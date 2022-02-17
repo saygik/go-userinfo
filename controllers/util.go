@@ -3,6 +3,7 @@ package controllers
 import (
 	"net"
 	"net/http"
+	"regexp"
 	"strings"
 )
 
@@ -28,4 +29,13 @@ func ReadUserIP(r *http.Request) string {
 
 func ReadUserName(ip string) (names []string, err error) {
 	return net.LookupAddr(ip)
+}
+
+var emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+
+func isEmailValid(e string) bool {
+	if len(e) < 3 && len(e) > 254 {
+		return false
+	}
+	return emailRegex.MatchString(e)
 }

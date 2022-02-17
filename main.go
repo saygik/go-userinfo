@@ -112,6 +112,7 @@ func main() {
 		user := new(controllers.UserController)
 
 		v1.GET("/users", user.All)
+		v1.GET("/user/set", user.SetIp)
 	}
 
 	r.LoadHTMLGlob("./public/html/*")

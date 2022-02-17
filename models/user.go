@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"github.com/saygik/go-userinfo/db"
+	"github.com/saygik/go-userinfo/forms"
 )
 
 //UserModel ...
@@ -32,4 +33,7 @@ func (m UserModel) All() (users []User, err error) {
 		users = append(users, user)
 	}
 	return users, err
+}
+func (m UserModel) SetUserIp(form forms.UserActivityForm) (err error) {
+	return nil
 }
