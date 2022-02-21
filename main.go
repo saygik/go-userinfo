@@ -46,15 +46,6 @@ func RequestIDMiddleware() gin.HandlerFunc {
 	}
 }
 
-//TokenAuthMiddleware ...
-//JWT Authentication middleware attached to each request that needs to be authenitcated to validate the access_token in the header
-//func TokenAuthMiddleware() gin.HandlerFunc {
-//	return func(c *gin.Context) {
-//		auth.TokenValid(c)
-//		c.Next()
-//	}
-//}
-
 var log = logrus.New()
 
 func main() {
@@ -80,19 +71,6 @@ func main() {
 		log.Fatal("Error loading .env file, please create one in the root directory")
 	}
 
-	// GLPI_ALOWED_USERS *********************************
-	//	arr := os.Getenv("GLPI_ALOWED_USERS")
-	//	var allowedClients map[string]string
-	//	json.Unmarshal([]byte(arr), &allowedClients)
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	// GLPI_ALOWED_USERS ******************************END
-
-	//if val, ok := AllowedClients["1234"]; ok {
-	//	println(val)
-	//}
-
 	r.Use(CORSMiddleware())
 	r.Use(RequestIDMiddleware())
 	r.Use(gzip.Gzip(gzip.DefaultCompression))
@@ -111,8 +89,9 @@ func main() {
 		/*** START USER ***/
 		user := new(controllers.UserController)
 
-		v1.GET("/users", user.All)
-		v1.GET("/user/set", user.SetIp)
+		v1.GET("/users/ip", user.All)
+		v1.GET("/user/ip", user.SetIp)
+		v1.GET("/user/ip/:username", user.GetUserByName)
 	}
 
 	r.LoadHTMLGlob("./public/html/*")
