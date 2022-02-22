@@ -54,8 +54,47 @@ func ConnectDB(dataSourceName string) (*gorp.DbMap, error) {
 func GetDB() *gorp.DbMap {
 	return db
 }
+
 func CloseDB() {
 	db.Db.Close()
+}
+
+var dbskype *gorp.DbMap
+
+//InitDbSkype ...
+func InitDbSkype() {
+	dbinfo := fmt.Sprintf("server=%s;database=%s;user id=%s;password=%s", os.Getenv("DB_SERVER_SKYPE"), os.Getenv("DB_NAME_SKYPE"), os.Getenv("DB_USER_SKYPE"), os.Getenv("DB_PASS_SKYPE"))
+	var err error
+	dbskype, err = ConnectDBSkype(dbinfo)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+//ConnectDBSkype ...
+func ConnectDBSkype(dataSourceName string) (*gorp.DbMap, error) {
+	dbskype, err := sql.Open("mssql", dataSourceName)
+
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("Connected Db Skype")
+	if err = dbskype.Ping(); err != nil {
+		return nil, err
+	}
+	var version string
+	dbskype.QueryRow("SELECT @@VERSION").Scan(&version)
+	fmt.Println("Connected to:", version)
+	dbmap := &gorp.DbMap{Db: dbskype, Dialect: gorp.SqlServerDialect{}}
+	return dbmap, nil
+}
+
+//GetDBSkype ...
+func GetDBSkype() *gorp.DbMap {
+	return dbskype
+}
+func CloseDBSkype() {
+	dbskype.Db.Close()
 }
 
 //RedisClient ...

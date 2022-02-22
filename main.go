@@ -101,6 +101,8 @@ func main() {
 	db.Init()
 	defer db.CloseDB()
 
+	db.InitDbSkype()
+	defer db.CloseDBSkype()
 	//Start AD clients
 
 	ad.Init(adconfig)
@@ -114,6 +116,7 @@ func main() {
 		/*** START USER ***/
 		user := new(controllers.UserController)
 
+		controllers.DefaultDomain = os.Getenv("DEFAULT_DOMAIN")
 		v1.GET("/users/ip", user.All)
 		v1.GET("/users/ip/:domain", user.All)
 		v1.GET("/user/ip", user.SetIp)
@@ -121,7 +124,10 @@ func main() {
 
 		aduser := new(controllers.ADUserController)
 		v1.GET("/users/ad/:domain", aduser.All)
+		v1.GET("/users/domains", aduser.AllDomains)
 
+		skype := new(controllers.SkypeController)
+		v1.GET("/skype/presences", skype.AllPresences)
 	}
 
 	r.LoadHTMLGlob("./public/html/*")

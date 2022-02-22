@@ -21,10 +21,16 @@ type Config struct {
 	ADS []ADConfig
 }
 
+//One minute ttl 60000000000
 const AllUsersTTL time.Duration = 60000000000
 
+var Domains map[string]bool
+
 func Init(adconfig Config) {
+	Domains = make(map[string]bool)
 	for _, oneADConfig := range adconfig.ADS {
+		Domains[oneADConfig.Key] = true
+		//		Domains=append(Domains,oneADConfig.Key)
 		oneADClient := NewAddConnection(oneADConfig)
 		defer oneADClient.Close()
 		adClients[oneADConfig.Key] = oneADClient

@@ -13,6 +13,11 @@ type ADUserModel struct{}
 
 var ctx = context.Background()
 
+//AllDomains...
+func (m ADUserModel) AllDomains() map[string]bool {
+	return ad.Domains
+}
+
 //All ...
 func (m ADUserModel) All(domain string) ([]map[string]string, error) {
 	redisClient := db.GetRedis()
@@ -40,12 +45,23 @@ func (m ADUserModel) All(domain string) ([]map[string]string, error) {
 	//t := time.Now()
 	//fmt.Println(t.Format("20060102150405"))
 	ips, err := UserModel{}.All(domain)
+	presences, err := SkypeModel{}.AllPresences()
 	if err == nil {
-		if len(ips) > 0 {
+		if len(ips) > 0 || len(presences) > 0 {
 			for _, user := range users {
-				for _, ip := range ips {
-					if user["userPrincipalName"] == ip.Login {
-						user["ip"] = ip.Ip
+				if len(ips) > 0 {
+					for _, ip := range ips {
+						if user["userPrincipalName"] == ip.Login {
+							user["ip"] = ip.Ip
+						}
+					}
+				}
+				if len(presences) > 0 {
+					for _, presence := range presences {
+						if user["userPrincipalName"] == presence.Userathost {
+							user["presence"] = presence.Presence
+							user["presencetime"] = presence.Lastpubtime
+						}
 					}
 				}
 			}

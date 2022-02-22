@@ -2,20 +2,23 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/saygik/go-userinfo/ad"
 	"github.com/saygik/go-userinfo/forms"
 	"github.com/saygik/go-userinfo/models"
 	"net/http"
+	"strings"
 )
 
 //UserController ...
 type UserController struct{}
 
 var userModel = new(models.UserModel)
+var DefaultDomain string
 
 func (ctrl UserController) All(c *gin.Context) {
 	domain := c.Param("domain")
 	if domain == "" {
-		domain = "brnv.rw"
+		domain = DefaultDomain
 	}
 	results, err := userModel.All(domain)
 	if err != nil {
@@ -35,6 +38,12 @@ func (ctrl UserController) SetIp(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get user info from request", "error": err.Error()})
 		return
 
+	}
+	domain := strings.Split(userForm.User, "@")[1]
+
+	if !ad.Domains[domain] {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not set users ip", "error": "Non served domain"})
+		return
 	}
 
 	userForm.Ip = ReadUserIP(c.Request)

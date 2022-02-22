@@ -26,3 +26,8 @@ func (ctrl ADUserController) All(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }
+func (ctrl ADUserController) AllDomains(c *gin.Context) {
+	domains := aduserModel.AllDomains()
+	c.JSON(http.StatusOK, gin.H{"data": domains})
+
+}
