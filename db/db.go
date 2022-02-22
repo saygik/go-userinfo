@@ -5,8 +5,10 @@ import (
 	"fmt"
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/go-gorp/gorp"
+	_redis "github.com/go-redis/redis"
 	"log"
 	"os"
+	"strconv"
 )
 
 //_ "github.com/lib/pq" //import postgres
@@ -54,4 +56,27 @@ func GetDB() *gorp.DbMap {
 }
 func CloseDB() {
 	db.Db.Close()
+}
+
+//RedisClient ...
+var RedisClient *_redis.Client
+
+//InitRedis ...
+func InitRedis(params ...string) {
+
+	var redisHost = os.Getenv("REDIS_HOST")
+	var redisPassword = os.Getenv("REDIS_PASSWORD")
+
+	db, _ := strconv.Atoi(params[0])
+
+	RedisClient = _redis.NewClient(&_redis.Options{
+		Addr:     redisHost,
+		Password: redisPassword,
+		DB:       db,
+	})
+}
+
+//GetRedis ...
+func GetRedis() *_redis.Client {
+	return RedisClient
 }

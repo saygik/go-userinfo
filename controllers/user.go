@@ -13,8 +13,11 @@ type UserController struct{}
 var userModel = new(models.UserModel)
 
 func (ctrl UserController) All(c *gin.Context) {
-
-	results, err := userModel.All()
+	domain := c.Param("domain")
+	if domain == "" {
+		domain = "brnv.rw"
+	}
+	results, err := userModel.All(domain)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get users ip`s", "error": err.Error()})
 		return

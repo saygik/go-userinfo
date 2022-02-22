@@ -26,5 +26,6 @@
 # SENSITVE DATA #
 .gitconfig
 .env
+adconfig.json
 cert/
 logs.txt

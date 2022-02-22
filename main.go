@@ -1,13 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/saygik/go-userinfo/ad"
 	"github.com/saygik/go-userinfo/controllers"
 	"github.com/saygik/go-userinfo/db"
 	ginlogrus "github.com/toorop/gin-logrus"
+	"io/ioutil"
 
 	//_ "github.com/saygik/go-glpi-api/log"
 	"github.com/sirupsen/logrus"
@@ -46,6 +49,19 @@ func RequestIDMiddleware() gin.HandlerFunc {
 	}
 }
 
+func LoadConfiguration(file string) (ad.Config, error) {
+	cfg := ad.Config{}
+	configFile, err := ioutil.ReadFile(file)
+
+	if err != nil {
+		return cfg, err
+	}
+	json.Unmarshal(configFile, &cfg.ADS)
+	//jsonParser := json.NewDecoder(configFile)
+	//jsonParser.Decode(&config)
+	return cfg, err
+}
+
 var log = logrus.New()
 
 func main() {
@@ -71,6 +87,11 @@ func main() {
 		log.Fatal("Error loading .env file, please create one in the root directory")
 	}
 
+	adconfig, err := LoadConfiguration("adconfig.json")
+	if err != nil || adconfig.ADS == nil {
+		log.Fatal("Error loading adconfig.json file, please create one in the root directory")
+	}
+
 	r.Use(CORSMiddleware())
 	r.Use(RequestIDMiddleware())
 	r.Use(gzip.Gzip(gzip.DefaultCompression))
@@ -80,9 +101,13 @@ func main() {
 	db.Init()
 	defer db.CloseDB()
 
+	//Start AD clients
+
+	ad.Init(adconfig)
+	defer ad.Close()
 	//Start Redis on database 1 - it's used to store the JWT but you can use it for anythig else
 	//Example: db.GetRedis().Set(KEY, VALUE, at.Sub(now)).Err()
-	//	db.InitRedis("1")
+	db.InitRedis("1")
 
 	v1 := r.Group("/v1")
 	{
@@ -90,8 +115,13 @@ func main() {
 		user := new(controllers.UserController)
 
 		v1.GET("/users/ip", user.All)
+		v1.GET("/users/ip/:domain", user.All)
 		v1.GET("/user/ip", user.SetIp)
 		v1.GET("/user/ip/:username", user.GetUserByName)
+
+		aduser := new(controllers.ADUserController)
+		v1.GET("/users/ad/:domain", aduser.All)
+
 	}
 
 	r.LoadHTMLGlob("./public/html/*")

@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"github.com/saygik/go-userinfo/db"
 	"github.com/saygik/go-userinfo/forms"
 )
@@ -15,10 +14,9 @@ type User struct {
 }
 
 //GLPI User find by Mail ...
-func (m UserModel) All() (users []User, err error) {
-	sql := fmt.Sprintf(
-		`SELECT  login, ip from UserIP`)
-	rows, err := db.GetDB().Query(sql)
+func (m UserModel) All(domain string) (users []User, err error) {
+
+	rows, err := db.GetDB().Query("GetAllUserIPByDomain $1", domain)
 	if err != nil {
 		return users, err
 	}
