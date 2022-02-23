@@ -15,21 +15,7 @@ type User struct {
 
 //GLPI User find by Mail ...
 func (m UserModel) All(domain string) (users []User, err error) {
-
-	rows, err := db.GetDB().Query("GetAllUserIPByDomain $1", domain)
-	if err != nil {
-		return users, err
-	}
-	for rows.Next() {
-		// In each step, scan one row
-		var user User
-		err = rows.Scan(&user.Login, &user.Ip)
-		if err != nil {
-			return users, err
-		}
-		// and append it to the array
-		users = append(users, user)
-	}
+	_, err = db.GetDB().Select(&users, "GetAllUserIPByDomain $1", domain)
 	return users, err
 }
 func (m UserModel) SetUserIp(form forms.UserActivityForm) (msgResponce string, err error) {

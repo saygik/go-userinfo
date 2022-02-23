@@ -128,6 +128,9 @@ func main() {
 
 		skype := new(controllers.SkypeController)
 		v1.GET("/skype/presences", skype.AllPresences)
+		v1.GET("/skype/presence/:user", skype.OnePresence)
+		v1.GET("/skype/activeconferences", skype.AllActiveConferences)
+		v1.GET("/skype/conferencepresence/:id", skype.ConferencePresence)
 	}
 
 	r.LoadHTMLGlob("./public/html/*")
@@ -136,7 +139,7 @@ func main() {
 
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
-			"ginBoilerplateVersion": "v0.03",
+			"ginBoilerplateVersion": "v1.03",
 			"goVersion":             runtime.Version(),
 		})
 	})
