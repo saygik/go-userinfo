@@ -9,6 +9,7 @@ import (
 	"github.com/saygik/go-userinfo/ad"
 	"github.com/saygik/go-userinfo/controllers"
 	"github.com/saygik/go-userinfo/db"
+	"github.com/saygik/go-userinfo/sp"
 	ginlogrus "github.com/toorop/gin-logrus"
 	"io/ioutil"
 
@@ -43,8 +44,8 @@ func CORSMiddleware() gin.HandlerFunc {
 //Generate a unique ID and attach it to each request for future reference or use
 func RequestIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		uuid := uuid.NewV4()
-		c.Writer.Header().Set("X-Request-Id", uuid.String())
+		suuid := uuid.NewV4()
+		c.Writer.Header().Set("X-Request-Id", suuid.String())
 		c.Next()
 	}
 }
@@ -111,9 +112,11 @@ func main() {
 	//Example: db.GetRedis().Set(KEY, VALUE, at.Sub(now)).Err()
 	db.InitRedis("1")
 
+	//Start Sharepoint client
+	sp.Init()
 	v1 := r.Group("/v1")
 	{
-		/*** START USER ***/
+
 		user := new(controllers.UserController)
 
 		controllers.DefaultDomain = os.Getenv("DEFAULT_DOMAIN")
@@ -131,6 +134,11 @@ func main() {
 		v1.GET("/skype/presence/:user", skype.OnePresence)
 		v1.GET("/skype/activeconferences", skype.AllActiveConferences)
 		v1.GET("/skype/conferencepresence/:id", skype.ConferencePresence)
+		v1.GET("/skype/presences2", skype.AllPresences)
+
+		sp_controller := new(controllers.SPController)
+		v1.GET("/sp/zals", sp_controller.All)
+
 	}
 
 	r.LoadHTMLGlob("./public/html/*")
