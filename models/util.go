@@ -54,3 +54,15 @@ type DataList struct {
 	Data JSONRaw `db:"data" json:"data"`
 	Meta JSONRaw `db:"meta" json:"meta"`
 }
+
+func isStringInArray(str string, arr interface{}) bool {
+	if arr == nil {
+		return false
+	}
+	for _, b := range arr.([]string) {
+		if b == str {
+			return true
+		}
+	}
+	return false
+}

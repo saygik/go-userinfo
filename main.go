@@ -127,6 +127,7 @@ func main() {
 
 		aduser := new(controllers.ADUserController)
 		v1.GET("/users/ad/:domain", aduser.All)
+		v1.GET("/users/ad/:domain/:group", aduser.GroupUsers)
 		v1.GET("/users/domains", aduser.AllDomains)
 
 		skype := new(controllers.SkypeController)

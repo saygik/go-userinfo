@@ -21,6 +21,23 @@ type Config struct {
 	ADS []ADConfig
 }
 
+type User struct {
+	UserPrincipalName []string `db:"userPrincipalName" json:"userPrincipalName"`
+	Dn                string   `db:"dn" json:"dn"`
+	Cn                string   `db:"cn" json:"cn"`
+	Company           string   `db:"company" json:"company"`
+	Department        string   `db:"department" json:"department"`
+	Title             string   `db:"title" json:"title"`
+	TelephoneNumber   string   `db:"telephoneNumber" json:"telephoneNumber"`
+	OtherTelephone    string   `db:"otherTelephone" json:"otherTelephone"`
+	Mobile            string   `db:"mobile" json:"mobile"`
+	Mail              string   `db:"mail" json:"mail"`
+	Pager             string   `db:"pager" json:"pager"`
+	Sip               string   `db:"msRTCSIP-PrimaryUserAddress" json:"msRTCSIP-PrimaryUserAddress"`
+	Url               string   `db:"url" json:"url"`
+	MemberOf          []string `db:"memberOf" json:"memberOf"`
+}
+
 //One minute ttl 60000000000
 const AllUsersTTL time.Duration = 60000000000
 
@@ -54,7 +71,7 @@ func NewAddConnection(config ADConfig) *adClient.ADClient {
 		UserFilter:   config.Filter,
 		GroupFilter:  "(memberUid=%s)",
 		Attributes: []string{"userPrincipalName", "dn", "cn", "company", "department", "title", "telephoneNumber",
-			"otherTelephone", "mobile", "mail", "pager", "msRTCSIP-PrimaryUserAddress", "url"},
+			"otherTelephone", "mobile", "mail", "pager", "msRTCSIP-PrimaryUserAddress", "url", "memberOf"},
 	}
 	return client
 }
