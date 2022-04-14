@@ -66,3 +66,11 @@ func isStringInArray(str string, arr interface{}) bool {
 	}
 	return false
 }
+func FindUserInRedisArray(users []map[string]interface{}, userToFind string) map[string]interface{} {
+	for _, user := range users {
+		if user["userPrincipalName"] == userToFind {
+			return user
+		}
+	}
+	return nil
+}

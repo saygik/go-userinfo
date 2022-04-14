@@ -9,6 +9,7 @@ import (
 	"github.com/saygik/go-userinfo/ad"
 	"github.com/saygik/go-userinfo/controllers"
 	"github.com/saygik/go-userinfo/db"
+	"github.com/saygik/go-userinfo/glpidb"
 	"github.com/saygik/go-userinfo/sp"
 	ginlogrus "github.com/toorop/gin-logrus"
 	"io/ioutil"
@@ -46,6 +47,17 @@ func RequestIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		suuid := uuid.NewV4()
 		c.Writer.Header().Set("X-Request-Id", suuid.String())
+		c.Next()
+	}
+}
+
+var auth = new(controllers.AuthController)
+
+//TokenAuthMiddleware ...
+//JWT Authentication middleware attached to each request that needs to be authenitcated to validate the access_token in the header
+func TokenAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth.TokenValid(c)
 		c.Next()
 	}
 }
@@ -102,6 +114,9 @@ func main() {
 	db.Init()
 	defer db.CloseDB()
 
+	glpidb.Init()
+	defer glpidb.CloseDB()
+
 	db.InitDbSkype()
 	defer db.CloseDBSkype()
 	//Start AD clients
@@ -118,17 +133,22 @@ func main() {
 	{
 
 		user := new(controllers.UserController)
+		v1.POST("/login", user.Login)
+		v1.GET("/logout", user.Logout)
+		userIP := new(controllers.UserIPController)
 
 		controllers.DefaultDomain = os.Getenv("DEFAULT_DOMAIN")
-		v1.GET("/users/ip", user.All)
-		v1.GET("/users/ip/:domain", user.All)
-		v1.GET("/user/ip", user.SetIp)
-		v1.GET("/user/ip/:username", user.GetUserByName)
+		v1.GET("/users/ip", userIP.All)
+		v1.GET("/users/ip/:domain", userIP.All)
+		v1.GET("/user/ip", userIP.SetIp)
+		v1.GET("/user/ip/:username", userIP.GetUserByName)
 
 		aduser := new(controllers.ADUserController)
 		v1.GET("/users/ad/:domain", aduser.All)
 		v1.GET("/users/ad/:domain/:group", aduser.GroupUsers)
 		v1.GET("/users/domains", aduser.AllDomains)
+		v1.GET("/users/whoami", TokenAuthMiddleware(), aduser.Find)
+		v1.GET("/user/ad/:username", aduser.GetUserByName)
 
 		skype := new(controllers.SkypeController)
 		v1.GET("/skype/presences", skype.AllPresences)
@@ -139,6 +159,9 @@ func main() {
 
 		sp_controller := new(controllers.SPController)
 		v1.GET("/sp/zals", sp_controller.All)
+
+		glpi_controller := new(controllers.GLPIController)
+		v1.GET("/user/glpi/:username", glpi_controller.GetUserByName)
 
 	}
 

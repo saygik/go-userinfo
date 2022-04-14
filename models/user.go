@@ -1,31 +1,49 @@
 package models
 
-import (
-	"github.com/saygik/go-userinfo/db"
-	"github.com/saygik/go-userinfo/forms"
-)
+//User ...
 
 //UserModel ...
 type UserModel struct{}
 
-type User struct {
-	Login string `db:"login" json:"login"`
-	Ip    string `db:"ip" json:"ip"`
+var authModel = new(AuthModel)
+
+//Login ...
+
+func (m UserModel) Login(login string) (token Token, err error) {
+
+	//Generate the JWT auth token
+
+	tokenDetails, err := authModel.CreateToken(login)
+
+	saveErr := authModel.CreateAuth(login, tokenDetails)
+	if saveErr == nil {
+		token.AccessToken = tokenDetails.AccessToken
+		token.RefreshToken = tokenDetails.RefreshToken
+	}
+
+	return token, nil
 }
 
-//GLPI User find by Mail ...
-func (m UserModel) All(domain string) (users []User, err error) {
-	_, err = db.GetDB().Select(&users, "GetAllUserIPByDomain $1", domain)
-	return users, err
-}
-func (m UserModel) SetUserIp(form forms.UserActivityForm) (msgResponce string, err error) {
-	//	_, err = db.GetDB().Exec("SetUserIPActivity $1,$2,$3", form.User, form.Ip, form.Activiy)
-	err = db.GetDB().QueryRow("SetUserIPActivity $1,$2,$3", form.User, form.Ip, form.Activiy).Scan(&msgResponce)
-
-	return msgResponce, err
-}
-func (m UserModel) GetUserByName(user string) (form forms.UserActivityForm, err error) {
-	err = db.GetDB().QueryRow("GetUserByName $1", user).Scan(&form.User, &form.Ip, &form.Activiy, &form.ActiviyIp, &form.Date)
-
-	return form, err
-}
+//Register ...
+//func (m UserModel) Register(form forms.RegisterForm) (user User, err error) {
+//	getDb := db.GetDB()
+//
+//	//Check if the user exists in database
+//	checkUser, err := getDb.SelectInt("SELECT count(id) FROM public.user WHERE mail=LOWER($1) LIMIT 1", form.Email)
+//
+//	if err != nil {
+//		return user, err
+//	}
+//
+//	if checkUser > 0 {
+//		return user, errors.New("User already exists")
+//	}
+//
+//	//Create the user and return back the user ID
+//	err = getDb.QueryRow("INSERT INTO public.user(mail, ao) VALUES($1, $2) RETURNING id", form.Email, form.Ao).Scan(&user.ID)
+//
+//	user.AO = form.Ao
+//	user.Email = form.Email
+//
+//	return user, err
+//}

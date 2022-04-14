@@ -1,9 +1,7 @@
 package forms
 
-type UserActivityForm struct {
-	User      string `form:"user" json:"user" binding:"required,email"`
-	Ip        string `form:"ip" json:"ip"`
-	Activiy   string `form:"activity" json:"activity,omitempty"`
-	ActiviyIp string `form:"activityip" json:"activityip,omitempty"`
-	Date      string `form:"date" json:"date,omitempty"`
+//LoginForm ...
+type LoginForm struct {
+	Email    string `form:"email" json:"email" binding:"required,email"`
+	Password string `form:"password" json:"password" binding:"required"`
 }

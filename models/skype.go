@@ -26,10 +26,10 @@ type ConferencePresence struct {
 	ConfId      string `db:"confid" json:"confid"`
 	UserName    string `db:"userName" json:"userName"`
 	JoinTime    string `db:"joinTime" json:"joinTime"`
-	Displayname string `db:"displayname" json:"displayname"`
-	Company     string `db:"company" json:"company"`
-	Department  string `db:"department" json:"department"`
-	Dolg        string `db:"dolg" json:"dolg"`
+	Displayname string `db:"displayname" json:"displayname,omitempty"`
+	Company     string `db:"company" json:"company,omitempty"`
+	Department  string `db:"department" json:"department,omitempty"`
+	Dolg        string `db:"dolg" json:"dolg,omitempty"`
 }
 
 //GLPI User find by Mail ...

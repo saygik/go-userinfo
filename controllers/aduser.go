@@ -11,6 +11,12 @@ type ADUserController struct{}
 
 var aduserModel = new(models.ADUserModel)
 
+//getUserID ...
+func getUserID(c *gin.Context) (userID string) {
+	//MustGet returns the value for the given key if it exists, otherwise it panics.
+	return c.MustGet("user").(models.UserInRedis).Login
+}
+
 //All ...
 func (ctrl ADUserController) All(c *gin.Context) {
 	domain := c.Param("domain")
@@ -50,4 +56,35 @@ func (ctrl ADUserController) GroupUsers(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": users})
+}
+func (ctrl ADUserController) Find(c *gin.Context) {
+	if userID := getUserID(c); userID != "" {
+		adUser, adErr := aduserModel.GetOneUser(userID)
+		if adErr != nil {
+			c.JSON(http.StatusNotAcceptable, gin.H{"message": "Invalid credentials", "error": adErr.Error()})
+			return
+		}
+		//	jadUser, _ := json.Marshal(adUser)
+
+		c.JSON(http.StatusOK, gin.H{"message": "User finded", "user": adUser})
+	}
+}
+
+func (ctrl ADUserController) GetUserByName(c *gin.Context) {
+	user := c.Param("username")
+	if user == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get user info from request", "error": ""})
+		return
+	}
+	if !isEmailValid(user) {
+		c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": "Invalid username. The name must include the domain in the format: user@domain", "error": ""})
+		return
+	}
+	adUser, adErr := aduserModel.GetOneUserPropertys(user)
+	if adErr != nil {
+		c.JSON(http.StatusNoContent, gin.H{"message": "Invalid credentials", "error": adErr.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User finded", "data": adUser})
 }
