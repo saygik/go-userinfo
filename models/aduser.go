@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/saygik/go-userinfo/ad"
 	"github.com/saygik/go-userinfo/db"
 	"github.com/saygik/go-userinfo/forms"
-	"strings"
 )
 
 // UserModel ...

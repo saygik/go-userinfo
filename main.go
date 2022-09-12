@@ -3,8 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/saygik/go-userinfo/ad"
 	"github.com/saygik/go-userinfo/controllers"
@@ -12,14 +15,13 @@ import (
 	"github.com/saygik/go-userinfo/glpidb"
 	"github.com/saygik/go-userinfo/sp"
 	ginlogrus "github.com/toorop/gin-logrus"
-	"io/ioutil"
 
 	//_ "github.com/saygik/go-glpi-api/log"
-	"github.com/sirupsen/logrus"
-	uuid "github.com/twinj/uuid"
 	"net/http"
 	"os"
 	"runtime"
+
+	"github.com/sirupsen/logrus"
 )
 
 // CORSMiddleware ...
@@ -45,7 +47,8 @@ func CORSMiddleware() gin.HandlerFunc {
 // Generate a unique ID and attach it to each request for future reference or use
 func RequestIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		suuid := uuid.NewV4()
+
+		suuid, _ := uuid.NewUUID() //uuid.NewV4()
 		c.Writer.Header().Set("X-Request-Id", suuid.String())
 		c.Next()
 	}
