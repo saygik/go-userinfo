@@ -10,12 +10,12 @@ import (
 	"os"
 )
 
-//AuthController ...
+// AuthController ...
 type AuthController struct{}
 
 var authModel = new(models.AuthModel)
 
-//TokenValid ...
+// TokenValid ...
 func (ctl AuthController) TokenValid(c *gin.Context) {
 
 	tokenAuth, err := authModel.ExtractTokenMetadata(c.Request)
@@ -36,7 +36,7 @@ func (ctl AuthController) TokenValid(c *gin.Context) {
 	c.Set("user", user)
 }
 
-//Refresh ...
+// Refresh ...
 func (ctl AuthController) Refresh(c *gin.Context) {
 	var tokenForm forms.Token
 
@@ -72,7 +72,7 @@ func (ctl AuthController) Refresh(c *gin.Context) {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid authorization, please login again"})
 			return
 		}
-		userID := fmt.Sprintf("%.f", claims["user_id"])
+		userID := fmt.Sprintf("%s", claims["user_id"])
 		//if err != nil {
 		//	c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid authorization, please login again"})
 		//	return
@@ -96,12 +96,12 @@ func (ctl AuthController) Refresh(c *gin.Context) {
 		//	c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid authorization, please login again"})
 		//	return
 		//}
-		////save the tokens metadata to redis
-		//saveErr := authModel.CreateAuth(user, ts)
-		//if saveErr != nil {
-		//	c.JSON(http.StatusForbidden, gin.H{"message": "Invalid authorization, please login again"})
-		//	return
-		//}
+		//save the tokens metadata to redis
+		saveErr := authModel.CreateAuth(userID, ts)
+		if saveErr != nil {
+			c.JSON(http.StatusForbidden, gin.H{"message": "Invalid authorization, please login again"})
+			return
+		}
 		tokens := map[string]string{
 			"access_token":  ts.AccessToken,
 			"refresh_token": ts.RefreshToken,

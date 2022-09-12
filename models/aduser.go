@@ -11,34 +11,35 @@ import (
 	"strings"
 )
 
-//UserModel ...
+// UserModel ...
 type ADUserModel struct{}
 
 var ctx = context.Background()
 
-//AllDomains...
+// AllDomains...
 func (m ADUserModel) AllDomains() []ad.ADArray {
 	return ad.DomainsArray
 }
 
-//type User struct {
-//	UserPrincipalName string `db:"userPrincipalName" json:"userPrincipalName"`
-//	Dn string `db:"dn" json:"dn"`
-//	Cn string `db:"cn" json:"cn"`
-//	Company string `db:"company" json:"company"`
-//	Department string `db:"department" json:"department"`
-//	Title string `db:"title" json:"title"`
-//	TelephoneNumber string `db:"telephoneNumber" json:"telephoneNumber"`
-//	OtherTelephone string `db:"otherTelephone" json:"otherTelephone"`
-//	Mobile string `db:"mobile" json:"mobile"`
-//	Mail string `db:"mail" json:"mail"`
-//	Pager string `db:"pager" json:"pager"`
-//	Sip string `db:"msRTCSIP-PrimaryUserAddress" json:"msRTCSIP-PrimaryUserAddress"`
-//	Url string `db:"url" json:"url"`
-//	MemberOf string `db:"memberOf" json:"memberOf"`
-//}
-//"userPrincipalName", "dn", "cn", "company", "department", "title", "telephoneNumber",	"otherTelephone", "mobile", "mail", "pager", "msRTCSIP-PrimaryUserAddress", "url","memberOf"
-//All ...
+//	type User struct {
+//		UserPrincipalName string `db:"userPrincipalName" json:"userPrincipalName"`
+//		Dn string `db:"dn" json:"dn"`
+//		Cn string `db:"cn" json:"cn"`
+//		Company string `db:"company" json:"company"`
+//		Department string `db:"department" json:"department"`
+//		Title string `db:"title" json:"title"`
+//		TelephoneNumber string `db:"telephoneNumber" json:"telephoneNumber"`
+//		OtherTelephone string `db:"otherTelephone" json:"otherTelephone"`
+//		Mobile string `db:"mobile" json:"mobile"`
+//		Mail string `db:"mail" json:"mail"`
+//		Pager string `db:"pager" json:"pager"`
+//		Sip string `db:"msRTCSIP-PrimaryUserAddress" json:"msRTCSIP-PrimaryUserAddress"`
+//		Url string `db:"url" json:"url"`
+//		MemberOf string `db:"memberOf" json:"memberOf"`
+//	}
+//
+// "userPrincipalName", "dn", "cn", "company", "department", "title", "telephoneNumber",	"otherTelephone", "mobile", "mail", "pager", "msRTCSIP-PrimaryUserAddress", "url","memberOf"
+// All ...
 func (m ADUserModel) All(domain string) ([]map[string]interface{}, error) {
 	//ad.GetDomainUsers(domain)
 	//return nil,nil
@@ -112,7 +113,7 @@ func (m ADUserModel) GroupUsers(domain string, group string) ([]map[string]inter
 	if currentADclient == nil {
 		return nil, errors.New("This domain is not served by the system")
 	}
-	users, err := ad.GetAD(domain).GetGroupUsers("CN=Пользователи интернета,OU=_Groups,DC=brnv,DC=rw")
+	users, err := ad.GetAD(domain).GetGroupUsers(group)
 	if err != nil || len(users) < 1 {
 		return nil, errors.New("Users not found")
 	}

@@ -6,10 +6,11 @@ import (
 	"github.com/saygik/go-userinfo/forms"
 	"github.com/saygik/go-userinfo/models"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
-//UserController ...
+// UserController ...
 type UserIPController struct{}
 
 var userIPModel = new(models.UserIPModel)
@@ -29,8 +30,103 @@ func (ctrl UserIPController) All(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": results})
 
 }
+func (ctrl UserIPController) GetSchedule(c *gin.Context) {
+	schedule := c.Param("id")
+	if schedule == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указан ID расписания"})
+		return
+	}
+	results, err := userIPModel.Schedule(schedule)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get schedule", "error": err.Error()})
+		return
+	}
 
-//
+	c.JSON(http.StatusOK, gin.H{"data": results})
+
+}
+func (ctrl UserIPController) GetScheduleTasks(c *gin.Context) {
+	schedule := c.Param("idc")
+	if schedule == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указан ID расписания"})
+		return
+	}
+	results, err := userIPModel.AllScheduleTasks(schedule)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get users ip`s", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": results})
+
+}
+
+func (ctrl UserIPController) DelScheduleTask(c *gin.Context) {
+	id := c.Param("id")
+	if id, err := strconv.ParseInt(id, 10, 64); err == nil {
+
+		ra, err := userIPModel.DelScheduleTask(id)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Schedule event could not be deleted", "error": err.Error()})
+			return
+		}
+		if ra == 0 {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"Message": "Schedule event does not exist"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Schedule deleted"})
+	} else {
+		c.JSON(http.StatusNotFound, gin.H{"Message": "Invalid parameter"})
+	}
+}
+func (ctrl UserIPController) AddScheduleTask(c *gin.Context) {
+	//decoder := json.NewDecoder(c.Request.Body)
+	var scheduleForm forms.ScheduleTask
+	//err := decoder.Decode(&scheduleForm)
+	err := c.ShouldBindJSON(&scheduleForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get schedule info from request", "error": err.Error()})
+		return
+
+	}
+	var msgResponce string
+	msgResponce, err = userIPModel.AddScheduleTask(scheduleForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not add schedule", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"id": msgResponce})
+
+}
+
+func (ctrl UserIPController) UpdateScheduleTask(c *gin.Context) {
+	id := c.Param("id")
+	if id, err := strconv.ParseInt(id, 10, 64); err == nil {
+		var scheduleForm forms.ScheduleTask
+		err := c.ShouldBindJSON(&scheduleForm)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get schedule info from request", "error": err.Error()})
+			return
+		}
+		scheduleForm.Id = strconv.FormatInt(id, 10)
+		ra, err := userIPModel.UpdateScheduleTask(scheduleForm)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Событие календаря не изменено: ", "error": err.Error()})
+			return
+		}
+		if ra == 0 {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"Message": "Событие календаря для изменения не существует"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Событие календаря изменено"})
+
+	} else {
+		c.JSON(http.StatusNotFound, gin.H{"Message": "Invalid parameter", "error": err.Error()})
+	}
+
+}
+
 func (ctrl UserIPController) SetIp(c *gin.Context) {
 	var userForm forms.UserActivityForm
 	err := c.ShouldBindQuery(&userForm)
@@ -82,5 +178,25 @@ func (ctrl UserIPController) GetUserByName(c *gin.Context) {
 	//var hostNames []string
 	// hostNames,_=ReadUserName(ipAddr)
 	//c.JSON(http.StatusOK, gin.H{"data": ipAddr, "host_names": hostNames})
+
+}
+
+func (ctrl UserIPController) GetUserWeekActivity(c *gin.Context) {
+	user := c.Param("username")
+	if user == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get user info from request", "error": ""})
+		return
+	}
+	if !isEmailValid(user) {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Invalid username. The name must include the domain in the format: user@domain", "error": ""})
+		return
+	}
+	data, err := userIPModel.GetUserWeekActivity(user)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get users activity from server", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": data})
 
 }

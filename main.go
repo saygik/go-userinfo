@@ -22,7 +22,7 @@ import (
 	"runtime"
 )
 
-//CORSMiddleware ...
+// CORSMiddleware ...
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
@@ -41,8 +41,8 @@ func CORSMiddleware() gin.HandlerFunc {
 	}
 }
 
-//RequestIDMiddleware ...
-//Generate a unique ID and attach it to each request for future reference or use
+// RequestIDMiddleware ...
+// Generate a unique ID and attach it to each request for future reference or use
 func RequestIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		suuid := uuid.NewV4()
@@ -53,8 +53,8 @@ func RequestIDMiddleware() gin.HandlerFunc {
 
 var auth = new(controllers.AuthController)
 
-//TokenAuthMiddleware ...
-//JWT Authentication middleware attached to each request that needs to be authenitcated to validate the access_token in the header
+// TokenAuthMiddleware ...
+// JWT Authentication middleware attached to each request that needs to be authenitcated to validate the access_token in the header
 func TokenAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth.TokenValid(c)
@@ -135,6 +135,7 @@ func main() {
 		user := new(controllers.UserController)
 		v1.POST("/login", user.Login)
 		v1.GET("/logout", user.Logout)
+		v1.POST("/token/refresh", auth.Refresh)
 		userIP := new(controllers.UserIPController)
 
 		controllers.DefaultDomain = os.Getenv("DEFAULT_DOMAIN")
@@ -142,6 +143,12 @@ func main() {
 		v1.GET("/users/ip/:domain", userIP.All)
 		v1.GET("/user/ip", userIP.SetIp)
 		v1.GET("/user/ip/:username", userIP.GetUserByName)
+		v1.GET("/user/activity/:username", userIP.GetUserWeekActivity)
+		v1.GET("/schedules/:id", userIP.GetSchedule)
+		v1.GET("/schedule/tasks/:idc", userIP.GetScheduleTasks)
+		v1.POST("/schedule/task", userIP.AddScheduleTask)
+		v1.DELETE("/schedule/task/:id", userIP.DelScheduleTask)
+		v1.PUT("/schedule/task/:id", userIP.UpdateScheduleTask)
 
 		aduser := new(controllers.ADUserController)
 		v1.GET("/users/ad/:domain", aduser.All)

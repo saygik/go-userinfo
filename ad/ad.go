@@ -31,8 +31,8 @@ type User struct {
 	Cn                string   `db:"cn" json:"cn"`
 }
 
-//One minute ttl 60000000000
-const AllUsersTTL time.Duration = 60000000000
+// One minute ttl 60000000000
+const AllUsersTTL time.Duration = 300000000000
 
 var Domains map[string]bool
 
@@ -57,7 +57,7 @@ func Init(adconfig Config) {
 
 }
 
-//"(userPrincipalName=%s)"
+// "(userPrincipalName=%s)"
 func NewAddConnection(config ADConfig) *adClient.ADClient {
 	client := &adClient.ADClient{
 		Base:         config.Base,
@@ -67,10 +67,10 @@ func NewAddConnection(config ADConfig) *adClient.ADClient {
 		BindDN:       config.BindDN,
 		BindPassword: config.BindPassword,
 		UserFilter:   config.Filter,
-		GroupFilter:  "(memberUid=%s)",
+		GroupFilter:  "(&(&(&(objectClass=user)(objectCategory=person)((memberof=%s))(!(userAccountControl:1.2.840.113556.1.4.803:=2)))))",
 		Attributes: []string{"userPrincipalName", "dn", "cn", "company", "department", "title", "telephoneNumber",
 			"otherTelephone", "mobile", "mail", "pager", "msRTCSIP-PrimaryUserAddress", "url", "memberOf", "displayName",
-			"description", "userPrincipalName"},
+			"description", "userPrincipalName", "employeeNumber", "pwdLastSet"},
 	}
 	return client
 }
