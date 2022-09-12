@@ -12,6 +12,7 @@ type ADConfig struct {
 	Name         string        `json:"name"`
 	Base         string        `json:"base"`
 	Dc           string        `json:"dc"`
+	GroupFilter  string        `json:"group-filter"`
 	Filter       string        `json:"filter"`
 	BindDN       string        `json:"bindDN"`
 	BindPassword string        `json:"bindPassword"`
@@ -67,7 +68,7 @@ func NewAddConnection(config ADConfig) *adClient.ADClient {
 		BindDN:       config.BindDN,
 		BindPassword: config.BindPassword,
 		UserFilter:   config.Filter,
-		GroupFilter:  "(&(&(&(objectClass=user)(objectCategory=person)((memberof=%s))(!(userAccountControl:1.2.840.113556.1.4.803:=2)))))",
+		GroupFilter:  config.GroupFilter,
 		Attributes: []string{"userPrincipalName", "dn", "cn", "company", "department", "title", "telephoneNumber",
 			"otherTelephone", "mobile", "mail", "pager", "msRTCSIP-PrimaryUserAddress", "url", "memberOf", "displayName",
 			"description", "userPrincipalName", "employeeNumber", "pwdLastSet"},

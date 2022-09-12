@@ -17,6 +17,11 @@ import (
 	ginlogrus "github.com/toorop/gin-logrus"
 
 	//_ "github.com/saygik/go-glpi-api/log"
+<<<<<<< HEAD
+=======
+	"github.com/sirupsen/logrus"
+	"github.com/twinj/uuid"
+>>>>>>> f644b5ce82d1da8a3682d2d8b392fca647917d6f
 	"net/http"
 	"os"
 	"runtime"
