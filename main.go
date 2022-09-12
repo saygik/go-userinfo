@@ -16,7 +16,7 @@ import (
 
 	//_ "github.com/saygik/go-glpi-api/log"
 	"github.com/sirupsen/logrus"
-	uuid "github.com/twinj/uuid"
+	"github.com/twinj/uuid"
 	"net/http"
 	"os"
 	"runtime"
