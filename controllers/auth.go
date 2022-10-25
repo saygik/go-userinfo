@@ -1,13 +1,18 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"os"
+	"strings"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/saygik/go-userinfo/forms"
 	"github.com/saygik/go-userinfo/models"
-	"net/http"
-	"os"
 )
 
 // AuthController ...
@@ -110,4 +115,68 @@ func (ctl AuthController) Refresh(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid authorization, please login again"})
 	}
+}
+
+func (ctrl UserController) LoginCallback(c *gin.Context) {
+	cd := c.Request.URL.RawQuery
+	fmt.Printf(cd)
+	code := c.Query("code")
+	if code == "" {
+		code = DefaultDomain
+	}
+	tokens, err := getUserInfo(code)
+	//	fmt.Printf("%s\n", tokens)
+	if err != nil {
+		fmt.Println(err.Error())
+		c.Redirect(http.StatusTemporaryRedirect, "http://10.2.146.202:3000")
+		return
+	}
+	authModel.CreateAuthOpenID(tokens)
+	c.Redirect(http.StatusTemporaryRedirect, "http://10.2.146.202:3000/auth?token="+tokens.IdToken)
+}
+
+func getUserInfo(token string) (models.OAuthTokens, error) {
+
+	// if state != oauthStateString {
+	// 	return nil, fmt.Errorf("invalid oauth state")
+	// }
+
+	// token, err := googleOauthConfig.Exchange(oauth2.NoContext, code)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("code exchange failed: %s", err.Error())
+	// }
+	data := url.Values{}
+	data.Set("grant_type", "authorization_code")
+	data.Set("client_id", "4OcmRaXcBIsoTehRDcF5fYO3N")
+	data.Set("client_secret", "qWfD4_C8Q5T5y1Zx1_uQG8V9RDJUcPwWzyXDRGXL")
+	data.Set("redirect_uri", "http://172.28.7.203:9099/v1/callback")
+	data.Set("code", token)
+
+	client := &http.Client{}
+	r, _ := http.NewRequest(http.MethodPost, "https://adss.brnv.rw/sso/oauth/7dd4815e19af5fbea99a290b134b7e493569ea13/token", strings.NewReader(data.Encode())) // URL-encoded payload
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	response, err := client.Do(r)
+	var requestToken models.OAuthTokens
+	if err != nil {
+		return requestToken, fmt.Errorf("failed getting user info: %s", err.Error())
+	}
+
+	defer response.Body.Close()
+	contents, err := io.ReadAll(response.Body)
+
+	if err != nil {
+		return requestToken, fmt.Errorf("failed reading response body: %s", err.Error())
+	}
+	json.Unmarshal([]byte(contents), &requestToken)
+
+	// req, _ := http.NewRequest("GET", "https://adss.brnv.rw/sso/oauth/7dd4815e19af5fbea99a290b134b7e493569ea13/userinfo", nil)
+	// req.Header.Set("Authorization", "Bearer "+requestToken.AccessToken)
+	// response, err = client.Do(req)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed getting user info: %s", err.Error())
+	// }
+	// defer response.Body.Close()
+	// contents, err = io.ReadAll(response.Body)
+
+	return requestToken, nil
 }

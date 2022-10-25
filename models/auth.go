@@ -13,7 +13,7 @@ import (
 	uuid "github.com/twinj/uuid"
 )
 
-//TokenDetails ...
+// TokenDetails ...
 type TokenDetails struct {
 	AccessToken  string
 	RefreshToken string
@@ -23,27 +23,40 @@ type TokenDetails struct {
 	RtExpires    int64
 }
 
-//AccessDetails ...
+// AccessDetails ...
 type AccessDetails struct {
 	AccessUUID string
 	UserID     string
 }
 
-//Token ...
+// Token ...
 type Token struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
 
-//User in Redis
+type OAuthTokens struct {
+	AccessToken string `json:"access_token"`
+	IdToken     string `json:"id_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
+}
+
+// User in Redis
 type UserInRedis struct {
 	Login string `json:"login"`
 }
 
-//AuthModel ...
+// User in Redis OpenID
+type UserInRedisOpenID struct {
+	Login       string `json:"login"`
+	AccessToken string `json:"access_token"`
+}
+
+// AuthModel ...
 type AuthModel struct{}
 
-//CreateToken ...
+// CreateToken ...
 func (m AuthModel) CreateToken(userLogin string) (*TokenDetails, error) {
 
 	td := &TokenDetails{}
@@ -79,8 +92,8 @@ func (m AuthModel) CreateToken(userLogin string) (*TokenDetails, error) {
 	return td, nil
 }
 
-//899063632300
-//CreateAuth ...
+// 899063632300
+// CreateAuth ...
 func (m AuthModel) CreateAuth(userLogin string, td *TokenDetails) error {
 	at := time.Unix(td.AtExpires, 0) //converting Unix to UTC(to Time object)
 	rt := time.Unix(td.RtExpires, 0)
@@ -101,7 +114,7 @@ func (m AuthModel) CreateAuth(userLogin string, td *TokenDetails) error {
 	return nil
 }
 
-//ExtractToken ...
+// ExtractToken ...
 func (m AuthModel) ExtractToken(r *http.Request) string {
 	bearToken := r.Header.Get("Authorization")
 	//normally Authorization the_token_xxx
@@ -112,16 +125,20 @@ func (m AuthModel) ExtractToken(r *http.Request) string {
 	return ""
 }
 
-//VerifyToken ...
+// VerifyToken ...
 func (m AuthModel) VerifyToken(r *http.Request) (*jwt.Token, error) {
 	tokenString := m.ExtractToken(r)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		//Make sure that the token method conform to "SigningMethodHMAC"
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(os.Getenv("ACCESS_SECRET")), nil
+		t := []byte("qWfD4_C8Q5T5y1Zx1_uQG8V9RDJUcPwWzyXDRGXL")
+		return t, nil
 	})
+	// token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	// 	//Make sure that the token method conform to "SigningMethodHMAC"
+	// 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+	// 		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+	// 	}
+	// 	return []byte(os.Getenv("ACCESS_SECRET")), nil
+	// })
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +150,8 @@ func (m AuthModel) VerifyTokenByTokenString(tokenString string) (*jwt.Token, err
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(os.Getenv("ACCESS_SECRET")), nil
+		return []byte("qWfD4_C8Q5T5y1Zx1_uQG8V9RDJUcPwWzyXDRGXL"), nil
+		//return []byte(os.Getenv("ACCESS_SECRET")), nil
 	})
 	if err != nil {
 		return nil, err
@@ -147,11 +165,11 @@ func (m AuthModel) ExtractTokenMetadataByTokenString(tokenString string) (*Acces
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
-		accessUUID, ok := claims["access_uuid"].(string)
+		accessUUID, ok := claims["at_hash"].(string)
 		if !ok {
 			return nil, err
 		}
-		userID := fmt.Sprintf("%.f", claims["user_id"])
+		userID := claims["sub"].(string)
 		return &AccessDetails{
 			AccessUUID: accessUUID,
 			UserID:     userID,
@@ -160,7 +178,7 @@ func (m AuthModel) ExtractTokenMetadataByTokenString(tokenString string) (*Acces
 	return nil, err
 }
 
-//TokenValid ...
+// TokenValid ...
 func (m AuthModel) TokenValid(r *http.Request) error {
 	token, err := m.VerifyToken(r)
 	if err != nil {
@@ -172,7 +190,7 @@ func (m AuthModel) TokenValid(r *http.Request) error {
 	return nil
 }
 
-//ExtractTokenMetadata ...
+// ExtractTokenMetadata ...
 func (m AuthModel) ExtractTokenMetadata(r *http.Request) (*AccessDetails, error) {
 	token, err := m.VerifyToken(r)
 	if err != nil {
@@ -180,11 +198,11 @@ func (m AuthModel) ExtractTokenMetadata(r *http.Request) (*AccessDetails, error)
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
-		accessUUID, ok := claims["access_uuid"].(string)
+		accessUUID, ok := claims["at_hash"].(string)
 		if !ok {
 			return nil, err
 		}
-		userID := fmt.Sprintf("%s", claims["user_id"])
+		userID := fmt.Sprintf("%s", claims["sub"])
 		return &AccessDetails{
 			AccessUUID: accessUUID,
 			UserID:     userID,
@@ -193,10 +211,10 @@ func (m AuthModel) ExtractTokenMetadata(r *http.Request) (*AccessDetails, error)
 	return nil, err
 }
 
-//FetchAuth ...
-func (m AuthModel) FetchAuth(authD *AccessDetails) (UserInRedis, error) {
+// FetchAuth ...
+func (m AuthModel) FetchAuth(authD *AccessDetails) (UserInRedisOpenID, error) {
 	userJSON, err := db.GetRedis().Get(ctx, authD.AccessUUID).Result()
-	user := UserInRedis{}
+	user := UserInRedisOpenID{}
 	if err != nil {
 		return user, err
 	}
@@ -205,11 +223,36 @@ func (m AuthModel) FetchAuth(authD *AccessDetails) (UserInRedis, error) {
 	return user, nil
 }
 
-//DeleteAuth ...
+// DeleteAuth ...
 func (m AuthModel) DeleteAuth(givenUUID string) (int64, error) {
 	deleted, err := db.GetRedis().Del(ctx, givenUUID).Result()
 	if err != nil {
 		return 0, err
 	}
 	return deleted, nil
+}
+
+// CreateAuth ...
+func (m AuthModel) CreateAuthOpenID(oauthToken OAuthTokens) error {
+
+	td, err := m.ExtractTokenMetadataByTokenString(oauthToken.IdToken)
+
+	//	token, err := m.VerifyTokenByTokenString(stoken)
+	if err != nil {
+		return err
+	}
+
+	at := time.Unix(int64(oauthToken.ExpiresIn), 0) //converting Unix to UTC(to Time object)
+	now := time.Now()
+	userInRedis := UserInRedisOpenID{
+		Login:       td.UserID,
+		AccessToken: oauthToken.AccessToken}
+	userInRedisJSON, _ := json.Marshal(userInRedis)
+	errAccess := db.GetRedis().Set(ctx, td.AccessUUID, userInRedisJSON, at.Sub(now)).Err()
+	if errAccess != nil {
+		return errAccess
+	}
+	userJSON, err := db.GetRedis().Get(ctx, td.AccessUUID).Result()
+	fmt.Printf(userJSON)
+	return nil
 }
