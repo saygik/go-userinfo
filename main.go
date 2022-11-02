@@ -137,7 +137,7 @@ func main() {
 		user := new(controllers.UserController)
 		v1.GET("/logino", user.LoginOauth)
 		v1.GET("/loginuser", TokenAuthMiddleware(), user.LoginUser)
-		v1.GET("/callback", user.LoginCallback)
+		v1.GET("/token", user.LoginCallback)
 		v1.POST("/login", user.Login)
 		v1.GET("/logout", user.Logout)
 		v1.POST("/token/refresh", auth.Refresh)

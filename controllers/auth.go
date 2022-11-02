@@ -118,24 +118,28 @@ func (ctl AuthController) Refresh(c *gin.Context) {
 }
 
 func (ctrl UserController) LoginCallback(c *gin.Context) {
-	cd := c.Request.URL.RawQuery
-	fmt.Printf(cd)
 	code := c.Query("code")
+	redirectUri := c.Query("redirect_uri")
 	if code == "" {
 		code = DefaultDomain
 	}
-	tokens, err := getUserInfo(code)
+	tokens, err := getToken(code, redirectUri)
 	//	fmt.Printf("%s\n", tokens)
 	if err != nil {
-		fmt.Println(err.Error())
-		c.Redirect(http.StatusTemporaryRedirect, "http://10.2.146.202:3000")
+		//		fmt.Println(err.Error())
+		//		c.Redirect(http.StatusTemporaryRedirect, "http://10.2.146.202:3000")
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid authorization, please login again"})
 		return
 	}
 	authModel.CreateAuthOpenID(tokens)
-	c.Redirect(http.StatusTemporaryRedirect, "http://10.2.146.202:3000/auth?token="+tokens.IdToken)
+	tokenRes := map[string]string{
+		"access_token": tokens.IdToken,
+	}
+	c.JSON(http.StatusOK, tokenRes)
+	// c.Redirect(http.StatusTemporaryRedirect, "http://10.2.146.202:3000/auth?token="+tokens.IdToken)
 }
 
-func getUserInfo(token string) (models.OAuthTokens, error) {
+func getToken(token, redirectUri string) (models.OAuthTokens, error) {
 
 	// if state != oauthStateString {
 	// 	return nil, fmt.Errorf("invalid oauth state")
@@ -149,7 +153,7 @@ func getUserInfo(token string) (models.OAuthTokens, error) {
 	data.Set("grant_type", "authorization_code")
 	data.Set("client_id", "4OcmRaXcBIsoTehRDcF5fYO3N")
 	data.Set("client_secret", "qWfD4_C8Q5T5y1Zx1_uQG8V9RDJUcPwWzyXDRGXL")
-	data.Set("redirect_uri", "http://172.28.7.203:9099/v1/callback")
+	data.Set("redirect_uri", redirectUri)
 	data.Set("code", token)
 
 	client := &http.Client{}
@@ -158,7 +162,10 @@ func getUserInfo(token string) (models.OAuthTokens, error) {
 	response, err := client.Do(r)
 	var requestToken models.OAuthTokens
 	if err != nil {
-		return requestToken, fmt.Errorf("failed getting user info: %s", err.Error())
+		return requestToken, fmt.Errorf("failed getting access token: %s", err.Error())
+	}
+	if response.StatusCode != 200 {
+		return requestToken, fmt.Errorf("failed getting access token from provider")
 	}
 
 	defer response.Body.Close()

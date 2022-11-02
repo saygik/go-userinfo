@@ -1,23 +1,30 @@
 package controllers
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/saygik/go-userinfo/models"
-	"net/http"
 )
 
-//UserController ...
+// UserController ...
 type ADUserController struct{}
 
 var aduserModel = new(models.ADUserModel)
 
-//getUserID ...
+// getUserID ...
 func getUserID(c *gin.Context) (userID string) {
 	//MustGet returns the value for the given key if it exists, otherwise it panics.
-	return c.MustGet("user").(models.UserInRedis).Login
+	return c.MustGet("user").(models.UserInRedisOpenID).Login
 }
 
-//All ...
+// getUser ...
+func getUser(c *gin.Context) (user models.UserInRedisOpenID) {
+	//MustGet returns the value for the given key if it exists, otherwise it panics.
+	return c.MustGet("user").(models.UserInRedisOpenID)
+}
+
+// All ...
 func (ctrl ADUserController) All(c *gin.Context) {
 	domain := c.Param("domain")
 	if domain == "" {
@@ -38,7 +45,7 @@ func (ctrl ADUserController) AllDomains(c *gin.Context) {
 
 }
 
-//All ...
+// All ...
 func (ctrl ADUserController) GroupUsers(c *gin.Context) {
 	domain := c.Param("domain")
 	if domain == "" {

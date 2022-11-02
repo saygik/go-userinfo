@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -51,6 +52,14 @@ type UserInRedis struct {
 type UserInRedisOpenID struct {
 	Login       string `json:"login"`
 	AccessToken string `json:"access_token"`
+}
+
+// OpenID User
+type OpenIDUser struct {
+	Id        string `json:"sub"`
+	LastName  string `json:"last_name"`
+	FirstName string `json:"first_name"`
+	Email     string `json:"email"`
 }
 
 // AuthModel ...
@@ -252,7 +261,27 @@ func (m AuthModel) CreateAuthOpenID(oauthToken OAuthTokens) error {
 	if errAccess != nil {
 		return errAccess
 	}
-	userJSON, err := db.GetRedis().Get(ctx, td.AccessUUID).Result()
-	fmt.Printf(userJSON)
+	//	userJSON, err := db.GetRedis().Get(ctx, td.AccessUUID).Result()
+	//	fmt.Printf(userJSON)
 	return nil
+}
+func (m AuthModel) GetUserInfo(token string) (user OpenIDUser, err error) {
+	req, _ := http.NewRequest("GET", "https://adss.brnv.rw/sso/oauth/7dd4815e19af5fbea99a290b134b7e493569ea13/userinfo", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		return user, fmt.Errorf("failed getting user info: %s", err.Error())
+	}
+	defer response.Body.Close()
+	contents, err := io.ReadAll(response.Body)
+	if err != nil {
+		return user, fmt.Errorf("failed reading user info from server: %s", err.Error())
+	}
+	//	var user OpenIDUser
+
+	json.Unmarshal([]byte(contents), &user)
+
+	return user, nil
+
 }
