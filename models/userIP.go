@@ -48,14 +48,16 @@ func (m UserIPModel) Schedule(id string) (schedule forms.Schedule, err error) {
 	return schedule, err
 }
 
-func (m UserIPModel) AddScheduleTask(form forms.ScheduleTask) (msgResponce string, err error) {
-	err = db.GetDB().QueryRow("AddScheduleTask $1,$2,$3,$4,$5", form.Idc, form.Title, form.Upn, form.Start, form.End).Scan(&msgResponce)
+func (m UserIPModel) AddScheduleTask(form forms.ScheduleTask) (formRes forms.ScheduleTask, err error) {
+	err = db.GetDB().QueryRow("AddScheduleTask $1,$2,$3,$4,$5,$6,$7,$8,$9,$10",
+		form.Idc, form.Tip, form.Status, form.Title, form.Upn, form.Start, form.End, form.AllDay, form.SendMattermost, form.Comment).Scan(&formRes.Id,
+		&formRes.Idc, &formRes.Tip, &formRes.Status, &formRes.Title, &formRes.Upn, &formRes.Start, &formRes.End, &formRes.AllDay, &formRes.SendMattermost, &formRes.Comment)
 
-	return msgResponce, err
+	return formRes, err
 }
 
 func (m UserIPModel) UpdateScheduleTask(form forms.ScheduleTask) (rows int64, err error) {
-	res, err := db.GetDB().Exec("UpdateScheduleTask $1,$2,$3", form.Id, form.Start, form.End)
+	res, err := db.GetDB().Exec("UpdateScheduleTask $1,$2,$3,$4,$5,$6,$7,$8,$9", form.Id, form.Tip, form.Status, form.Title, form.Start, form.End, form.AllDay, form.SendMattermost, form.Comment)
 	if res != nil {
 		ra, err1 := res.RowsAffected()
 		if err1 != nil {

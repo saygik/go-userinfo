@@ -1,13 +1,14 @@
 package controllers
 
 import (
+	"net/http"
+	"strconv"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/saygik/go-userinfo/ad"
 	"github.com/saygik/go-userinfo/forms"
 	"github.com/saygik/go-userinfo/models"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 // UserController ...
@@ -89,14 +90,14 @@ func (ctrl UserIPController) AddScheduleTask(c *gin.Context) {
 		return
 
 	}
-	var msgResponce string
-	msgResponce, err = userIPModel.AddScheduleTask(scheduleForm)
+
+	msgResponce, err := userIPModel.AddScheduleTask(scheduleForm)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not add schedule", "error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"id": msgResponce})
+	c.JSON(http.StatusOK, gin.H{"data": msgResponce})
 
 }
 
