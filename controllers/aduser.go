@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,14 @@ type ADUserController struct{}
 
 var aduserModel = new(models.ADUserModel)
 
+func (ctrl ADUserController) GetAllDomainsUsers(clearDomains bool) {
+	fmt.Println("Getting all Users...")
+	if clearDomains {
+		aduserModel.ClearAllDomainsUsers()
+	}
+	aduserModel.GetAllDomainsUsers()
+}
+
 // getUserID ...
 func getUserID(c *gin.Context) (userID string) {
 	//MustGet returns the value for the given key if it exists, otherwise it panics.
@@ -22,6 +31,17 @@ func getUserID(c *gin.Context) (userID string) {
 func getUser(c *gin.Context) (user models.UserInRedisOpenID) {
 	//MustGet returns the value for the given key if it exists, otherwise it panics.
 	return c.MustGet("user").(models.UserInRedisOpenID)
+}
+
+// All ADs ...
+func (ctrl ADUserController) AllAd(c *gin.Context) {
+	users, err := aduserModel.AllAd()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get all domains users", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": users})
 }
 
 // All ...
@@ -75,6 +95,25 @@ func (ctrl ADUserController) Find(c *gin.Context) {
 
 		c.JSON(http.StatusOK, gin.H{"message": "User finded", "user": adUser})
 	}
+}
+
+func (ctrl ADUserController) GetUserAdusers(c *gin.Context) {
+	user := c.Param("username")
+	if user == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get user info from request", "error": ""})
+		return
+	}
+	if !isEmailValid(user) {
+		c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": "Invalid username. The name must include the domain in the format: user@domain", "error": ""})
+		return
+	}
+	role, err := aduserModel.GetAdusersRights(user)
+	if err != nil {
+		c.JSON(http.StatusNoContent, gin.H{})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User role finded", "data": role})
 }
 
 func (ctrl ADUserController) GetUserByName(c *gin.Context) {

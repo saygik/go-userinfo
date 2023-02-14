@@ -131,11 +131,28 @@ func main() {
 
 	//Start Sharepoint client
 	sp.Init()
+
+	aduser := new(controllers.ADUserController)
+	aduser.GetAllDomainsUsers(true)
+	// ticker := time.NewTicker(10 * time.Minute)
+	// quit := make(chan struct{})
+	// go func() {
+	// 	for {
+	// 		select {
+	// 		case <-ticker.C:
+	// 			// do stuff
+	// 			aduser.GetAllDomainsUsers(false)
+	// 		case <-quit:
+	// 			ticker.Stop()
+	// 			return
+	// 		}
+	// 	}
+	// }()
 	v1 := r.Group("/v1")
 	{
 
 		user := new(controllers.UserController)
-		v1.GET("/logino", user.LoginOauth)
+		v1.GET("/loginoauth", user.LoginOauth)
 		v1.GET("/loginuser", TokenAuthMiddleware(), user.LoginUser)
 		v1.GET("/token", user.LoginCallback)
 		v1.POST("/login", user.Login)
@@ -155,12 +172,13 @@ func main() {
 		v1.DELETE("/schedule/task/:id", userIP.DelScheduleTask)
 		v1.PUT("/schedule/task/:id", userIP.UpdateScheduleTask)
 
-		aduser := new(controllers.ADUserController)
 		v1.GET("/users/ad/:domain", aduser.All)
+		v1.GET("/users/allad", aduser.AllAd)
 		v1.GET("/users/ad/:domain/:group", aduser.GroupUsers)
 		v1.GET("/users/domains", aduser.AllDomains)
 		v1.GET("/users/whoami", TokenAuthMiddleware(), aduser.Find)
-		v1.GET("/user/ad/:username", aduser.GetUserByName)
+		v1.GET("/user/ad/:username", TokenAuthMiddleware(), aduser.GetUserByName)
+		v1.GET("/user/adusers/:username", TokenAuthMiddleware(), aduser.GetUserAdusers)
 
 		skype := new(controllers.SkypeController)
 		v1.GET("/skype/presences", skype.AllPresences)
@@ -174,6 +192,7 @@ func main() {
 
 		glpi_controller := new(controllers.GLPIController)
 		v1.GET("/user/glpi/:username", glpi_controller.GetUserByName)
+		v1.GET("/softwares", glpi_controller.GetSoftwares)
 
 	}
 

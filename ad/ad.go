@@ -1,8 +1,9 @@
 package ad
 
 import (
-	adClient "github.com/saygik/go-ad-client"
 	"time"
+
+	adClient "github.com/saygik/go-ad-client"
 )
 
 var adClients = map[string]*adClient.ADClient{}
@@ -71,7 +72,7 @@ func NewAddConnection(config ADConfig) *adClient.ADClient {
 		GroupFilter:  config.GroupFilter,
 		Attributes: []string{"userPrincipalName", "dn", "cn", "company", "department", "title", "telephoneNumber",
 			"otherTelephone", "mobile", "mail", "pager", "msRTCSIP-PrimaryUserAddress", "url", "memberOf", "displayName",
-			"description", "userPrincipalName", "employeeNumber", "pwdLastSet"},
+			"description", "userPrincipalName", "employeeNumber", "pwdLastSet", "proxyAddresses"},
 	}
 	return client
 }
@@ -79,6 +80,10 @@ func NewAddConnection(config ADConfig) *adClient.ADClient {
 func GetAD(adName string) *adClient.ADClient {
 	cli := adClients[adName]
 	return cli
+}
+
+func GetAllADClients() map[string]*adClient.ADClient {
+	return adClients
 }
 
 func Close() {

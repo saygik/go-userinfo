@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/saygik/go-userinfo/ad"
@@ -40,40 +41,23 @@ func (m ADUserModel) AllDomains() []ad.ADArray {
 //	}
 //
 // "userPrincipalName", "dn", "cn", "company", "department", "title", "telephoneNumber",	"otherTelephone", "mobile", "mail", "pager", "msRTCSIP-PrimaryUserAddress", "url","memberOf"
-// All ...
-func (m ADUserModel) All(domain string) ([]map[string]interface{}, error) {
-	//ad.GetDomainUsers(domain)
-	//return nil,nil
 
+func (m ADUserModel) ClearAllDomainsUsers() {
 	redisClient := db.GetRedis()
-	if redisClient == nil {
-		return nil, errors.New("Redis not found")
-	}
-	redisADUsers, err := redisClient.Get(ctx, domain+"-ad").Result()
-
-	if err == nil && redisADUsers != "" {
-		if redisADUsers != "" && redisADUsers != "null" {
-			var r []map[string]interface{}
-			json.Unmarshal([]byte(redisADUsers), &r)
-			println("Get from redis")
-			return r, nil
-		}
-	}
-	currentADclient := ad.GetAD(domain)
-	if currentADclient == nil {
-		return nil, errors.New("This domain is not served by the system")
-	}
-	users, err := ad.GetAD(domain).GetAllUsers()
-	if err != nil || len(users) < 1 {
-		return nil, errors.New("Users not found")
-	}
-	//t := time.Now()
-	//fmt.Println(t.Format("20060102150405"))
-	ips, err := UserIPModel{}.All(domain)
-	presences, err := SkypeModel{}.AllPresences()
-	if err == nil {
-		if len(ips) > 0 || len(presences) > 0 {
+	redisClient.Del(ctx, "ad")
+}
+func (m ADUserModel) GetAllDomainsUsers() {
+	allADs := ad.GetAllADClients()
+	redisClient := db.GetRedis()
+	for domain, oneAD := range allADs {
+		users, err := oneAD.GetAllUsers()
+		if err == nil || len(users) > 0 {
+			//break // break here
+			println("Get from ad to redis from " + domain)
+			ips, _ := UserIPModel{}.All(domain)
+			presences, _ := SkypeModel{}.AllPresences()
 			for _, user := range users {
+				user["domain"] = domain
 				if isStringInArray("Пользователи интернета", user["memberOf"]) {
 					user["internet"] = true
 				}
@@ -95,8 +79,116 @@ func (m ADUserModel) All(domain string) ([]map[string]interface{}, error) {
 							user["lastpubtime"] = presence.Lastpubtime
 
 						}
+
 					}
 				}
+			}
+
+		}
+		sort.Slice(users, func(i, j int) bool {
+			return fmt.Sprintf("%v", users[i]["cn"]) < fmt.Sprintf("%v", users[j]["cn"])
+		})
+		jsonUsers, _ := json.Marshal(users)
+		err1 := redisClient.HSet(ctx, "ad", domain, jsonUsers).Err()
+		if err1 != nil {
+			fmt.Println("key does not exists")
+			return
+		}
+	}
+}
+
+// All ...
+func (m ADUserModel) AllAd() ([]map[string]interface{}, error) {
+	redisClient := db.GetRedis()
+	if redisClient == nil {
+		return nil, errors.New("Redis not found")
+	}
+	//redisADUsers, err := redisClient.Get(ctx, "brnv.rw"+"-ad").Result()
+	redisADUsers, err := redisClient.HGetAll(ctx, "ad").Result()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []map[string]interface{}
+	//res := make([]map[string]interface{}, 3000)
+	for _, oneDomain := range redisADUsers {
+		var r []map[string]interface{}
+		json.Unmarshal([]byte(oneDomain), &r)
+		// rc := make([]map[string]interface{}, len(r))
+		// copy(rc, r[:])
+		res = append(res, r...)
+	}
+	if redisClient == nil {
+		return nil, errors.New("Redis not found")
+	}
+	// if err == nil && redisADUsers != "" {
+	// 	if redisADUsers != "" && redisADUsers != "null" {
+	// 		var r []map[string]interface{}
+	// 		json.Unmarshal([]byte(fmt.Sprintf("%v", redisADUsers)), &r)
+	// 		println("Get from redis")
+	// 		return r, nil
+	// 	}
+	// }
+	return res, nil
+}
+
+// All ...
+func (m ADUserModel) All(domain string) ([]map[string]interface{}, error) {
+	//ad.GetDomainUsers(domain)
+	//return nil,nil
+
+	redisClient := db.GetRedis()
+	if redisClient == nil {
+		return nil, errors.New("Redis not found")
+	}
+	redisADUsers, err := redisClient.Get(ctx, domain+"-ad").Result()
+
+	if err == nil && redisADUsers != "" {
+		if redisADUsers != "" && redisADUsers != "null" {
+			var r []map[string]interface{}
+			json.Unmarshal([]byte(redisADUsers), &r)
+			println("Get from redis")
+			return r, nil
+		}
+	}
+	return nil, nil
+	currentADclient := ad.GetAD(domain)
+	if currentADclient == nil {
+		return nil, errors.New("This domain is not served by the system")
+	}
+	users, err := ad.GetAD(domain).GetAllUsers()
+	if err != nil || len(users) < 1 {
+		return nil, errors.New("Users not found")
+	}
+	//t := time.Now()
+	//fmt.Println(t.Format("20060102150405"))
+	ips, err := UserIPModel{}.All(domain)
+	presences, err := SkypeModel{}.AllPresences()
+
+	for _, user := range users {
+		user["domain"] = domain
+		if isStringInArray("Пользователи интернета", user["memberOf"]) {
+			user["internet"] = true
+		}
+		if isStringInArray("Пользователи интернета Белый список", user["memberOf"]) {
+			user["internetwl"] = true
+		}
+		delete(user, "memberOf")
+		if len(ips) > 0 {
+			for _, ip := range ips {
+				if user["userPrincipalName"] == ip.Login {
+					user["ip"] = ip.Ip
+				}
+			}
+		}
+		if len(presences) > 0 {
+			for _, presence := range presences {
+				if user["userPrincipalName"] == presence.Userathost {
+					user["presence"] = presence.Presence
+					user["lastpubtime"] = presence.Lastpubtime
+
+				}
+
 			}
 		}
 	}
@@ -202,4 +294,28 @@ func (m ADUserModel) GetOneUserPropertys(username string) (map[string]interface{
 	}
 	delete(user, "memberOf")
 	return user, nil
+}
+
+func (m ADUserModel) GetAdusersRights(username string) (role string, err error) {
+	role = "user"
+	domain := strings.Split(fmt.Sprintf("%s", username), "@")[1]
+	catalog := ad.GetAD(domain)
+	if catalog == nil {
+		return role, errors.New("there is no such domain")
+	}
+	user, err := ad.GetAD(domain).GetUserInfo(username)
+	if err != nil {
+		return role, err
+	}
+
+	if isStringInArray("adusersGlobalAdmins", user["memberOf"]) && domain == "brnv.rw" {
+		role = "globaladmin"
+	}
+	if isStringInArray("adusersDomainAdmins", user["memberOf"]) {
+		role = "admin"
+	}
+	if isStringInArray("adusersTS", user["memberOf"]) {
+		role = "ts"
+	}
+	return role, nil
 }

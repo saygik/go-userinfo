@@ -68,6 +68,10 @@ func (ctrl UserController) LoginOauth(c *gin.Context) {
 
 func (ctrl UserController) LoginUser(c *gin.Context) {
 	user := getUser(c)
-	userInfo, _ := authModel.GetUserInfo(user.AccessToken)
+	userInfo, err := authModel.GetUserInfo(user.AccessToken)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"user": userInfo})
 }

@@ -273,6 +273,9 @@ func (m AuthModel) GetUserInfo(token string) (user OpenIDUser, err error) {
 	if err != nil {
 		return user, fmt.Errorf("failed getting user info: %s", err.Error())
 	}
+	if response.StatusCode != 200 {
+		return user, fmt.Errorf("Access token is invalid or expired.")
+	}
 	defer response.Body.Close()
 	contents, err := io.ReadAll(response.Body)
 	if err != nil {
