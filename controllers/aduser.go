@@ -45,7 +45,6 @@ func (ctrl ADUserController) AllAd(c *gin.Context) {
 	}
 	// var userRoles []string
 	// if userID != "" {
-
 	// }
 	users, err := aduserModel.AllAd()
 	if err != nil {
