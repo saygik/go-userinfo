@@ -20,20 +20,39 @@ type AuthController struct{}
 
 var authModel = new(models.AuthModel)
 
-// TokenValid ...
-func (ctl AuthController) TokenValid(c *gin.Context) {
+// UserFromToken ...
+func (ctl AuthController) UserFromToken(c *gin.Context) {
 
 	tokenAuth, err := authModel.ExtractTokenMetadata(c.Request)
 	if err != nil {
 		//Token either expired or not valid
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Please login first"})
 		return
 	}
 
 	user, err := authModel.FetchAuth(tokenAuth)
 	if err != nil {
 		//Token does not exists in Redis (User logged out or expired)
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Please login first"})
+		return
+	}
+
+	//To be called from GetUserID()
+	c.Set("user", user)
+}
+
+// TokenValid ...
+func (ctl AuthController) TokenValid(c *gin.Context) {
+
+	tokenAuth, err := authModel.ExtractTokenMetadata(c.Request)
+	if err != nil {
+		//Token either expired or not valid
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Cначала войдите в систему"})
+		return
+	}
+
+	user, err := authModel.FetchAuth(tokenAuth)
+	if err != nil {
+		//Token does not exists in Redis (User logged out or expired)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Cначала войдите в систему"})
 		return
 	}
 

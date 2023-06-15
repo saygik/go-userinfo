@@ -24,7 +24,11 @@ func (ctrl ADUserController) GetAllDomainsUsers(clearDomains bool) {
 // getUserID ...
 func getUserID(c *gin.Context) (userID string) {
 	//MustGet returns the value for the given key if it exists, otherwise it panics.
-	return c.MustGet("user").(models.UserInRedisOpenID).Login
+	_, isExist := c.Get("user")
+	if isExist {
+		return c.MustGet("user").(models.UserInRedis).Login
+	}
+	return ""
 }
 
 // getUser ...
@@ -35,6 +39,14 @@ func getUser(c *gin.Context) (user models.UserInRedisOpenID) {
 
 // All ADs ...
 func (ctrl ADUserController) AllAd(c *gin.Context) {
+	if userID := getUserID(c); userID == "" {
+		// c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain users", "error": "Empty domain name"})
+		// return
+	}
+	// var userRoles []string
+	// if userID != "" {
+
+	// }
 	users, err := aduserModel.AllAd()
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get all domains users", "error": err.Error()})
@@ -46,6 +58,10 @@ func (ctrl ADUserController) AllAd(c *gin.Context) {
 
 // All ...
 func (ctrl ADUserController) All(c *gin.Context) {
+	if userID := getUserID(c); userID != "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain users", "error": "Empty domain name"})
+		return
+	}
 	domain := c.Param("domain")
 	if domain == "" {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain users", "error": "Empty domain name"})

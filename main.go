@@ -64,6 +64,15 @@ func TokenAuthMiddleware() gin.HandlerFunc {
 	}
 }
 
+// TokenAuthMiddleware ...
+// JWT Authentication middleware attached to each request that needs to be authenitcated to validate the access_token in the header
+func UserFromTokenTokenMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth.UserFromToken(c)
+		c.Next()
+	}
+}
+
 func LoadConfiguration(file string) (ad.Config, error) {
 	cfg := ad.Config{}
 	configFile, err := ioutil.ReadFile(file)
@@ -172,8 +181,8 @@ func main() {
 		v1.DELETE("/schedule/task/:id", userIP.DelScheduleTask)
 		v1.PUT("/schedule/task/:id", userIP.UpdateScheduleTask)
 
-		v1.GET("/users/ad/:domain", aduser.All)
-		v1.GET("/users/allad", aduser.AllAd)
+		v1.GET("/users/ad/:domain", UserFromTokenTokenMiddleware(), aduser.All)
+		v1.GET("/users/allad", UserFromTokenTokenMiddleware(), aduser.AllAd)
 		v1.GET("/users/ad/:domain/:group", aduser.GroupUsers)
 		v1.GET("/users/domains", aduser.AllDomains)
 		v1.GET("/users/whoami", TokenAuthMiddleware(), aduser.Find)

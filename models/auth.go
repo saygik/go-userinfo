@@ -69,10 +69,11 @@ type AuthModel struct{}
 func (m AuthModel) CreateToken(userLogin string) (*TokenDetails, error) {
 
 	td := &TokenDetails{}
-	td.AtExpires = time.Now().Add(time.Minute * 60).Unix()
+	td.AtExpires = time.Now().Add(time.Minute * 50).Unix()
 	td.AccessUUID = uuid.NewV4().String()
 
 	td.RtExpires = time.Now().Add(time.Hour * 24 * 7).Unix()
+	//	td.RtExpires = time.Now().Add(time.Hour * 2).Unix()
 	td.RefreshUUID = uuid.NewV4().String()
 
 	var err error
@@ -137,17 +138,17 @@ func (m AuthModel) ExtractToken(r *http.Request) string {
 // VerifyToken ...
 func (m AuthModel) VerifyToken(r *http.Request) (*jwt.Token, error) {
 	tokenString := m.ExtractToken(r)
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		t := []byte("qWfD4_C8Q5T5y1Zx1_uQG8V9RDJUcPwWzyXDRGXL")
-		return t, nil
-	})
 	// token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-	// 	//Make sure that the token method conform to "SigningMethodHMAC"
-	// 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-	// 		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-	// 	}
-	// 	return []byte(os.Getenv("ACCESS_SECRET")), nil
+	// 	t := []byte("qWfD4_C8Q5T5y1Zx1_uQG8V9RDJUcPwWzyXDRGXL")
+	// 	return t, nil
 	// })
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		//Make sure that the token method conform to "SigningMethodHMAC"
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("ACCESS_SECRET")), nil
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -159,8 +160,8 @@ func (m AuthModel) VerifyTokenByTokenString(tokenString string) (*jwt.Token, err
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte("qWfD4_C8Q5T5y1Zx1_uQG8V9RDJUcPwWzyXDRGXL"), nil
-		//return []byte(os.Getenv("ACCESS_SECRET")), nil
+		//return []byte("qWfD4_C8Q5T5y1Zx1_uQG8V9RDJUcPwWzyXDRGXL"), nil
+		return []byte(os.Getenv("ACCESS_SECRET")), nil
 	})
 	if err != nil {
 		return nil, err
@@ -174,11 +175,11 @@ func (m AuthModel) ExtractTokenMetadataByTokenString(tokenString string) (*Acces
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
-		accessUUID, ok := claims["at_hash"].(string)
+		accessUUID, ok := claims["access_uuid"].(string)
 		if !ok {
 			return nil, err
 		}
-		userID := claims["sub"].(string)
+		userID := fmt.Sprintf("%.f", claims["user_id"])
 		return &AccessDetails{
 			AccessUUID: accessUUID,
 			UserID:     userID,
@@ -207,11 +208,11 @@ func (m AuthModel) ExtractTokenMetadata(r *http.Request) (*AccessDetails, error)
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
-		accessUUID, ok := claims["at_hash"].(string)
+		accessUUID, ok := claims["access_uuid"].(string)
 		if !ok {
 			return nil, err
 		}
-		userID := fmt.Sprintf("%s", claims["sub"])
+		userID := fmt.Sprintf("%.f", claims["user_id"])
 		return &AccessDetails{
 			AccessUUID: accessUUID,
 			UserID:     userID,
@@ -221,9 +222,9 @@ func (m AuthModel) ExtractTokenMetadata(r *http.Request) (*AccessDetails, error)
 }
 
 // FetchAuth ...
-func (m AuthModel) FetchAuth(authD *AccessDetails) (UserInRedisOpenID, error) {
+func (m AuthModel) FetchAuth(authD *AccessDetails) (UserInRedis, error) {
 	userJSON, err := db.GetRedis().Get(ctx, authD.AccessUUID).Result()
-	user := UserInRedisOpenID{}
+	user := UserInRedis{}
 	if err != nil {
 		return user, err
 	}

@@ -116,6 +116,10 @@ func (m ADUserModel) AllAd() ([]map[string]interface{}, error) {
 		json.Unmarshal([]byte(oneDomain), &r)
 		// rc := make([]map[string]interface{}, len(r))
 		// copy(rc, r[:])
+		for _, user := range r {
+			delete(user, "ip1")
+			//user["ip"] = "-"
+		}
 		res = append(res, r...)
 	}
 	if redisClient == nil {
