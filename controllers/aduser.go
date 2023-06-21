@@ -39,14 +39,14 @@ func getUser(c *gin.Context) (user models.UserInRedisOpenID) {
 
 // All ADs ...
 func (ctrl ADUserController) AllAd(c *gin.Context) {
+	var userRoles []string
 	if userID := getUserID(c); userID == "" {
 		// c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain users", "error": "Empty domain name"})
 		// return
+	} else {
+		userRoles, _ = userIPModel.GetUserRoles(userID)
 	}
-	// var userRoles []string
-	// if userID != "" {
-	// }
-	users, err := aduserModel.AllAd()
+	users, err := aduserModel.AllAd(userRoles)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get all domains users", "error": err.Error()})
 		return
@@ -141,7 +141,16 @@ func (ctrl ADUserController) GetUserByName(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": "Invalid username. The name must include the domain in the format: user@domain", "error": ""})
 		return
 	}
-	adUser, adErr := aduserModel.GetOneUserPropertys(user)
+
+	var userRoles []string
+	if userID := getUserID(c); userID == "" {
+		// c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain users", "error": "Empty domain name"})
+		// return
+	} else {
+		userRoles, _ = userIPModel.GetUserRoles(userID)
+	}
+
+	adUser, adErr := aduserModel.GetOneUserPropertys(user, userRoles)
 	if adErr != nil {
 		c.JSON(http.StatusNoContent, gin.H{"message": "Invalid credentials", "error": adErr.Error()})
 		return

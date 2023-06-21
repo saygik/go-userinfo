@@ -58,10 +58,10 @@ func (m ADUserModel) GetAllDomainsUsers() {
 			presences, _ := SkypeModel{}.AllPresences()
 			for _, user := range users {
 				user["domain"] = domain
-				if isStringInArray("Пользователи интернета", user["memberOf"]) {
+				if IsStringInArray("Пользователи интернета", user["memberOf"]) {
 					user["internet"] = true
 				}
-				if isStringInArray("Пользователи интернета Белый список", user["memberOf"]) {
+				if IsStringInArray("Пользователи интернета Белый список", user["memberOf"]) {
 					user["internetwl"] = true
 				}
 				delete(user, "memberOf")
@@ -98,11 +98,13 @@ func (m ADUserModel) GetAllDomainsUsers() {
 }
 
 // All ...
-func (m ADUserModel) AllAd() ([]map[string]interface{}, error) {
+func (m ADUserModel) AllAd(userRoles []string) ([]map[string]interface{}, error) {
+
 	redisClient := db.GetRedis()
 	if redisClient == nil {
 		return nil, errors.New("Redis not found")
 	}
+
 	//redisADUsers, err := redisClient.Get(ctx, "brnv.rw"+"-ad").Result()
 	redisADUsers, err := redisClient.HGetAll(ctx, "ad").Result()
 	if err != nil {
@@ -111,19 +113,23 @@ func (m ADUserModel) AllAd() ([]map[string]interface{}, error) {
 
 	var res []map[string]interface{}
 	//res := make([]map[string]interface{}, 3000)
-	for _, oneDomain := range redisADUsers {
+	for domainName, oneDomain := range redisADUsers {
 		var r []map[string]interface{}
 		json.Unmarshal([]byte(oneDomain), &r)
-		// rc := make([]map[string]interface{}, len(r))
-		// copy(rc, r[:])
+		isUserAccessToDomain := IsStringInArray(domainName, userRoles) || IsStringInArray("fullAdmin", userRoles)
+		domainTechnical := IsStringInArray("domainTechnical", userRoles) || IsStringInArray("domainAdmin", userRoles)
+		accessToTechnicalInfo := (isUserAccessToDomain && domainTechnical) || IsStringInArray("fullAdmin", userRoles)
 		for _, user := range r {
-			delete(user, "ip1")
+			if !accessToTechnicalInfo {
+				delete(user, "ip")
+				delete(user, "pwdLastSet")
+				delete(user, "proxyAddresses")
+				delete(user, "employeeNumber")
+			}
+
 			//user["ip"] = "-"
 		}
 		res = append(res, r...)
-	}
-	if redisClient == nil {
-		return nil, errors.New("Redis not found")
 	}
 	// if err == nil && redisADUsers != "" {
 	// 	if redisADUsers != "" && redisADUsers != "null" {
@@ -171,10 +177,10 @@ func (m ADUserModel) All(domain string) ([]map[string]interface{}, error) {
 
 	for _, user := range users {
 		user["domain"] = domain
-		if isStringInArray("Пользователи интернета", user["memberOf"]) {
+		if IsStringInArray("Пользователи интернета", user["memberOf"]) {
 			user["internet"] = true
 		}
-		if isStringInArray("Пользователи интернета Белый список", user["memberOf"]) {
+		if IsStringInArray("Пользователи интернета Белый список", user["memberOf"]) {
 			user["internetwl"] = true
 		}
 		delete(user, "memberOf")
@@ -237,17 +243,17 @@ func (m ADUserModel) GetOneUser(username string) (map[string]interface{}, error)
 	}
 
 	user["domain"] = domain
-	if isStringInArray("adusersGlobalAdmins", user["memberOf"]) && domain == "brnv.rw" {
+	if IsStringInArray("adusersGlobalAdmins", user["memberOf"]) && domain == "brnv.rw" {
 		user["role"] = "globaladmin"
 		delete(user, "memberOf")
 		return user, nil
 	}
-	if isStringInArray("adusersDomainAdmins", user["memberOf"]) {
+	if IsStringInArray("adusersDomainAdmins", user["memberOf"]) {
 		user["role"] = "admin"
 		delete(user, "memberOf")
 		return user, nil
 	}
-	if isStringInArray("adusersTS", user["memberOf"]) {
+	if IsStringInArray("adusersTS", user["memberOf"]) {
 		user["role"] = "ts"
 		delete(user, "memberOf")
 		return user, nil
@@ -257,47 +263,44 @@ func (m ADUserModel) GetOneUser(username string) (map[string]interface{}, error)
 	return user, nil
 }
 
-func (m ADUserModel) GetOneUserPropertys(username string) (map[string]interface{}, error) {
+func (m ADUserModel) GetOneUserPropertys(username string, userRoles []string) (map[string]interface{}, error) {
 	domain := strings.Split(fmt.Sprintf("%s", username), "@")[1]
+	isUserAccessToDomain := IsStringInArray(domain, userRoles) || IsStringInArray("fullAdmin", userRoles)
+	domainTechnical := IsStringInArray("domainTechnical", userRoles) || IsStringInArray("domainAdmin", userRoles)
+	accessToTechnicalInfo := (isUserAccessToDomain && domainTechnical) || IsStringInArray("fullAdmin", userRoles)
+
 	catalog := ad.GetAD(domain)
 	if catalog == nil {
-		return nil, errors.New("there is no such domain")
+		return nil, errors.New("нет такого домена")
 	}
 	redisClient := db.GetRedis()
 	if redisClient == nil {
-		return nil, errors.New("Redis not found")
+		return nil, errors.New("Redis не найден на сервере")
 	}
-	redisADUsers, err := redisClient.Get(ctx, domain+"-ad").Result()
+	redisADUsers, err := redisClient.HGetAll(ctx, "ad").Result()
+	if err != nil {
+		return nil, err
+	}
 
-	if err == nil && redisADUsers != "" {
-		if redisADUsers != "" && redisADUsers != "null" {
+	ADUsers := redisADUsers[domain]
+
+	if err == nil && ADUsers != "" {
+		if ADUsers != "" && ADUsers != "null" {
 			var r []map[string]interface{}
-			json.Unmarshal([]byte(redisADUsers), &r)
+			json.Unmarshal([]byte(ADUsers), &r)
 			user := FindUserInRedisArray(r, username)
 			if user != nil {
-				println("Get from redis")
+				if !accessToTechnicalInfo {
+					delete(user, "ip")
+					delete(user, "pwdLastSet")
+					delete(user, "proxyAddresses")
+					delete(user, "employeeNumber")
+				}
 				return user, nil
 			}
 		}
 	}
-	user, err := ad.GetAD(domain).GetUserInfo(username)
-	if err != nil {
-		return nil, errors.New("User not found")
-	}
-	ip, err := UserIPModel{}.GetUserByName(username)
-	presence, err := SkypeModel{}.OnePresence(username)
-	user["ip"] = ip.Ip
-	user["presence"] = presence.Presence
-	user["lastpubtime"] = presence.Lastpubtime
-
-	if isStringInArray("Пользователи интернета", user["memberOf"]) {
-		user["internet"] = true
-	}
-	if isStringInArray("Пользователи интернета Белый список", user["memberOf"]) {
-		user["internetwl"] = true
-	}
-	delete(user, "memberOf")
-	return user, nil
+	return nil, errors.New("пользователь не найден")
 }
 
 func (m ADUserModel) GetAdusersRights(username string) (role string, err error) {
@@ -312,13 +315,13 @@ func (m ADUserModel) GetAdusersRights(username string) (role string, err error) 
 		return role, err
 	}
 
-	if isStringInArray("adusersGlobalAdmins", user["memberOf"]) && domain == "brnv.rw" {
+	if IsStringInArray("adusersGlobalAdmins", user["memberOf"]) && domain == "brnv.rw" {
 		role = "globaladmin"
 	}
-	if isStringInArray("adusersDomainAdmins", user["memberOf"]) {
+	if IsStringInArray("adusersDomainAdmins", user["memberOf"]) {
 		role = "admin"
 	}
-	if isStringInArray("adusersTS", user["memberOf"]) {
+	if IsStringInArray("adusersTS", user["memberOf"]) {
 		role = "ts"
 	}
 	return role, nil

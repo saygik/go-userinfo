@@ -24,6 +24,12 @@ func (m UserIPModel) All(domain string) (users []User, err error) {
 	_, err = db.GetDB().Select(&users, "GetAllUserIPByDomain $1", domain)
 	return users, err
 }
+
+func (m UserIPModel) GetUserRoles(userID string) (roles []string, err error) {
+	_, err = db.GetDB().Select(&roles, "GetUserRoles $1", userID)
+	return roles, err
+}
+
 func (m UserIPModel) SetUserIp(form forms.UserActivityForm) (msgResponce string, err error) {
 	//	_, err = db.GetDB().Exec("SetUserIPActivity $1,$2,$3", form.User, form.Ip, form.Activiy)
 	err = db.GetDB().QueryRow("SetUserIPActivity $1,$2,$3", form.User, form.Ip, form.Activiy).Scan(&msgResponce)

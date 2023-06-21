@@ -1,26 +1,28 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	_ "github.com/denisenkom/go-mssqldb"
-	"github.com/go-gorp/gorp"
-	_redis "github.com/go-redis/redis"
 	"log"
 	"os"
 	"strconv"
+
+	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/go-gorp/gorp"
+	_redis "github.com/go-redis/redis"
 )
 
 //_ "github.com/lib/pq" //import postgres
 
-//DB ...
+// DB ...
 type DB struct {
 	*sql.DB
 }
 
 var db *gorp.DbMap
 
-//Init ...
+// Init ...
 func Init() {
 	dbinfo := fmt.Sprintf("server=%s;database=%s;user id=%s;password=%s", os.Getenv("DB_SERVER"), os.Getenv("DB_NAME"), os.Getenv("DB_USER"), os.Getenv("DB_PASS"))
 	var err error
@@ -30,7 +32,7 @@ func Init() {
 	}
 }
 
-//ConnectDB ...
+// ConnectDB ...
 func ConnectDB(dataSourceName string) (*gorp.DbMap, error) {
 	db, err := sql.Open("mssql", dataSourceName)
 	//	db, _ := sql.Open("mysql", "dellis:@/shud")
@@ -50,7 +52,7 @@ func ConnectDB(dataSourceName string) (*gorp.DbMap, error) {
 	return dbmap, nil
 }
 
-//GetDB ...
+// GetDB ...
 func GetDB() *gorp.DbMap {
 	return db
 }
@@ -61,7 +63,7 @@ func CloseDB() {
 
 var dbskype *gorp.DbMap
 
-//InitDbSkype ...
+// InitDbSkype ...
 func InitDbSkype() {
 	dbinfo := fmt.Sprintf("server=%s;database=%s;user id=%s;password=%s", os.Getenv("DB_SERVER_SKYPE"), os.Getenv("DB_NAME_SKYPE"), os.Getenv("DB_USER_SKYPE"), os.Getenv("DB_PASS_SKYPE"))
 	var err error
@@ -71,7 +73,7 @@ func InitDbSkype() {
 	}
 }
 
-//ConnectDBSkype ...
+// ConnectDBSkype ...
 func ConnectDBSkype(dataSourceName string) (*gorp.DbMap, error) {
 	dbskype, err := sql.Open("mssql", dataSourceName)
 
@@ -89,7 +91,7 @@ func ConnectDBSkype(dataSourceName string) (*gorp.DbMap, error) {
 	return dbmap, nil
 }
 
-//GetDBSkype ...
+// GetDBSkype ...
 func GetDBSkype() *gorp.DbMap {
 	return dbskype
 }
@@ -97,10 +99,10 @@ func CloseDBSkype() {
 	dbskype.Db.Close()
 }
 
-//RedisClient ...
+// RedisClient ...
 var RedisClient *_redis.Client
 
-//InitRedis ...
+// InitRedis ...
 func InitRedis(params ...string) {
 
 	var redisHost = os.Getenv("REDIS_HOST")
@@ -115,7 +117,19 @@ func InitRedis(params ...string) {
 	})
 }
 
-//GetRedis ...
+// GetRedis ...
 func GetRedis() *_redis.Client {
 	return RedisClient
+}
+
+func PingRedis() error {
+	var ctx = context.Background()
+	pong, err := RedisClient.Ping(ctx).Result()
+	if err != nil {
+		return err
+	}
+	fmt.Println(pong, err)
+	// Output: PONG <nil>
+
+	return nil
 }

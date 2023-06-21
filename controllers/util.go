@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/saygik/go-userinfo/models"
 )
 
 func ReadUserIP(r *http.Request) string {
@@ -38,4 +41,47 @@ func isEmailValid(e string) bool {
 		return false
 	}
 	return emailRegex.MatchString(e)
+}
+func isTechnicalAdminOfUser(user models.GLPIUser, tech models.GLPIUser) bool {
+
+	if len(user.Profiles) < 1 {
+		return false
+	}
+	if len(tech.Profiles) < 1 {
+		return false
+	}
+	var userProfiles []int64
+	for _, tp := range tech.Profiles {
+		for _, up := range user.Profiles {
+			if tp.Id == 1 {
+				continue
+			}
+			if tp.Recursive {
+				if err := json.Unmarshal([]byte(up.Orgs), &userProfiles); err != nil {
+					return false
+				}
+				if up.Eid == tp.Eid {
+					return true
+				}
+				if containsInt64(userProfiles, tp.Eid) {
+					return true
+				}
+			} else {
+				if up.Eid == tp.Eid {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func containsInt64(s []int64, e int64) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }

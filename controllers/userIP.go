@@ -185,16 +185,30 @@ func (ctrl UserIPController) GetUserByName(c *gin.Context) {
 func (ctrl UserIPController) GetUserWeekActivity(c *gin.Context) {
 	user := c.Param("username")
 	if user == "" {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get user info from request", "error": ""})
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно получить имя пользователя из запроса"})
 		return
 	}
 	if !isEmailValid(user) {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Invalid username. The name must include the domain in the format: user@domain", "error": ""})
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Неверное имя пользователя. Имя должно включать домен в формате: user@domain"})
+		return
+	}
+
+	var userRoles []string
+	if userID := getUserID(c); userID == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	} else {
+		userRoles, _ = userIPModel.GetUserRoles(userID)
+	}
+
+	accessToTechnicalInfo := models.ISaccessToUserDomainTechnicalInfo(user, userRoles)
+	if !accessToTechnicalInfo {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "У вас нет прав на просмотр этой информации в домене"})
 		return
 	}
 	data, err := userIPModel.GetUserWeekActivity(user)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get users activity from server", "error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно получить информацию об активности пользователя с сервера"})
 		return
 	}
 

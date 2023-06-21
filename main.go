@@ -136,8 +136,11 @@ func main() {
 	defer ad.Close()
 	//Start Redis on database 1 - it's used to store the JWT but you can use it for anythig else
 	//Example: db.GetRedis().Set(KEY, VALUE, at.Sub(now)).Err()
-	db.InitRedis("1")
 
+	db.InitRedis("1")
+	if err := db.PingRedis(); err != nil {
+		log.Fatal("Redis not found")
+	}
 	//Start Sharepoint client
 	sp.Init()
 
@@ -174,7 +177,7 @@ func main() {
 		v1.GET("/users/ip/:domain", userIP.All)
 		v1.GET("/user/ip", userIP.SetIp)
 		v1.GET("/user/ip/:username", userIP.GetUserByName)
-		v1.GET("/user/activity/:username", userIP.GetUserWeekActivity)
+		v1.GET("/user/activity/:username", UserFromTokenTokenMiddleware(), userIP.GetUserWeekActivity)
 		v1.GET("/schedules/:id", userIP.GetSchedule)
 		v1.GET("/schedule/tasks/:idc", userIP.GetScheduleTasks)
 		v1.POST("/schedule/task", userIP.AddScheduleTask)
@@ -186,7 +189,7 @@ func main() {
 		v1.GET("/users/ad/:domain/:group", aduser.GroupUsers)
 		v1.GET("/users/domains", aduser.AllDomains)
 		v1.GET("/users/whoami", TokenAuthMiddleware(), aduser.Find)
-		v1.GET("/user/ad/:username", TokenAuthMiddleware(), aduser.GetUserByName)
+		v1.GET("/user/ad/:username", UserFromTokenTokenMiddleware(), aduser.GetUserByName)
 		v1.GET("/user/adusers/:username", TokenAuthMiddleware(), aduser.GetUserAdusers)
 
 		skype := new(controllers.SkypeController)
@@ -200,7 +203,7 @@ func main() {
 		v1.GET("/sp/zals", sp_controller.All)
 
 		glpi_controller := new(controllers.GLPIController)
-		v1.GET("/user/glpi/:username", glpi_controller.GetUserByName)
+		v1.GET("/user/glpi/:username", UserFromTokenTokenMiddleware(), glpi_controller.GetUserByName)
 		v1.GET("/softwares", glpi_controller.GetSoftwares)
 
 	}

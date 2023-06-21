@@ -11,6 +11,7 @@ type GLPIUser struct {
 	Name     string            `db:"name" json:"name"`
 	Self     string            `db:"self" json:"self"`
 	Date     string            `db:"date" json:"date"`
+	Org      string            `db:"org" json:"org"`
 	Author   int64             `db:"author" json:"author"`
 	Executor int64             `db:"executor" json:"executor"`
 	Profiles []GLPIUserProfile `db:"profiles" json:"profiles"`
@@ -20,6 +21,8 @@ type GLPIUserProfile struct {
 	Id        int64  `db:"id" json:"id"`
 	Name      string `db:"name" json:"name"`
 	EName     string `db:"ename" json:"ename"`
+	Eid       int64  `db:"eid" json:"eid"`
+	Orgs      string `db:"orgs" json:"orgs"`
 	Recursive bool   `db:"recursive" json:"recursive"`
 }
 
@@ -45,19 +48,20 @@ type GLPIModel struct{}
 
 func (m GLPIModel) GetUserByName(login string) (user GLPIUser, err error) {
 	sql := fmt.Sprintf(
-		`SELECT u.id , u.name, IFNULL(u.last_login,'-') AS date, IFNULL((SELECT glpi_entities.completename  FROM glpi_profiles_users 
+		`SELECT u.id , u.name, IFNULL(u.last_login,'-') AS date, e.completename as org, IFNULL((SELECT glpi_entities.completename  FROM glpi_profiles_users 
                 INNER JOIN glpi_entities ON glpi_entities.id=glpi_profiles_users.entities_id 
                 WHERE glpi_profiles_users.users_id=u.id AND glpi_profiles_users.profiles_id=1 LIMIT 1),'-') AS self,
                 (SELECT COUNT(glpi_tickets_users.id) FROM glpi_tickets_users INNER JOIN glpi_tickets ON glpi_tickets.id=glpi_tickets_users.tickets_id WHERE glpi_tickets_users.users_id=u.id AND glpi_tickets_users.type=1 AND is_deleted=0) AS author,
                 (SELECT COUNT(glpi_tickets_users.id) FROM glpi_tickets_users INNER JOIN glpi_tickets ON glpi_tickets.id=glpi_tickets_users.tickets_id WHERE glpi_tickets_users.users_id=u.id AND glpi_tickets_users.type=2 AND is_deleted=0) AS executor 
-                 FROM (SELECT * FROM glpi_users  WHERE glpi_users.name= '%s' ) u`, login)
+                 FROM (SELECT * FROM glpi_users  WHERE glpi_users.name= '%s' ) u INNER JOIN glpi_entities e ON e.id=u.entities_id`, login)
 	err = glpidb.GetDB().SelectOne(&user, sql)
 	return user, err
 }
 
 func (m GLPIModel) GetUserProfiles(id int64) (profiles []GLPIUserProfile, err error) {
 	sql := fmt.Sprintf(
-		`SELECT glpi_profiles_users.profiles_id AS id, glpi_profiles.name AS 'name', glpi_entities.completename AS ename, glpi_profiles_users.is_recursive AS 'recursive' 
+		`SELECT glpi_profiles_users.profiles_id AS id, glpi_profiles.name AS 'name', glpi_entities.completename AS ename, glpi_profiles_users.is_recursive AS 'recursive',
+		glpi_entities.id AS 'eid', IFNULL(JSON_EXTRACT(ancestors_cache, '$.*'),JSON_ARRAY(0)) AS 'orgs'
 		FROM  glpi_profiles_users
 		INNER JOIN glpi_profiles ON glpi_profiles_users.profiles_id=glpi_profiles.id
 		INNER JOIN glpi_entities ON glpi_profiles_users.entities_id=glpi_entities.id
