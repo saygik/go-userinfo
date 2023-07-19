@@ -28,3 +28,9 @@ type Schedule struct {
 	Domain    string `db:"domain" json:"domain"`
 	Usergroup string `db:"usergroup" json:"usergroup"`
 }
+
+// SoftwareForm ...
+type SoftwareForm struct {
+	Id   int64  `form:"id" json:"id" binding:"required,number"`
+	User string `form:"user" json:"user"`
+}

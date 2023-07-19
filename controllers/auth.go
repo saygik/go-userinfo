@@ -102,11 +102,14 @@ func (ctl AuthController) Refresh(c *gin.Context) {
 		//	return
 		//}
 		//Delete the previous Refresh Token
+
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		deleted, delErr := authModel.DeleteAuth(refreshUUID)
 		if delErr != nil || deleted == 0 { //if any goes wrong
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid authorization, please login again"})
-			return
+			//c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid authorization, please login again"})
+			//return
 		}
+		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 		//Create new pairs of refresh and access tokens
 		ts, createErr := authModel.CreateToken(userID)

@@ -12,6 +12,10 @@ type User struct {
 	Login string `db:"login" json:"login"`
 	Ip    string `db:"ip" json:"ip"`
 }
+type SoftUser struct {
+	Id   int64  `db:"id" json:"id"`
+	Name string `db:"user_name" json:"name"`
+}
 
 type UserActivity struct {
 	Ip       string `db:"ip" json:"ip"`
@@ -29,7 +33,14 @@ func (m UserIPModel) GetUserRoles(userID string) (roles []string, err error) {
 	_, err = db.GetDB().Select(&roles, "GetUserRoles $1", userID)
 	return roles, err
 }
-
+func (m UserIPModel) GetUserSoftwares(userID string) (softwares []int64, err error) {
+	_, err = db.GetDB().Select(&softwares, "GetUserSoftwares $1", userID)
+	return softwares, err
+}
+func (m UserIPModel) GetSoftwareUsers(softID int64) (users []SoftUser, err error) {
+	_, err = db.GetDB().Select(&users, "GetSoftwareUsers $1", softID)
+	return users, err
+}
 func (m UserIPModel) SetUserIp(form forms.UserActivityForm) (msgResponce string, err error) {
 	//	_, err = db.GetDB().Exec("SetUserIPActivity $1,$2,$3", form.User, form.Ip, form.Activiy)
 	err = db.GetDB().QueryRow("SetUserIPActivity $1,$2,$3", form.User, form.Ip, form.Activiy).Scan(&msgResponce)
@@ -81,6 +92,29 @@ func (m UserIPModel) DelScheduleTask(id int64) (rows int64, err error) {
 			return 0, err
 		}
 		return ra, err
+	}
+	return 0, err
+}
+
+func (m UserIPModel) DelOneUserSoftware(user string, id int64) (rows int64, err error) {
+	res, err := db.GetDB().Exec("DelOneUserSoftware $1, $2", user, id)
+	if res != nil {
+		ra, err1 := res.RowsAffected()
+		if err1 != nil {
+			return 0, err1
+		}
+		return ra, nil
+	}
+	return 0, err
+}
+func (m UserIPModel) AddOneUserSoftware(form forms.SoftwareForm) (rows int64, err error) {
+	res, err := db.GetDB().Exec("AddOneUserSoftware $1,$2", form.User, form.Id)
+	if res != nil {
+		ra, err1 := res.RowsAffected()
+		if err1 != nil {
+			return 0, err1
+		}
+		return ra, nil
 	}
 	return 0, err
 }

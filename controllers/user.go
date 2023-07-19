@@ -18,13 +18,13 @@ func (ctrl UserController) Login(c *gin.Context) {
 	var loginForm forms.LoginForm
 	err := c.ShouldBindJSON(&loginForm)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Invalid form"})
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Неправильные данные"})
 		return
 	}
 	var adModel = new(models.ADUserModel)
 	_, _, adErr := adModel.Authenticate(loginForm)
 	if adErr != nil {
-		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Invalid credentials", "error": adErr.Error()})
+		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Неправильный логин или пароль", "error": adErr.Error()})
 		return
 	}
 
@@ -34,7 +34,7 @@ func (ctrl UserController) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User signed in", "user": loginForm.Email, "token": token})
+	c.JSON(http.StatusOK, gin.H{"message": "Вход произведен", "user": loginForm.Email, "token": token})
 }
 
 // Logout ...

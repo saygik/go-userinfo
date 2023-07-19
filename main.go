@@ -189,7 +189,7 @@ func main() {
 		v1.GET("/users/ad/:domain/:group", aduser.GroupUsers)
 		v1.GET("/users/domains", aduser.AllDomains)
 		v1.GET("/users/whoami", TokenAuthMiddleware(), aduser.Find)
-		v1.GET("/user/ad/:username", UserFromTokenTokenMiddleware(), aduser.GetUserByName)
+		v1.GET("/user/ad/:username", TokenAuthMiddleware(), aduser.GetUserByName)
 		v1.GET("/user/adusers/:username", TokenAuthMiddleware(), aduser.GetUserAdusers)
 
 		skype := new(controllers.SkypeController)
@@ -205,6 +205,16 @@ func main() {
 		glpi_controller := new(controllers.GLPIController)
 		v1.GET("/user/glpi/:username", UserFromTokenTokenMiddleware(), glpi_controller.GetUserByName)
 		v1.GET("/softwares", glpi_controller.GetSoftwares)
+		v1.GET("/software/:id/users", glpi_controller.GetSoftwareUsers)
+
+		v1.GET("/users/glpi", glpi_controller.GetUsers)
+		v1.GET("/software/:id", glpi_controller.GetSoftware)
+		v1.GET("/user/softwares/:username", glpi_controller.GetUserSoftwares)
+		v1.DELETE("/user/software/:username/:id", glpi_controller.DelOneUserSoftware)
+		v1.POST("/user/software/:username", glpi_controller.AddOneUserSoftware)
+
+		manuals_controller := new(controllers.ManualsController)
+		v1.GET("/manuals/orgcodes", manuals_controller.AllOrgCodes)
 
 	}
 
