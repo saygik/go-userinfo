@@ -72,8 +72,8 @@ func (m AuthModel) CreateToken(userLogin string) (*TokenDetails, error) {
 	td.AtExpires = time.Now().Add(time.Minute * 1).Unix()
 	td.AccessUUID = uuid.NewV4().String()
 
-	//td.RtExpires = time.Now().Add(time.Hour * 24 * 7).Unix()
-	td.RtExpires = time.Now().Add(time.Minute * 5).Unix()
+	td.RtExpires = time.Now().Add(time.Hour * 24 * 7).Unix()
+	//td.RtExpires = time.Now().Add(time.Minute * 5).Unix()
 	td.RefreshUUID = uuid.NewV4().String()
 
 	var err error
