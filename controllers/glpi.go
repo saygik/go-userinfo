@@ -211,3 +211,38 @@ func (ctrl GLPIController) AddOneUserSoftware(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Система добавлена"})
 
 }
+
+func (ctrl GLPIController) GetStatTickets(c *gin.Context) {
+
+	tickets, err := GLPIModel.GetStatTickets()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get tickets statistics info from GLPI", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": tickets})
+
+}
+func (ctrl GLPIController) GetStatFailures(c *gin.Context) {
+
+	tickets, err := GLPIModel.GetStatFailures()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get tickets statistics info from GLPI", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": tickets})
+}
+
+func (ctrl GLPIController) GetStatRegions(c *gin.Context) {
+	date := c.Query("startdate")
+	if date == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата начала сбора статистики"})
+		return
+	}
+	tickets, err := GLPIModel.GetStatRegions(date)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get tickets statistics info from GLPI", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": tickets})
+}

@@ -203,8 +203,9 @@ func main() {
 		v1.GET("/sp/zals", sp_controller.All)
 
 		ideco_controller := new(controllers.IDECOController)
-
 		v1.GET("/iutm/wlist", UserFromTokenTokenMiddleware(), ideco_controller.GetWiteList)
+		mattermost_controller := new(controllers.MattermostController)
+		v1.GET("/matt/users", mattermost_controller.GetAll)
 
 		glpi_controller := new(controllers.GLPIController)
 		v1.GET("/user/glpi/:username", UserFromTokenTokenMiddleware(), glpi_controller.GetUserByName)
@@ -216,6 +217,9 @@ func main() {
 		v1.GET("/user/softwares/:username", glpi_controller.GetUserSoftwares)
 		v1.DELETE("/user/software/:username/:id", glpi_controller.DelOneUserSoftware)
 		v1.POST("/user/software/:username", glpi_controller.AddOneUserSoftware)
+		v1.GET("/glpi/tickets/stats", glpi_controller.GetStatTickets)
+		v1.GET("/glpi/failures/stats", glpi_controller.GetStatFailures)
+		v1.GET("/glpi/regions/stats", glpi_controller.GetStatRegions)
 
 		manuals_controller := new(controllers.ManualsController)
 		v1.GET("/manuals/orgcodes", manuals_controller.AllOrgCodes)

@@ -17,11 +17,14 @@ type GLPIUser struct {
 	Profiles []GLPIUserProfile `db:"profiles" json:"profiles"`
 }
 type GLPIUserShort struct {
-	Id       int64  `db:"id" json:"id"`
-	Name     string `db:"name" json:"name"`
-	Realname string `db:"realname" json:"realname"`
-	Authtype int64  `db:"authtype" json:"authtype"`
-	Deleted  int64  `db:"is_deleted" json:"is_deleted"`
+	Id        int64  `db:"id" json:"id"`
+	Name      string `db:"name" json:"name"`
+	Realname  string `db:"realname" json:"realname"`
+	Authtype  int64  `db:"authtype" json:"authtype"`
+	Deleted   int64  `db:"is_deleted" json:"is_deleted"`
+	AD        string `db:"ad" json:"ad"`
+	LastLogin string `db:"last_login" json:"last_login"`
+	Author    int64  `db:"author" json:"author"`
 }
 type GLPIUserProfile struct {
 	Id        int64  `db:"id" json:"id"`
@@ -54,7 +57,18 @@ type Software struct {
 	GroupName      string   `db:"group_name" json:"group_name"`
 	Admins         []string `json:"tech_users"`
 }
+type TicketsStats struct {
+	Сount int64 `db:"count" json:"count"`
+	Type  int64 `db:"type" json:"type"`
+	Year  int64 `db:"year" json:"year"`
+	Month int64 `db:"month" json:"month"`
+}
 
+type RegionsStats struct {
+	Сount int64  `db:"count" json:"count"`
+	Org   string `db:"org" json:"org"`
+	Proc  int64  `db:"proc" json:"proc"`
+}
 type GLPIModel struct{}
 
 func (m GLPIModel) GetUserByName(login string) (user GLPIUser, err error) {
@@ -145,8 +159,59 @@ func (m GLPIModel) GetSoftwaresAdmins() (admins []SoftwareAdmins, err error) {
 
 func (m GLPIModel) GetUsers() (users []GLPIUserShort, err error) {
 	sql := fmt.Sprintf(
-		`SELECT  id, name, IFNULL(IF(realname='' AND firstname='', name , CONCAT(realname, ' ',firstname)),'-') AS realname, authtype, is_deleted FROM glpi_users
-		  ORDER BY realname`)
+		`SELECT  u.id as id, u.name as name, IFNULL(IF(realname='' AND firstname='', u.name , CONCAT(realname, ' ',firstname)),'-') AS realname,
+		authtype, LOWER(IFNULL(glpi_authldaps.name,'-')) AS ad, IFNULL(last_login, '-') as last_login,
+		(SELECT COUNT(glpi_tickets_users.id) FROM glpi_tickets_users INNER JOIN glpi_tickets ON glpi_tickets.id=glpi_tickets_users.tickets_id WHERE glpi_tickets_users.users_id=u.id AND glpi_tickets_users.type=1 AND is_deleted=0) AS author
+		FROM glpi_users u LEFT JOIN glpi_authldaps ON glpi_authldaps.id=u.auths_id WHERE is_deleted=false `)
 	_, err = glpidb.GetDB().Select(&users, sql)
 	return users, err
+}
+
+func (m GLPIModel) GetStatTickets() (tickets []TicketsStats, err error) {
+	sql := fmt.Sprintf(
+		`SELECT COUNT(id) AS count, TYPE AS type, YEAR (DATE) AS year, MONTH (DATE)  AS month FROM glpi_tickets
+		WHERE YEAR (DATE)>2020 GROUP BY MONTH (date) , YEAR (DATE), TYPE ORDER BY DATE`)
+	_, err = glpidb.GetDB().Select(&tickets, sql)
+	return tickets, err
+}
+func (m GLPIModel) GetStatFailures() (tickets []TicketsStats, err error) {
+	sql := fmt.Sprintf(
+		`SELECT COUNT(id) AS count, YEAR (DATE) AS year, MONTH (DATE)  AS month  FROM (SELECT glpi_tickets.id, glpi_tickets.date from glpi_tickets
+			LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
+			INNER JOIN glpi_plugin_fields_ticketfailures ON glpi_plugin_fields_ticketfailures.items_id=glpi_tickets.id
+			INNER JOIN ( select id from glpi_plugin_fields_failcategoryfielddropdowns WHERE id>4) gpf ON gpf.id=glpi_plugin_fields_ticketfailures.plugin_fields_failcategoryfielddropdowns_id
+			WHERE  glpi_tickets.is_deleted<>TRUE AND  (glpi_tickets.name not like '%%тест%%' and glpi_tickets.name not like '%%test%%')) d1
+			WHERE YEAR (DATE)>2021
+			GROUP BY MONTH (date) , YEAR (date)
+			ORDER BY date
+		 `)
+	_, err = glpidb.GetDB().Select(&tickets, sql)
+	return tickets, err
+}
+
+func (m GLPIModel) GetStatRegions(date string) (tickets []RegionsStats, err error) {
+	sql := fmt.Sprintf(
+		`SELECT count, org,ROUND(100* count/(
+			SELECT count(glpi_tickets.id) FROM glpi_tickets WHERE glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s'
+			)) AS proc  FROM (
+			SELECT count(glpi_tickets.id) AS COUNT, 'ИРЦ Минск' AS org FROM glpi_tickets LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
+			WHERE glpi_entities.completename LIKE '%%БЖД > ИРЦ%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s'
+			UNION
+			SELECT count(glpi_tickets.id) AS count, 'ИВЦ2' AS org FROM glpi_tickets LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
+			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ2%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s'
+			UNION
+			SELECT count(glpi_tickets.id) AS count, 'ИВЦ3' AS org FROM glpi_tickets LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
+			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ3%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s'
+			UNION
+			SELECT count(glpi_tickets.id) AS count, 'ИВЦ4' AS org FROM glpi_tickets LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
+			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ4%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s'
+			UNION
+			SELECT count(glpi_tickets.id) AS count, 'ИВЦ5' AS org FROM glpi_tickets LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
+			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ5%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s'
+			UNION
+			SELECT count(glpi_tickets.id) AS count, 'ИВЦ6' AS org FROM glpi_tickets LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
+			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ6%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s') a1
+		 `, date)
+	_, err = glpidb.GetDB().Select(&tickets, sql)
+	return tickets, err
 }
