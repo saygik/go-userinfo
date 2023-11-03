@@ -9,8 +9,9 @@ import (
 type UserIPModel struct{}
 
 type User struct {
-	Login string `db:"login" json:"login"`
-	Ip    string `db:"ip" json:"ip"`
+	Login    string `db:"login" json:"login"`
+	Ip       string `db:"ip" json:"ip"`
+	Computer string `db:"computer" json:"computer"`
 }
 type SoftUser struct {
 	Id   int64  `db:"id" json:"id"`
@@ -23,15 +24,39 @@ type UserActivity struct {
 	Date     string `db:"date" json:"date"`
 }
 
+type IdName struct {
+	Id   int64  `db:"id" json:"id"`
+	Name string `db:"name" json:"name"`
+}
+
+type AppResources struct {
+	Id   int64  `db:"id" json:"id"`
+	Name string `db:"name" json:"name"`
+	Edit string `db:"edit" json:"edit"`
+}
+
 // GLPI User find by Mail ...
 func (m UserIPModel) All(domain string) (users []User, err error) {
 	_, err = db.GetDB().Select(&users, "GetAllUserIPByDomain $1", domain)
 	return users, err
 }
 
-func (m UserIPModel) GetUserRoles(userID string) (roles []string, err error) {
+func (m UserIPModel) GetUserRoles(userID string) (roles []IdName, err error) {
 	_, err = db.GetDB().Select(&roles, "GetUserRoles $1", userID)
 	return roles, err
+}
+func (m UserIPModel) GetUserGroups(userID string) (groups []IdName, err error) {
+	_, err = db.GetDB().Select(&groups, "GetUserGroups $1", userID)
+	return groups, err
+}
+func (m UserIPModel) GetCurrentUserResources(userID string) (groups []AppResources, err error) {
+	_, err = db.GetDB().Select(&groups, "GetUserResources $1", userID)
+	return groups, err
+}
+
+func (m UserIPModel) GetUserResourceAccess(resouceID string, userID string) (access int, err error) {
+	err = db.GetDB().QueryRow("GetUserResourceAccess $1,$2", resouceID, userID).Scan(&access)
+	return access, err
 }
 func (m UserIPModel) GetUserSoftwares(userID string) (softwares []int64, err error) {
 	_, err = db.GetDB().Select(&softwares, "GetUserSoftwares $1", userID)
@@ -43,7 +68,7 @@ func (m UserIPModel) GetSoftwareUsers(softID int64) (users []SoftUser, err error
 }
 func (m UserIPModel) SetUserIp(form forms.UserActivityForm) (msgResponce string, err error) {
 	//	_, err = db.GetDB().Exec("SetUserIPActivity $1,$2,$3", form.User, form.Ip, form.Activiy)
-	err = db.GetDB().QueryRow("SetUserIPActivity $1,$2,$3", form.User, form.Ip, form.Activiy).Scan(&msgResponce)
+	err = db.GetDB().QueryRow("SetUserIPActivityComputer $1,$2,$3,$4", form.User, form.Ip, form.Computer, form.Activiy).Scan(&msgResponce)
 
 	return msgResponce, err
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/saygik/go-userinfo/ad"
 	"github.com/saygik/go-userinfo/models"
 )
 
@@ -39,14 +40,15 @@ func getUser(c *gin.Context) (user models.UserInRedisOpenID) {
 
 // All ADs ...
 func (ctrl ADUserController) AllAd(c *gin.Context) {
-	var userRoles []string
-	if userID := getUserID(c); userID == "" {
-		// c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain users", "error": "Empty domain name"})
-		// return
+	//	var userRoles []models.IdName
+	userID := ""
+	if userID = getUserID(c); userID == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain users", "error": "Empty domain name"})
+		return
 	} else {
-		userRoles, _ = userIPModel.GetUserRoles(userID)
+		//userRoles, _ = userIPModel.GetUserRoles(userID)
 	}
-	users, err := aduserModel.AllAd(userRoles)
+	users, err := aduserModel.AllAd(userID)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get all domains users", "error": err.Error()})
 		return
@@ -75,8 +77,31 @@ func (ctrl ADUserController) All(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }
 func (ctrl ADUserController) AllDomains(c *gin.Context) {
+	userID := ""
+	if userID = getUserID(c); userID == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domains", "error": "Empty domain name"})
+		return
+	} else {
+		//userRoles, _ = userIPModel.GetUserRoles(userID)
+	}
+	domain := GetDomainFromUserName(userID)
 	domains := aduserModel.AllDomains()
-	c.JSON(http.StatusOK, gin.H{"data": domains})
+	res := []ad.ADArray{}
+	for _, oneDomain := range domains {
+		access := models.GetAccessToResource(oneDomain.Name, userID)
+		if access == -1 && domain == oneDomain.Name {
+			access = 0
+		}
+		if access == -1 {
+			continue
+		}
+		if access != -1 {
+			res = append(res, oneDomain)
+		}
+
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": res})
 
 }
 
@@ -101,7 +126,7 @@ func (ctrl ADUserController) GroupUsers(c *gin.Context) {
 }
 func (ctrl ADUserController) Find(c *gin.Context) {
 	if userID := getUserID(c); userID != "" {
-		adUser, adErr := aduserModel.GetOneUser(userID)
+		adUser, adErr := aduserModel.GetCurrentUser(userID)
 		if adErr != nil {
 			c.JSON(http.StatusNotAcceptable, gin.H{"message": "Invalid credentials", "error": adErr.Error()})
 			return
@@ -110,25 +135,6 @@ func (ctrl ADUserController) Find(c *gin.Context) {
 
 		c.JSON(http.StatusOK, gin.H{"message": "User finded", "user": adUser})
 	}
-}
-
-func (ctrl ADUserController) GetUserAdusers(c *gin.Context) {
-	user := c.Param("username")
-	if user == "" {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get user info from request", "error": ""})
-		return
-	}
-	if !isEmailValid(user) {
-		c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": "Invalid username. The name must include the domain in the format: user@domain", "error": ""})
-		return
-	}
-	role, err := aduserModel.GetAdusersRights(user)
-	if err != nil {
-		c.JSON(http.StatusNoContent, gin.H{})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "User role finded", "data": role})
 }
 
 func (ctrl ADUserController) GetUserByName(c *gin.Context) {
@@ -141,16 +147,13 @@ func (ctrl ADUserController) GetUserByName(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": "Invalid username. The name must include the domain in the format: user@domain", "error": ""})
 		return
 	}
-
-	var userRoles []string
-	if userID := getUserID(c); userID == "" {
-		// c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain users", "error": "Empty domain name"})
-		// return
-	} else {
-		userRoles, _ = userIPModel.GetUserRoles(userID)
+	userID := ""
+	if userID = getUserID(c); userID == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain user", "error": "Empty domain name"})
+		return
 	}
 
-	adUser, adErr := aduserModel.GetOneUserPropertys(user, userRoles)
+	adUser, adErr := aduserModel.GetOneUserPropertys(user, userID)
 	if adErr != nil {
 		c.JSON(http.StatusNoContent, gin.H{"message": "Invalid credentials", "error": adErr.Error()})
 		return

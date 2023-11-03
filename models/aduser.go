@@ -69,6 +69,7 @@ func (m ADUserModel) GetAllDomainsUsers() {
 					for _, ip := range ips {
 						if user["userPrincipalName"] == ip.Login {
 							user["ip"] = ip.Ip
+							user["computer"] = ip.Computer
 						}
 					}
 				}
@@ -98,8 +99,8 @@ func (m ADUserModel) GetAllDomainsUsers() {
 }
 
 // All ...
-func (m ADUserModel) AllAd(userRoles []string) ([]map[string]interface{}, error) {
-
+func (m ADUserModel) AllAd(user string) ([]map[string]interface{}, error) {
+	domain := strings.Split(fmt.Sprintf("%s", user), "@")[1]
 	redisClient := db.GetRedis()
 	if redisClient == nil {
 		return nil, errors.New("Redis not found")
@@ -114,17 +115,30 @@ func (m ADUserModel) AllAd(userRoles []string) ([]map[string]interface{}, error)
 	var res []map[string]interface{}
 	//res := make([]map[string]interface{}, 3000)
 	for domainName, oneDomain := range redisADUsers {
+		access := GetAccessToResource(domainName, user)
+		if access == -1 && domain == domainName {
+			access = 0
+		}
+		if access == -1 {
+			continue
+		}
 		var r []map[string]interface{}
 		json.Unmarshal([]byte(oneDomain), &r)
-		isUserAccessToDomain := IsStringInArray(domainName, userRoles) || IsStringInArray("fullAdmin", userRoles)
-		domainTechnical := IsStringInArray("domainTechnical", userRoles) || IsStringInArray("domainAdmin", userRoles)
-		accessToTechnicalInfo := (isUserAccessToDomain && domainTechnical) || IsStringInArray("fullAdmin", userRoles)
+		// isUserAccessToDomain := IsStringInArray(domainName, userRoles) || IsStringInArray("fullAdmin", userRoles)
+		// domainTechnical := IsStringInArray("domainTechnical", userRoles) || IsStringInArray("domainAdmin", userRoles)
+		//accessToTechnicalInfo := (isUserAccessToDomain && domainTechnical) || IsStringInArray("fullAdmin", userRoles) || access
+		accessToTechnicalInfo := access == 1
 		for _, user := range r {
 			if !accessToTechnicalInfo {
 				delete(user, "ip")
 				delete(user, "pwdLastSet")
 				delete(user, "proxyAddresses")
 				delete(user, "employeeNumber")
+				delete(user, "passwordDontExpire")
+				delete(user, "passwordCantChange")
+				delete(user, "distinguishedName")
+				delete(user, "userAccountControl")
+
 			}
 
 			//user["ip"] = "-"
@@ -231,7 +245,7 @@ func (m ADUserModel) Authenticate(form forms.LoginForm) (bool, map[string]string
 	}
 	return catalog.Authenticate(form.Email, form.Password)
 }
-func (m ADUserModel) GetOneUser(username string) (map[string]interface{}, error) {
+func (m ADUserModel) GetCurrentUser(username string) (map[string]interface{}, error) {
 	domain := strings.Split(fmt.Sprintf("%s", username), "@")[1]
 	catalog := ad.GetAD(domain)
 	if catalog == nil {
@@ -241,33 +255,41 @@ func (m ADUserModel) GetOneUser(username string) (map[string]interface{}, error)
 	if err != nil {
 		return nil, err
 	}
+	var userIPModel = new(UserIPModel)
+	role := IdName{Id: 5, Name: "Пользователь"}
+	roles, err := userIPModel.GetUserRoles(username)
+	if err == nil && len(roles) > 0 {
+		role = roles[0]
+	}
 
+	groups, err := userIPModel.GetUserGroups(username)
+	if err == nil && len(groups) > 0 {
+		user["groups"] = groups
+	} else {
+		user["groups"] = []IdName{}
+	}
+
+	user["role"] = role
 	user["domain"] = domain
-	if IsStringInArray("adusersGlobalAdmins", user["memberOf"]) && domain == "brnv.rw" {
-		user["role"] = "globaladmin"
-		delete(user, "memberOf")
-		return user, nil
-	}
-	if IsStringInArray("adusersDomainAdmins", user["memberOf"]) {
-		user["role"] = "admin"
-		delete(user, "memberOf")
-		return user, nil
-	}
-	if IsStringInArray("adusersTS", user["memberOf"]) {
-		user["role"] = "ts"
-		delete(user, "memberOf")
-		return user, nil
-	}
-	user["role"] = "user"
+
 	delete(user, "memberOf")
 	return user, nil
 }
 
-func (m ADUserModel) GetOneUserPropertys(username string, userRoles []string) (map[string]interface{}, error) {
-	domain := strings.Split(fmt.Sprintf("%s", username), "@")[1]
-	isUserAccessToDomain := IsStringInArray(domain, userRoles) || IsStringInArray("fullAdmin", userRoles)
-	domainTechnical := IsStringInArray("domainTechnical", userRoles) || IsStringInArray("domainAdmin", userRoles)
-	accessToTechnicalInfo := (isUserAccessToDomain && domainTechnical) || IsStringInArray("fullAdmin", userRoles)
+func (m ADUserModel) GetOneUserPropertys(username string, techUser string) (map[string]interface{}, error) {
+
+	domain := GetDomainFromUserName(username)
+	domainName := GetDomainFromUserName(techUser)
+
+	access := GetAccessToResource(domain, techUser)
+	if access == -1 && domain == domainName {
+		access = 0
+	}
+	if access == -1 {
+		return nil, errors.New("У вас недостаточно прав на просмотр данных пользователя")
+	}
+
+	accessToTechnicalInfo := access == 1
 
 	catalog := ad.GetAD(domain)
 	if catalog == nil {
@@ -295,34 +317,14 @@ func (m ADUserModel) GetOneUserPropertys(username string, userRoles []string) (m
 					delete(user, "pwdLastSet")
 					delete(user, "proxyAddresses")
 					delete(user, "employeeNumber")
+					delete(user, "passwordDontExpire")
+					delete(user, "passwordCantChange")
+					delete(user, "distinguishedName")
+					delete(user, "userAccountControl")
 				}
 				return user, nil
 			}
 		}
 	}
 	return nil, errors.New("пользователь не найден")
-}
-
-func (m ADUserModel) GetAdusersRights(username string) (role string, err error) {
-	role = "user"
-	domain := strings.Split(fmt.Sprintf("%s", username), "@")[1]
-	catalog := ad.GetAD(domain)
-	if catalog == nil {
-		return role, errors.New("there is no such domain")
-	}
-	user, err := ad.GetAD(domain).GetUserInfo(username)
-	if err != nil {
-		return role, err
-	}
-
-	if IsStringInArray("adusersGlobalAdmins", user["memberOf"]) && domain == "brnv.rw" {
-		role = "globaladmin"
-	}
-	if IsStringInArray("adusersDomainAdmins", user["memberOf"]) {
-		role = "admin"
-	}
-	if IsStringInArray("adusersTS", user["memberOf"]) {
-		role = "ts"
-	}
-	return role, nil
 }

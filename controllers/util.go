@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"regexp"
@@ -84,4 +85,27 @@ func containsInt64(s []int64, e int64) bool {
 		}
 	}
 	return false
+}
+
+func containsInt64InIdNameTypeArray(s []models.IdNameType, e int64) bool {
+	for _, a := range s {
+		if a.Id == e {
+			return true
+		}
+	}
+	return false
+}
+func containsIDNameInIdNameTypeArray(s []models.IdNameType, e []models.IdName) bool {
+	for _, a := range s {
+		for _, b := range e {
+			if a.Id == b.Id {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func GetDomainFromUserName(s string) string {
+	return strings.Split(fmt.Sprintf("%s", s), "@")[1]
 }

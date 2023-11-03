@@ -175,14 +175,24 @@ func (ctrl UserIPController) GetUserByName(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": userWithActivity})
-	// ipAddr:=ReadUserIP(c.Request)
-	//var hostNames []string
-	// hostNames,_=ReadUserName(ipAddr)
-	//c.JSON(http.StatusOK, gin.H{"data": ipAddr, "host_names": hostNames})
 
 }
 
+func (ctrl UserIPController) CurrentUserResources(c *gin.Context) {
+	if userID := getUserID(c); userID != "" {
+		resources, err := userIPModel.GetCurrentUserResources(userID)
+		if err != nil {
+			c.JSON(http.StatusNotAcceptable, gin.H{"message": "Invalid credentials", "error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"data": resources})
+	} else {
+		c.JSON(http.StatusNotAcceptable, gin.H{"error": "Invalid credentials"})
+		return
+	}
+}
 func (ctrl UserIPController) GetUserWeekActivity(c *gin.Context) {
+
 	user := c.Param("username")
 	if user == "" {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно получить имя пользователя из запроса"})
@@ -192,16 +202,17 @@ func (ctrl UserIPController) GetUserWeekActivity(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Неверное имя пользователя. Имя должно включать домен в формате: user@domain"})
 		return
 	}
-
-	var userRoles []string
-	if userID := getUserID(c); userID == "" {
+	userID := ""
+	if userID = getUserID(c); userID == "" {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
 		return
-	} else {
-		userRoles, _ = userIPModel.GetUserRoles(userID)
 	}
 
-	accessToTechnicalInfo := models.ISaccessToUserDomainTechnicalInfo(user, userRoles)
+	domain := GetDomainFromUserName(user)
+
+	access := models.GetAccessToResource(domain, userID)
+
+	accessToTechnicalInfo := access == 1
 	if !accessToTechnicalInfo {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "У вас нет прав на просмотр этой информации в домене"})
 		return

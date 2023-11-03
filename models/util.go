@@ -76,9 +76,33 @@ func FindUserInRedisArray(users []map[string]interface{}, userToFind string) map
 	}
 	return nil
 }
-func ISaccessToUserDomainTechnicalInfo(user string, userRoles []string) bool {
-	domain := strings.Split(fmt.Sprintf("%s", user), "@")[1]
-	isUserAccessToDomain := IsStringInArray(domain, userRoles) || IsStringInArray("fullAdmin", userRoles)
-	domainTechnical := IsStringInArray("domainTechnical", userRoles) || IsStringInArray("domainAdmin", userRoles)
-	return (isUserAccessToDomain && domainTechnical) || IsStringInArray("fullAdmin", userRoles)
+
+func IsStringInArrayIdName(str string, arr []IdName) bool {
+	if arr == nil {
+		return false
+	}
+	for _, b := range arr {
+		if b.Name == str {
+			return true
+		}
+	}
+	return false
+}
+func GetAccessToResource(resource string, user string) (res int) {
+	var userIPModel = new(UserIPModel)
+	res = -1
+	userRoles, err := userIPModel.GetUserRoles(user)
+	if err != nil {
+		return -1
+	}
+	if IsStringInArrayIdName("Администратор системы", userRoles) {
+		return 1
+	}
+	accessRole, err := userIPModel.GetUserResourceAccess(resource, user)
+
+	return accessRole
+}
+
+func GetDomainFromUserName(s string) string {
+	return strings.Split(fmt.Sprintf("%s", s), "@")[1]
 }

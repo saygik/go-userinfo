@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -24,6 +25,55 @@ func (ctrl GLPIController) GetUsers(c *gin.Context) {
 
 }
 
+// ************************* Всего отказов **********************************//
+func (ctrl GLPIController) GetStatOtkazSum(c *gin.Context) {
+	sum, _ := GLPIModel.GetStatOtkazSum()
+
+	c.JSON(http.StatusOK, gin.H{"data": sum})
+}
+
+func (ctrl GLPIController) GetOtkazes(c *gin.Context) {
+	startdate := c.Query("startdate")
+	if startdate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата начала периода"})
+		return
+	}
+	enddate := c.Query("enddate")
+	if enddate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата конца периода"})
+		return
+	}
+	otkazes, err := GLPIModel.GetOtkazes(startdate, enddate)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Отказы не найдены в системе GLPI", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": otkazes})
+}
+
+func (ctrl GLPIController) CurrentUserGLPI(c *gin.Context) {
+	user := getUserID(c)
+	if user == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	glpiUser, err := GLPIModel.GetUserByName(user)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Пользователь не найден в системе GLPI", "error": err.Error()})
+		return
+	}
+	glpiUserProfiles, err := GLPIModel.GetUserProfiles(glpiUser.Id)
+	if err == nil {
+		glpiUser.Profiles = glpiUserProfiles
+	}
+	glpiUserGroups, err := GLPIModel.GetUserGroups(glpiUser.Id)
+	if err == nil {
+		glpiUser.Groups = glpiUserGroups
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": glpiUser})
+
+}
 func (ctrl GLPIController) GetUserByName(c *gin.Context) {
 	user := c.Param("username")
 	if user == "" {
@@ -245,4 +295,108 @@ func (ctrl GLPIController) GetStatRegions(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": tickets})
+}
+
+func (ctrl GLPIController) GetTicketsNonClosed(c *gin.Context) {
+	userID := getUserID(c)
+	if userID == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	userRequesterInGLPI, err := GLPIModel.GetUserByName(userID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Вы не найдены в системе GLPI"})
+		return
+	}
+	glpiUserRequesterProfiles, err := GLPIModel.GetUserProfiles(userRequesterInGLPI.Id)
+	if err == nil {
+		if len(glpiUserRequesterProfiles) == 0 {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Ваш профиль не найден в системе GLPI"})
+			return
+		}
+		userRequesterInGLPI.Profiles = glpiUserRequesterProfiles
+	} else {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Ваш профиль не найден в системе GLPI"})
+		return
+	}
+	glpiUserGroups, err := GLPIModel.GetUserGroups(userRequesterInGLPI.Id)
+	if err == nil {
+		userRequesterInGLPI.Groups = glpiUserGroups
+	} else {
+		userRequesterInGLPI.Groups = []models.IdName{}
+	}
+	tickets, err := GLPIModel.GetTicketsNonClosed()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get not closed tickets from GLPI", "error": err.Error()})
+		return
+	}
+	var ticketOrgs []int64
+	var ticketUsers []models.IdNameType
+	var ticketGroups []models.IdNameType
+	ticketsAllowed := []models.Ticket{}
+	for _, ticket := range tickets {
+		ticket.MyTicket = 0
+		if err := json.Unmarshal([]byte(ticket.Users), &ticketUsers); err == nil {
+			if containsInt64InIdNameTypeArray(ticketUsers, userRequesterInGLPI.Id) {
+				ticket.MyTicket = 1
+			}
+		}
+		if err := json.Unmarshal([]byte(ticket.UserGroups), &ticketGroups); err == nil {
+			if containsIDNameInIdNameTypeArray(ticketGroups, userRequesterInGLPI.Groups) {
+				ticket.MyTicket = 2
+			}
+		}
+		for _, tp := range userRequesterInGLPI.Profiles {
+			if tp.Id == 6 {
+				if ticket.MyTicket > 0 {
+					ticketsAllowed = append(ticketsAllowed, ticket)
+					break
+				}
+			}
+			if tp.Id != 3 && tp.Id != 4 && tp.Id != 5 && tp.Id != 15 && tp.Id != 7 {
+				continue
+			}
+			if tp.Recursive {
+				if err := json.Unmarshal([]byte(ticket.Orgs), &ticketOrgs); err != nil {
+					continue
+				}
+				if ticket.Eid == tp.Eid {
+					ticketsAllowed = append(ticketsAllowed, ticket)
+					break
+
+				}
+				if containsInt64(ticketOrgs, tp.Eid) {
+					ticketsAllowed = append(ticketsAllowed, ticket)
+					break
+
+				}
+			} else {
+				if ticket.Eid == tp.Eid {
+					ticketsAllowed = append(ticketsAllowed, ticket)
+					break
+				}
+			}
+			// if tp.Recursive {
+			// }
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": ticketsAllowed})
+}
+
+func (ctrl GLPIController) GetTicket(c *gin.Context) {
+	ticketId := c.Param("id")
+	if ticketId == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get ticket id from request", "error": ""})
+		return
+	}
+	ticket, err := GLPIModel.GetTicket(ticketId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get ticket from GLPI", "error": err.Error()})
+		return
+	}
+	works, _ := GLPIModel.TicketWorks(ticketId)
+	ticket.Works = works
+	c.JSON(http.StatusOK, gin.H{"message": "Ticket finded", "data": ticket})
+
 }

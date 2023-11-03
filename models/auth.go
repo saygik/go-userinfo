@@ -69,7 +69,8 @@ type AuthModel struct{}
 func (m AuthModel) CreateToken(userLogin string) (*TokenDetails, error) {
 
 	td := &TokenDetails{}
-	td.AtExpires = time.Now().Add(time.Minute * 1).Unix()
+	td.AtExpires = time.Now().Add(time.Hour * 4).Unix()
+	//  td.AtExpires = time.Now().Add(time.Minute * 60).Unix()
 	td.AccessUUID = uuid.NewV4().String()
 
 	td.RtExpires = time.Now().Add(time.Hour * 24 * 7).Unix()
