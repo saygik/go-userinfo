@@ -178,19 +178,20 @@ func main() {
 		v1.GET("/user/ip", userIP.SetIp)
 		v1.GET("/user/ip/:username", userIP.GetUserByName)
 		v1.GET("/user/activity/:username", TokenAuthMiddleware(), userIP.GetUserWeekActivity)
+		v1.GET("/user/ad/:username", TokenAuthMiddleware(), aduser.GetUserByName)
+		v1.GET("/cuser/whoami", TokenAuthMiddleware(), aduser.Find)
+		v1.GET("/cuser/resources", TokenAuthMiddleware(), userIP.CurrentUserResources)
+
+		v1.GET("/users/ad/:domain", TokenAuthMiddleware(), aduser.All)
+		v1.GET("/users/allad", TokenAuthMiddleware(), aduser.AllAd)
+		v1.GET("/users/ad/:domain/:group", aduser.GroupUsers)
+		v1.GET("/users/domains", TokenAuthMiddleware(), aduser.AllDomains)
+
 		v1.GET("/schedules/:id", userIP.GetSchedule)
 		v1.GET("/schedule/tasks/:idc", userIP.GetScheduleTasks)
 		v1.POST("/schedule/task", userIP.AddScheduleTask)
 		v1.DELETE("/schedule/task/:id", userIP.DelScheduleTask)
 		v1.PUT("/schedule/task/:id", userIP.UpdateScheduleTask)
-
-		v1.GET("/users/ad/:domain", TokenAuthMiddleware(), aduser.All)
-		v1.GET("/users/allad", TokenAuthMiddleware(), aduser.AllAd)
-		v1.GET("/users/ad/:domain/:group", aduser.GroupUsers)
-		v1.GET("/users/domains", aduser.AllDomains)
-		v1.GET("/users/whoami", TokenAuthMiddleware(), aduser.Find)
-		v1.GET("/user/ad/:username", TokenAuthMiddleware(), aduser.GetUserByName)
-		v1.GET("/user/adusers/:username", TokenAuthMiddleware(), aduser.GetUserAdusers)
 
 		skype := new(controllers.SkypeController)
 		v1.GET("/skype/presences", skype.AllPresences)
@@ -211,9 +212,15 @@ func main() {
 		v1.GET("/user/glpi/:username", UserFromTokenTokenMiddleware(), glpi_controller.GetUserByName)
 		v1.GET("/softwares", TokenAuthMiddleware(), glpi_controller.GetSoftwares)
 		v1.GET("/software/:id/users", TokenAuthMiddleware(), glpi_controller.GetSoftwareUsers)
+		v1.GET("/glpi/sum/otkaz", glpi_controller.GetStatOtkazSum)                            // * Всего отказов //
+		v1.GET("/glpi/otkazes", glpi_controller.GetOtkazes)                                   // * Все отказвы //
+		v1.GET("/glpi/nctickets", TokenAuthMiddleware(), glpi_controller.GetTicketsNonClosed) // * Все незакрытые заявки //
+		v1.GET("/glpi/ticket/:id", TokenAuthMiddleware(), glpi_controller.GetTicket)          // * Все незакрытые заявки //
 
 		v1.GET("/users/glpi", glpi_controller.GetUsers)
 		v1.GET("/software/:id", TokenAuthMiddleware(), glpi_controller.GetSoftware)
+		v1.GET("/cuser/glpi", TokenAuthMiddleware(), glpi_controller.CurrentUserGLPI)
+
 		v1.GET("/user/softwares/:username", glpi_controller.GetUserSoftwares)
 		v1.DELETE("/user/software/:username/:id", glpi_controller.DelOneUserSoftware)
 		v1.POST("/user/software/:username", glpi_controller.AddOneUserSoftware)
