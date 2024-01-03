@@ -10,7 +10,7 @@ import (
 
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/go-gorp/gorp"
-	_redis "github.com/go-redis/redis"
+	"github.com/redis/go-redis/v9"
 )
 
 //_ "github.com/lib/pq" //import postgres
@@ -100,7 +100,7 @@ func CloseDBSkype() {
 }
 
 // RedisClient ...
-var RedisClient *_redis.Client
+var RedisClient *redis.Client
 
 // InitRedis ...
 func InitRedis(params ...string) {
@@ -110,7 +110,7 @@ func InitRedis(params ...string) {
 
 	db, _ := strconv.Atoi(params[0])
 
-	RedisClient = _redis.NewClient(&_redis.Options{
+	RedisClient = redis.NewClient(&redis.Options{
 		Addr:     redisHost,
 		Password: redisPassword,
 		DB:       db,
@@ -118,7 +118,7 @@ func InitRedis(params ...string) {
 }
 
 // GetRedis ...
-func GetRedis() *_redis.Client {
+func GetRedis() *redis.Client {
 	return RedisClient
 }
 
