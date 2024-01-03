@@ -88,7 +88,6 @@ func (ctrl UserIPController) AddScheduleTask(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get schedule info from request", "error": err.Error()})
 		return
-
 	}
 
 	msgResponce, err := userIPModel.AddScheduleTask(scheduleForm)
@@ -191,6 +190,36 @@ func (ctrl UserIPController) CurrentUserResources(c *gin.Context) {
 		return
 	}
 }
+func (ctrl UserIPController) UpdateUserAvatar(c *gin.Context) {
+	if userID := getUserID(c); userID != "" {
+		user := c.Param("username")
+		if user == "" {
+			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get user info from request", "error": ""})
+			return
+		}
+		if !isEmailValid(user) {
+			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Invalid username. The name must include the domain in the format: user@domain", "error": ""})
+			return
+		}
+		var avatarForm forms.AvatarForm
+
+		err := c.ShouldBindJSON(&avatarForm)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get avatar name from request", "error": err.Error()})
+			return
+		}
+		msg, err := userIPModel.SetUserAvatar(user, avatarForm.Avatar)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not update user avatar", "error": msg})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"data": "OK"})
+	} else {
+		c.JSON(http.StatusNotAcceptable, gin.H{"error": "Invalid credentials"})
+		return
+	}
+}
+
 func (ctrl UserIPController) GetUserWeekActivity(c *gin.Context) {
 
 	user := c.Param("username")

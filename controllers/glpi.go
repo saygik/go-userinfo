@@ -1,11 +1,15 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/saygik/go-userinfo/db"
 	"github.com/saygik/go-userinfo/forms"
 	"github.com/saygik/go-userinfo/models"
 )
@@ -20,6 +24,10 @@ func (ctrl GLPIController) GetUsers(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно получить список пользователей GLPI"})
 		return
+	}
+	for i, user := range users {
+		adUser := GetRedisUser(user.Name)
+		users[i].ADProfile = adUser
 	}
 	c.JSON(http.StatusOK, gin.H{"data": users})
 
@@ -49,6 +57,97 @@ func (ctrl GLPIController) GetOtkazes(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": otkazes})
+}
+func (ctrl GLPIController) GetStatTop10Performers(c *gin.Context) {
+	startdate := c.Query("startdate")
+	if startdate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата начала периода"})
+		return
+	}
+	enddate := c.Query("enddate")
+	if enddate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата конца периода"})
+		return
+	}
+	stats, err := GLPIModel.GetStatTop10Performers(startdate, enddate)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Пользователи не найдены в системе GLPI", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": stats})
+}
+func (ctrl GLPIController) GetStatPeriodTicketsCounts(c *gin.Context) {
+	startdate := c.Query("startdate")
+	if startdate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата начала периода"})
+		return
+	}
+	enddate := c.Query("enddate")
+	if enddate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата конца периода"})
+		return
+	}
+	stats, err := GLPIModel.GetStatPeriodTicketsCounts(startdate, enddate)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Счетчики не найдены в системе GLPI", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": stats})
+}
+func (ctrl GLPIController) GetStatPeriodRequestTypes(c *gin.Context) {
+	startdate := c.Query("startdate")
+	if startdate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата начала периода"})
+		return
+	}
+	enddate := c.Query("enddate")
+	if enddate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата конца периода"})
+		return
+	}
+	stats, err := GLPIModel.GetStatPeriodRequestTypes(startdate, enddate)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Счетчики не найдены в системе GLPI", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": stats})
+}
+
+func (ctrl GLPIController) GetStatTop10Iniciators(c *gin.Context) {
+	startdate := c.Query("startdate")
+	if startdate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата начала периода"})
+		return
+	}
+	enddate := c.Query("enddate")
+	if enddate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата конца периода"})
+		return
+	}
+	stats, err := GLPIModel.GetStatTop10Iniciators(startdate, enddate)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Пользователи не найдены в системе GLPI", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": stats})
+}
+func (ctrl GLPIController) GetStatTop10Groups(c *gin.Context) {
+	startdate := c.Query("startdate")
+	if startdate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата начала периода"})
+		return
+	}
+	enddate := c.Query("enddate")
+	if enddate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата конца периода"})
+		return
+	}
+	stats, err := GLPIModel.GetStatTop10Groups(startdate, enddate)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Группы не найдены в системе GLPI", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": stats})
 }
 
 func (ctrl GLPIController) CurrentUserGLPI(c *gin.Context) {
@@ -126,6 +225,26 @@ func (ctrl GLPIController) GetSoftwares(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get softwares info from GLPI", "error": err.Error()})
 		return
 	}
+	admins, _ := GLPIModel.GetSoftwaresAdmins()
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"data": softwares})
+	}
+	softAdmins := []map[string]interface{}{}
+	for i, soft := range softwares {
+		for _, admin := range admins {
+			if soft.Groups_id_tech == admin.Id {
+				adUser := GetRedisUser(admin.Name)
+				softAdmins = append(softAdmins, adUser)
+			}
+		}
+		if len(softAdmins) > 0 {
+			softwares[i].Admins = softAdmins
+			softAdmins = []map[string]interface{}{}
+		} else {
+			soft.Admins = []map[string]interface{}{}
+		}
+
+	}
 
 	c.JSON(http.StatusOK, gin.H{"data": softwares})
 
@@ -142,14 +261,62 @@ func (ctrl GLPIController) GetSoftware(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Неправильный идентификатор программного обеспечения"})
 		return
 	}
-	softwares, err := GLPIModel.GetSoftware(id_int)
+	software, err := GLPIModel.GetSoftware(id_int)
+
+	//redisClient.HSet(ctx, "allusers", user["userPrincipalName"], jsonUser).Err()
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get software info from GLPI", "error": err.Error()})
 		return
 	}
+	admins, _ := GLPIModel.GetSoftwaresAdmins()
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"data": software})
+	}
+	softAdmins := []map[string]interface{}{}
 
-	c.JSON(http.StatusOK, gin.H{"data": softwares})
+	for _, admin := range admins {
+		if software.Groups_id_tech == admin.Id {
+			adUser := GetRedisUser(admin.Name)
+			softAdmins = append(softAdmins, adUser)
+		}
+	}
+	if len(softAdmins) > 0 {
+		software.Admins = softAdmins
+		softAdmins = nil
+	} else {
+		software.Admins = []map[string]interface{}{}
+	}
+	c.JSON(http.StatusOK, gin.H{"data": software})
 
+}
+func GetRedisUser(name string) (user map[string]interface{}) {
+	var userProperties map[string]interface{}
+	redisClient := db.GetRedis()
+	var ctx = context.Background()
+	redisADUser, err := redisClient.HGet(ctx, "allusers", name).Result()
+	if err == nil {
+		json.Unmarshal([]byte(redisADUser), &userProperties)
+		delete(userProperties, "ip")
+		delete(userProperties, "pwdLastSet")
+		delete(userProperties, "proxyAddresses")
+		delete(userProperties, "passwordDontExpire")
+		delete(userProperties, "passwordCantChange")
+		delete(userProperties, "distinguishedName")
+		delete(userProperties, "userAccountControl")
+		delete(userProperties, "memberOf")
+		delete(userProperties, "employeeNumber")
+		delete(userProperties, "presence")
+		delete(userProperties, "otherTelephone")
+		userProperties["name"] = name
+		userProperties["findedInAD"] = true
+		return userProperties
+	} else {
+		userProperties = map[string]interface{}{}
+		userProperties["name"] = name
+		userProperties["findedInAD"] = false
+
+		return userProperties
+	}
 }
 func (ctrl GLPIController) GetSoftwareUsers(c *gin.Context) {
 	id := c.Param("id")
@@ -160,7 +327,17 @@ func (ctrl GLPIController) GetSoftwareUsers(c *gin.Context) {
 			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно получить список пользователей программного обеспечения", "error_message": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"data": users})
+		softUsers := []map[string]interface{}{}
+		for _, user := range users {
+			adUser := GetRedisUser(user.Name)
+			adUser["login"] = user.Login
+			adUser["comment"] = user.Comment
+			adUser["fio"] = user.Fio
+			adUser["external"] = user.External
+			softUsers = append(softUsers, adUser)
+		}
+
+		c.JSON(http.StatusOK, gin.H{"data": softUsers})
 	} else {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Неправильный номер программного обеспечения"})
 	}
@@ -183,7 +360,27 @@ func (ctrl GLPIController) GetUserSoftwares(c *gin.Context) {
 		return
 	}
 	// список администраторов систем
-	softwares = softwares
+	admins, _ := GLPIModel.GetSoftwaresAdmins()
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"data": softwares})
+	}
+	softAdmins := []map[string]interface{}{}
+	for i, soft := range softwares {
+		for _, admin := range admins {
+			if soft.Groups_id_tech == admin.Id {
+				adUser := GetRedisUser(admin.Name)
+				softAdmins = append(softAdmins, adUser)
+			}
+		}
+		if len(softAdmins) > 0 {
+			softwares[i].Admins = softAdmins
+			softAdmins = []map[string]interface{}{}
+		} else {
+			soft.Admins = []map[string]interface{}{}
+		}
+
+	}
+
 	userSoftwares, err := userIPModel.GetUserSoftwares(user)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно получить список систем пользователя"})
@@ -197,6 +394,7 @@ func (ctrl GLPIController) GetUserSoftwares(c *gin.Context) {
 			}
 		}
 	}
+
 	c.JSON(http.StatusOK, gin.H{"data": filteredSoft})
 
 }
@@ -262,6 +460,69 @@ func (ctrl GLPIController) AddOneUserSoftware(c *gin.Context) {
 
 }
 
+func (ctrl GLPIController) AddOneSoftwareUser(c *gin.Context) {
+	id := c.Param("software")
+	var idd int64
+	if idx, err := strconv.ParseInt(id, 10, 64); err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить номер системы"})
+		return
+	} else {
+		idd = idx
+	}
+	var softwareForm forms.SoftwareUsersForm
+	err := c.ShouldBindJSON(&softwareForm)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить пользователя системы: " + err.Error()})
+		return
+	}
+	if softwareForm.User == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить имя пользователя в запросе"})
+		return
+	}
+	if !isEmailValid(softwareForm.User) {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Неправильное имя пользователя. Имя должно содержать домен в формате: user@domain"})
+		return
+	}
+
+	softwareForm.Id = idd
+	rowsAffected, err := userIPModel.AddOneSoftwareUser(softwareForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Ошибка добавления пользователя системы: " + err.Error()})
+		return
+	}
+	if rowsAffected < 1 {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Пользователь системы не добавлен"})
+		return
+	}
+	userProperties := GetRedisUser(softwareForm.User)
+	delete(userProperties, "ip")
+	delete(userProperties, "pwdLastSet")
+	delete(userProperties, "proxyAddresses")
+	delete(userProperties, "passwordDontExpire")
+	delete(userProperties, "passwordCantChange")
+	delete(userProperties, "distinguishedName")
+	delete(userProperties, "userAccountControl")
+	delete(userProperties, "memberOf")
+	delete(userProperties, "employeeNumber")
+	delete(userProperties, "presence")
+	delete(userProperties, "url")
+	delete(userProperties, "otherTelephone")
+	userProperties["name"] = softwareForm.User
+	userProperties["login"] = softwareForm.Login
+	userProperties["comment"] = softwareForm.Comment
+	userProperties["fio"] = softwareForm.Fio
+	userProperties["external"] = softwareForm.External
+
+	_, ok := userProperties["userPrincipalName"]
+	if ok {
+		userProperties["findedInAD"] = true
+	} else {
+		userProperties["findedInAD"] = false
+	}
+	c.JSON(http.StatusOK, gin.H{"data": userProperties})
+
+}
 func (ctrl GLPIController) GetStatTickets(c *gin.Context) {
 
 	tickets, err := GLPIModel.GetStatTickets()
@@ -273,6 +534,27 @@ func (ctrl GLPIController) GetStatTickets(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": tickets})
 
 }
+func (ctrl GLPIController) GetStatTicketsDays(c *gin.Context) {
+	startdate := c.Query("startdate")
+	if startdate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата начала периода"})
+		return
+	}
+	enddate := c.Query("enddate")
+	if enddate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата конца периода"})
+		return
+	}
+	tickets, err := GLPIModel.GetStatTicketsDays(startdate, enddate)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get tickets statistics info from GLPI", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": tickets})
+
+}
+
 func (ctrl GLPIController) GetStatFailures(c *gin.Context) {
 
 	tickets, err := GLPIModel.GetStatFailures()
@@ -284,12 +566,62 @@ func (ctrl GLPIController) GetStatFailures(c *gin.Context) {
 }
 
 func (ctrl GLPIController) GetStatRegions(c *gin.Context) {
-	date := c.Query("startdate")
-	if date == "" {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата начала сбора статистики"})
+	startdate := c.Query("startdate")
+	if startdate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата начала периода"})
 		return
 	}
-	tickets, err := GLPIModel.GetStatRegions(date)
+	enddate := c.Query("enddate")
+	if enddate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата конца периода"})
+		return
+	}
+	tickets, err := GLPIModel.GetStatRegions(startdate, enddate)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get tickets statistics info from GLPI", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": tickets})
+}
+
+func (ctrl GLPIController) GetStatPeriodOrgTreemap(c *gin.Context) {
+	startdate := c.Query("startdate")
+	if startdate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата начала периода"})
+		return
+	}
+	enddate := c.Query("enddate")
+	if enddate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата конца периода"})
+		return
+	}
+	tickets, err := GLPIModel.GetStatPeriodOrgTreemap(startdate, enddate)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get tickets statistics info from GLPI", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": tickets})
+}
+
+func (ctrl GLPIController) GetStatPeriodRegionDayCounts(c *gin.Context) {
+	startdate := c.Query("startdate")
+	if startdate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата начала периода"})
+		return
+	}
+	enddate := c.Query("enddate")
+	if enddate == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указана дата конца периода"})
+		return
+	}
+	dat := strings.Split(enddate, "T")[0]
+	date, error := time.Parse("2006-01-02", dat)
+	if error != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Неверная  дата конца периода"})
+		return
+	}
+	day := date.Day()
+	tickets, err := GLPIModel.GetStatPeriodRegionDayCounts(startdate, enddate, day)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get tickets statistics info from GLPI", "error": err.Error()})
 		return

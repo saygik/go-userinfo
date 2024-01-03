@@ -9,15 +9,17 @@ import (
 var adClients = map[string]*adClient.ADClient{}
 
 type ADConfig struct {
-	Key          string        `json:"key"`
-	Name         string        `json:"name"`
-	Base         string        `json:"base"`
-	Dc           string        `json:"dc"`
-	GroupFilter  string        `json:"group-filter"`
-	Filter       string        `json:"filter"`
-	BindDN       string        `json:"bindDN"`
-	BindPassword string        `json:"bindPassword"`
-	Time         time.Duration `json:"time"`
+	Key            string        `json:"key"`
+	Domain         string        `json:"domain"`
+	Name           string        `json:"name"`
+	Base           string        `json:"base"`
+	Dc             string        `json:"dc"`
+	GroupFilter    string        `json:"group-filter"`
+	Filter         string        `json:"filter"`
+	ComputerFilter string        `json:"filter-computer"`
+	BindDN         string        `json:"bindDN"`
+	BindPassword   string        `json:"bindPassword"`
+	Time           time.Duration `json:"time"`
 }
 type ADArray struct {
 	Name  string `json:"name"`
@@ -62,14 +64,16 @@ func Init(adconfig Config) {
 // "(userPrincipalName=%s)"
 func NewAddConnection(config ADConfig) *adClient.ADClient {
 	client := &adClient.ADClient{
-		Base:         config.Base,
-		Host:         config.Dc,
-		Port:         389,
-		UseSSL:       false,
-		BindDN:       config.BindDN,
-		BindPassword: config.BindPassword,
-		UserFilter:   config.Filter,
-		GroupFilter:  config.GroupFilter,
+		Domain:         config.Domain,
+		Base:           config.Base,
+		Host:           config.Dc,
+		Port:           389,
+		UseSSL:         false,
+		BindDN:         config.BindDN,
+		BindPassword:   config.BindPassword,
+		UserFilter:     config.Filter,
+		ComputerFilter: config.ComputerFilter,
+		GroupFilter:    config.GroupFilter,
 		Attributes: []string{"userPrincipalName", "dn", "cn", "company", "department", "title", "telephoneNumber",
 			"otherTelephone", "mobile", "mail", "pager", "msRTCSIP-PrimaryUserAddress", "url", "memberOf", "displayName",
 			"description", "userPrincipalName", "employeeNumber", "pwdLastSet", "proxyAddresses", "userAccountControl", "distinguishedName"},

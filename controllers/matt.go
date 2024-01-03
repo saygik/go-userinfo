@@ -20,19 +20,31 @@ func (ctrl MattermostController) GetAll(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get users list from Mattermost server", "error": err.Error()})
 		return
 	}
-	newUsers := []models.MattermostUser{}
-	for _, user := range users {
+	softUsers, err := userIPModel.GetSoftwareUsers(833)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно получить список пользователей Mattermost, зарегистрированных в системе", "error_message": err.Error()})
+		return
+	}
+
+	for i, user := range users {
 		if user.Roles != "system_user system_admin" && user.IsBot == false {
-			user.Roles = ""
+			users[i].Roles = ""
+
 			if user.AuthService == "ldap" {
-				user.AD = "it.rw"
+				users[i].AD = "it.rw"
 			} else {
-				user.AD = "-"
+				users[i].AD = "-"
 			}
-			user.AuthService = ""
+			users[i].Registred = false
+			for _, softUser := range softUsers {
+				if softUser.Login == user.Name {
+					users[i].Registred = true
+				}
+			}
+			users[i].AuthService = ""
 			//			user.IsBot = nil
-			newUsers = append(newUsers, user)
+
 		}
 	}
-	c.JSON(http.StatusOK, gin.H{"data": newUsers})
+	c.JSON(http.StatusOK, gin.H{"data": users})
 }

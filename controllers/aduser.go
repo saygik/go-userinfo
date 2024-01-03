@@ -39,6 +39,18 @@ func getUser(c *gin.Context) (user models.UserInRedisOpenID) {
 }
 
 // All ADs ...
+func (ctrl ADUserController) AllAdUsersShort(c *gin.Context) {
+	users, err := aduserModel.AllAdUsersShort()
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get all domains users", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": users})
+}
+
+// All ADs ...
 func (ctrl ADUserController) AllAd(c *gin.Context) {
 	//	var userRoles []models.IdName
 	userID := ""
@@ -55,6 +67,35 @@ func (ctrl ADUserController) AllAd(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": users})
+}
+
+func (ctrl ADUserController) AllAdCounts(c *gin.Context) {
+	users, computers, err := aduserModel.AllAdCounts()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get all domains counts", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"users": users, "computers": computers})
+}
+
+// All ADs Computers ...
+func (ctrl ADUserController) AllAdComputers(c *gin.Context) {
+
+	userID := ""
+	if userID = getUserID(c); userID == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domains computers", "error": "Empty domain name"})
+		return
+	} else {
+		//userRoles, _ = userIPModel.GetUserRoles(userID)
+	}
+	// userID := "say@brnv.rw"
+	computers, err := aduserModel.AllAdComputers(userID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get all domains computers", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": computers})
 }
 
 // All ...

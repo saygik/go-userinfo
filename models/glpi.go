@@ -18,14 +18,15 @@ type GLPIUser struct {
 	Groups   []IdName          `json:"groups"`
 }
 type GLPIUserShort struct {
-	Id        int64  `db:"id" json:"id"`
-	Name      string `db:"name" json:"name"`
-	Realname  string `db:"realname" json:"realname"`
-	Authtype  int64  `db:"authtype" json:"authtype"`
-	Deleted   int64  `db:"is_deleted" json:"is_deleted"`
-	AD        string `db:"ad" json:"ad"`
-	LastLogin string `db:"last_login" json:"last_login"`
-	Author    int64  `db:"author" json:"author"`
+	Id        int64                  `db:"id" json:"id"`
+	Name      string                 `db:"name" json:"name"`
+	Realname  string                 `db:"realname" json:"realname"`
+	Authtype  int64                  `db:"authtype" json:"authtype"`
+	Deleted   int64                  `db:"is_deleted" json:"is_deleted"`
+	AD        string                 `db:"ad" json:"ad"`
+	LastLogin string                 `db:"last_login" json:"last_login"`
+	Author    int64                  `db:"author" json:"author"`
+	ADProfile map[string]interface{} `json:"ad_profile"`
 }
 type GLPIUserProfile struct {
 	Id        int64  `db:"id" json:"id"`
@@ -45,23 +46,23 @@ type IdNameType struct {
 	Type int64  `db:"type" json:"type"`
 }
 type Software struct {
-	Id             int64    `db:"id" json:"id"`
-	Name           string   `db:"name" json:"name"`
-	Ename          string   `db:"ename" json:"company"`
-	Comment        string   `db:"comment" json:"comment"`
-	Locations      string   `db:"locations" json:"locations,omitempty"`
-	Manufacture    string   `db:"manufacture" json:"manufacture"`
-	Description1   string   `db:"description1" json:"description1"`
-	Description2   string   `db:"description2" json:"description2"`
-	Murl           string   `db:"murl" json:"manual_url"`
-	Durl           string   `db:"durl" json:"icon_url"`
-	IsRecursive    int64    `db:"is_recursive" json:"is_recursive"`
-	Groups_id_tech int64    `db:"groups_id_tech" json:"groups_id_tech"`
-	Users_id_tech  int64    `db:"users_id_tech" json:"users_id_tech"`
-	Extauth        int64    `db:"extauth" json:"ext_auth"`
-	Clients        int64    `db:"clients" json:"clients"`
-	GroupName      string   `db:"group_name" json:"group_name"`
-	Admins         []string `json:"tech_users"`
+	Id             int64                    `db:"id" json:"id"`
+	Name           string                   `db:"name" json:"name"`
+	Ename          string                   `db:"ename" json:"company"`
+	Comment        string                   `db:"comment" json:"comment"`
+	Locations      string                   `db:"locations" json:"locations,omitempty"`
+	Manufacture    string                   `db:"manufacture" json:"manufacture"`
+	Description1   string                   `db:"description1" json:"description1"`
+	Description2   string                   `db:"description2" json:"description2"`
+	Murl           string                   `db:"murl" json:"manual_url"`
+	Durl           string                   `db:"durl" json:"icon_url"`
+	IsRecursive    int64                    `db:"is_recursive" json:"is_recursive"`
+	Groups_id_tech int64                    `db:"groups_id_tech" json:"groups_id_tech"`
+	Users_id_tech  int64                    `db:"users_id_tech" json:"users_id_tech"`
+	Extauth        int64                    `db:"extauth" json:"ext_auth"`
+	Clients        int64                    `db:"clients" json:"clients"`
+	GroupName      string                   `db:"group_name" json:"group_name"`
+	Admins         []map[string]interface{} `json:"tech_users"`
 }
 type Otkaz struct {
 	Id            int64  `db:"id" json:"id"`
@@ -82,12 +83,38 @@ type TicketsStats struct {
 	Type  int64 `db:"type" json:"type"`
 	Year  int64 `db:"year" json:"year"`
 	Month int64 `db:"month" json:"month"`
+	Day   int64 `db:"day" json:"day"`
 }
 
 type RegionsStats struct {
 	Сount int64  `db:"count" json:"count"`
 	Org   string `db:"org" json:"org"`
 	Proc  int64  `db:"proc" json:"proc"`
+}
+type RegionsDayStats struct {
+	Сount int64  `db:"count" json:"count"`
+	Org   string `db:"org" json:"org"`
+	Day   int64  `db:"day" json:"day"`
+}
+
+type StatsTop10 struct {
+	Name         string `db:"name" json:"name"`
+	Completename string `db:"completename" json:"completename"`
+	Company      string `db:"company" json:"company"`
+	Count        int64  `db:"count" json:"count"`
+}
+
+type StatsCounts struct {
+	T1  string `db:"t1" json:"t1"`
+	T11 string `db:"t1_1" json:"t1_1"`
+	T12 string `db:"t1_2" json:"t1_2"`
+	T2  string `db:"t2" json:"t2"`
+	T21 string `db:"t2_1" json:"t2_1"`
+	T22 string `db:"t2_2" json:"t2_2"`
+	T3  string `db:"t3" json:"t3"`
+	T31 string `db:"t3_1" json:"t3_1"`
+	T32 string `db:"t3_2" json:"t3_2"`
+	T33 string `db:"t3_3" json:"t3_3"`
 }
 
 type Ticket struct {
@@ -123,6 +150,10 @@ type Work struct {
 	Author       string `db:"author" json:"author"`
 	IsPrivate    string `db:"is_private" json:"is_private"`
 	Type         string `db:"type" json:"type"`
+}
+type TreemapData struct {
+	X string `db:"x" json:"x"`
+	Y int64  `db:"y" json:"y"`
 }
 
 type GLPIModel struct{}
@@ -163,8 +194,8 @@ func (m GLPIModel) GetSoftware(id int64) (software Software, err error) {
 	sql := fmt.Sprintf(
 		`SELECT glpi_softwares.id, glpi_softwares.name, glpi_softwares.comment, IFNULL(glpi_entities.completename,'') AS ename, glpi_softwares.is_recursive,
 		IFNULL(glpi_locations.completename,'') AS locations, glpi_softwares.groups_id_tech, glpi_softwares.users_id_tech, IFNULL(glpi_manufacturers.name,'') AS manufacture,
-		IFNULL(softadd.descriptionfieldtwo,'') AS description1, IFNULL(softadd.moredescriptionfield,'') AS description2, IFNULL(softadd.externalauthenticationfieldtwo,0) AS extauth,
-		IFNULL(softadd.clientsoftwarefieldtwo,0) AS clients, IFNULL(softadd.servicemanualurlfieldtwo,'') murl, IFNULL(softadd.technicaldescriptionurlfield,'') AS durl, IFNULL(glpi_groups.name,'') as group_name
+		IFNULL(softadd.moredescriptionfield,'') AS description1,
+		 IFNULL(softadd.servicemanualurlfieldtwo,'') murl, IFNULL(softadd.technicaldescriptionurlfield,'') AS durl, IFNULL(glpi_groups.name,'') as group_name
 		from glpi_softwares
 		INNER JOIN glpi_entities ON glpi_softwares.entities_id=glpi_entities.id
 		LEFT JOIN glpi_locations ON glpi_softwares.locations_id=glpi_locations.id
@@ -173,15 +204,14 @@ func (m GLPIModel) GetSoftware(id int64) (software Software, err error) {
 		LEFT JOIN glpi_groups ON glpi_softwares.groups_id_tech=glpi_groups.id
 		WHERE glpi_softwares.id=%d`, id)
 	err = glpidb.GetDB().SelectOne(&software, sql)
-
 	return software, err
 }
 func (m GLPIModel) GetSoftwares() (softwares []Software, err error) {
 	sql := fmt.Sprintf(
 		`SELECT glpi_softwares.id, glpi_softwares.name, glpi_softwares.comment, IFNULL(glpi_entities.completename,'') AS ename, glpi_softwares.is_recursive,
 		IFNULL(glpi_locations.completename,'') AS locations, glpi_softwares.groups_id_tech, glpi_softwares.users_id_tech, IFNULL(glpi_manufacturers.name,'') AS manufacture,
-		IFNULL(softadd.descriptionfieldtwo,'') AS description1, IFNULL(softadd.moredescriptionfield,'') AS description2, IFNULL(softadd.externalauthenticationfieldtwo,0) AS extauth,
-		IFNULL(softadd.clientsoftwarefieldtwo,0) AS clients, IFNULL(softadd.servicemanualurlfieldtwo,'') murl, IFNULL(softadd.technicaldescriptionurlfield,'') AS durl, IFNULL(glpi_groups.name,'') as group_name
+		IFNULL(softadd.moredescriptionfield,'') AS description1,
+		 IFNULL(softadd.servicemanualurlfieldtwo,'') murl, IFNULL(softadd.technicaldescriptionurlfield,'') AS durl, IFNULL(glpi_groups.name,'') as group_name
 		from glpi_softwares
 		INNER JOIN glpi_entities ON glpi_softwares.entities_id=glpi_entities.id
 		LEFT JOIN glpi_locations ON glpi_softwares.locations_id=glpi_locations.id
@@ -190,27 +220,27 @@ func (m GLPIModel) GetSoftwares() (softwares []Software, err error) {
 		LEFT JOIN glpi_groups ON glpi_softwares.groups_id_tech=glpi_groups.id
 		WHERE glpi_softwares.is_deleted=0`)
 	_, err = glpidb.GetDB().Select(&softwares, sql)
-	if err != nil {
-		return softwares, err
-	}
-	admins, err1 := m.GetSoftwaresAdmins()
-	if err != nil {
-		return softwares, err1
-	}
-	softAdmins := []string{}
-	for i, soft := range softwares {
-		for _, admin := range admins {
-			if soft.Groups_id_tech == admin.Id {
-				softAdmins = append(softAdmins, admin.Name)
-			}
-		}
-		if len(softAdmins) > 0 {
-			softwares[i].Admins = softAdmins
-			softAdmins = nil
-		} else {
-			softwares[i].Admins = []string{}
-		}
-	}
+	// if err != nil {
+	// 	return softwares, err
+	// }
+	// admins, err1 := m.GetSoftwaresAdmins()
+	// if err != nil {
+	// 	return softwares, err1
+	// }
+	// softAdmins := []string{}
+	// for i, soft := range softwares {
+	// 	for _, admin := range admins {
+	// 		if soft.Groups_id_tech == admin.Id {
+	// 			softAdmins = append(softAdmins, admin.Name)
+	// 		}
+	// 	}
+	// 	if len(softAdmins) > 0 {
+	// 		softwares[i].Admins = []map[string]interface{}{}
+	// 		softAdmins = nil
+	// 	} else {
+	// 		softwares[i].Admins = []map[string]interface{}{}
+	// 	}
+	// }
 	return softwares, err
 }
 func (m GLPIModel) GetSoftwaresAdmins() (admins []SoftwareAdmins, err error) {
@@ -234,8 +264,16 @@ func (m GLPIModel) GetUsers() (users []GLPIUserShort, err error) {
 
 func (m GLPIModel) GetStatTickets() (tickets []TicketsStats, err error) {
 	sql := fmt.Sprintf(
-		`SELECT COUNT(id) AS count, TYPE AS type, YEAR (DATE) AS year, MONTH (DATE)  AS month FROM glpi_tickets
+		`SELECT COUNT(id) AS count, TYPE AS type, YEAR (DATE) AS year, MONTH (DATE)  AS month FROM (SELECT * from glpi_tickets WHERE glpi_tickets.is_deleted=0) gt
 		WHERE YEAR (DATE)>2020 GROUP BY MONTH (date) , YEAR (DATE), TYPE ORDER BY DATE`)
+	_, err = glpidb.GetDB().Select(&tickets, sql)
+	return tickets, err
+}
+func (m GLPIModel) GetStatTicketsDays(startdate string, enddate string) (tickets []TicketsStats, err error) {
+	sql := fmt.Sprintf(
+		`SELECT COUNT(id) AS count, TYPE AS type, YEAR (DATE) AS year, MONTH (DATE)  AS month, DAY (DATE) AS day
+		 FROM (SELECT * from glpi_tickets WHERE glpi_tickets.is_deleted=0 AND date>='%[1]s' AND date <='%[2]s') gt
+		 GROUP BY DAY (DATE), MONTH (date) , YEAR (DATE), TYPE ORDER BY DATE`, startdate, enddate)
 	_, err = glpidb.GetDB().Select(&tickets, sql)
 	return tickets, err
 }
@@ -271,7 +309,7 @@ func (m GLPIModel) GetOtkazes(startdate string, enddate string) (otkazes []Otkaz
 			LEFT JOIN glpi_plugin_fields_ticketfailures ON glpi_plugin_fields_ticketfailures.items_id=glpi_tickets.id
 			LEFT JOIN glpi_plugin_fields_failcategoryfielddropdowns ON glpi_plugin_fields_failcategoryfielddropdowns.id=glpi_plugin_fields_ticketfailures.plugin_fields_failcategoryfielddropdowns_id
 			WHERE glpi_tickets.is_deleted<>TRUE  AND glpi_plugin_fields_failcategoryfielddropdowns.id>4
-			AND glpi_tickets.name not like '%%тест%%' and glpi_tickets.name not like '%%test%%' AND
+			AND
 			((date>='%[1]s' AND date <='%[2]s') OR (solvedate>='%[1]s' AND solvedate <='%[2]s') OR (date<'%[1]s' AND solvedate >'%[2]s') OR (date<'%[1]s' AND solvedate is null))
 			ORDER BY date desc
 		`, startdate, enddate)
@@ -298,8 +336,8 @@ func (m GLPIModel) GetStatFailures() (tickets []TicketsStats, err error) {
 			LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
 			INNER JOIN glpi_plugin_fields_ticketfailures ON glpi_plugin_fields_ticketfailures.items_id=glpi_tickets.id
 			INNER JOIN ( select id from glpi_plugin_fields_failcategoryfielddropdowns WHERE id>4) gpf ON gpf.id=glpi_plugin_fields_ticketfailures.plugin_fields_failcategoryfielddropdowns_id
-			WHERE  glpi_tickets.is_deleted<>TRUE AND  (glpi_tickets.name not like '%%тест%%' and glpi_tickets.name not like '%%test%%')) d1
-			WHERE YEAR (DATE)>2021
+			WHERE  glpi_tickets.is_deleted<>TRUE ) d1
+			WHERE YEAR (DATE)>2020
 			GROUP BY MONTH (date) , YEAR (date)
 			ORDER BY date
 		 `)
@@ -307,29 +345,27 @@ func (m GLPIModel) GetStatFailures() (tickets []TicketsStats, err error) {
 	return tickets, err
 }
 
-func (m GLPIModel) GetStatRegions(date string) (tickets []RegionsStats, err error) {
+func (m GLPIModel) GetStatRegions(startdate string, enddate string) (tickets []RegionsStats, err error) {
 	sql := fmt.Sprintf(
-		`SELECT count, org,ROUND(100* count/(
-			SELECT count(glpi_tickets.id) FROM glpi_tickets WHERE glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s'
-			)) AS proc  FROM (
+		`SELECT count, org  FROM (
 			SELECT count(glpi_tickets.id) AS COUNT, 'ИРЦ Минск' AS org FROM glpi_tickets LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
-			WHERE glpi_entities.completename LIKE '%%БЖД > ИРЦ%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s'
+			WHERE glpi_entities.completename LIKE '%%БЖД > ИРЦ%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s'
 			UNION
 			SELECT count(glpi_tickets.id) AS count, 'ИВЦ2' AS org FROM glpi_tickets LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
-			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ2%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s'
+			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ2%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s'
 			UNION
 			SELECT count(glpi_tickets.id) AS count, 'ИВЦ3' AS org FROM glpi_tickets LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
-			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ3%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s'
+			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ3%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s'
 			UNION
 			SELECT count(glpi_tickets.id) AS count, 'ИВЦ4' AS org FROM glpi_tickets LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
-			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ4%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s'
+			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ4%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s'
 			UNION
 			SELECT count(glpi_tickets.id) AS count, 'ИВЦ5' AS org FROM glpi_tickets LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
-			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ5%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s'
+			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ5%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s'
 			UNION
 			SELECT count(glpi_tickets.id) AS count, 'ИВЦ6' AS org FROM glpi_tickets LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
-			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ6%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.name NOT LIKE '%%ТЕСТ%%' AND glpi_tickets.name NOT LIKE '%%test%%' AND glpi_tickets.date> '%[1]s') a1
-		 `, date)
+			WHERE glpi_entities.completename LIKE '%%БЖД > ИВЦ6%%' AND glpi_tickets.is_deleted<>TRUE  AND glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s') a1
+		 `, startdate, enddate)
 	_, err = glpidb.GetDB().Select(&tickets, sql)
 	return tickets, err
 }
@@ -402,4 +438,294 @@ func (m GLPIModel) TicketWorks(ticketID string) (work []Work, err error) {
 		return nil, err
 	}
 	return work, nil
+}
+
+func (m GLPIModel) GetStatTop10Performers(startdate string, enddate string) (tickets []StatsTop10, err error) {
+	sql := fmt.Sprintf(
+		`SELECT * FROM ( SELECT  gg.name, TRIM(CONCAT(ifnull(NULLIF(gg.realname, ''), ''),' ', ifnull(NULLIF(gg.firstname, ''),''))) AS completename,ge.completename AS company,
+		 count(gt.id) AS count FROM (SELECT * from glpi_tickets WHERE glpi_tickets.is_deleted=0  AND ((glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s') OR (glpi_tickets.solvedate>= '%[1]s' AND glpi_tickets.solvedate<= '%[2]s'))) gt
+		 inner JOIN (SELECT id, tickets_id, users_id FROM glpi_tickets_users WHERE TYPE=2) ggt ON ggt.tickets_id= gt.id
+		 inner JOIN glpi_users gg ON gg.id = ggt.users_id
+		 inner JOIN glpi_entities ge ON ge.id = gg.entities_id
+		 GROUP BY gg.name, ge.completename ) tab
+		 ORDER BY COUNT  DESC LIMIT 10
+		 `, startdate, enddate)
+	_, err = glpidb.GetDB().Select(&tickets, sql)
+	return tickets, err
+}
+
+func (m GLPIModel) GetStatTop10Iniciators(startdate string, enddate string) (tickets []StatsTop10, err error) {
+	sql := fmt.Sprintf(
+		`SELECT * FROM ( SELECT  gg.name, TRIM(CONCAT(ifnull(NULLIF(gg.realname, ''), ''),' ', ifnull(NULLIF(gg.firstname, ''),''))) AS completename,ge.completename AS company,
+		 count(gt.id) AS count FROM (SELECT * from glpi_tickets WHERE glpi_tickets.is_deleted=0  AND glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s') gt
+		 inner JOIN (SELECT id, tickets_id, users_id FROM glpi_tickets_users WHERE TYPE=1) ggt ON ggt.tickets_id= gt.id
+		 inner JOIN glpi_users gg ON gg.id = ggt.users_id
+		 inner JOIN glpi_entities ge ON ge.id = gg.entities_id
+		 GROUP BY gg.name, ge.completename ) tab
+		 ORDER BY COUNT  DESC LIMIT 10
+		 `, startdate, enddate)
+	_, err = glpidb.GetDB().Select(&tickets, sql)
+	return tickets, err
+}
+
+func (m GLPIModel) GetStatTop10Groups(startdate string, enddate string) (tickets []StatsTop10, err error) {
+	sql := fmt.Sprintf(
+		`SELECT * FROM ( SELECT gg.name, ifnull(gg.comment,'') AS completename, ge.completename AS company,  count(gt.id) AS count
+		FROM (SELECT * from glpi_tickets WHERE glpi_tickets.is_deleted=0  AND ((glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s') OR (glpi_tickets.solvedate>= '%[1]s' AND glpi_tickets.solvedate<= '%[2]s'))) gt
+		inner JOIN (SELECT id, tickets_id, groups_id FROM glpi_groups_tickets WHERE TYPE=2) ggt ON ggt.tickets_id= gt.id
+		 inner JOIN glpi_groups gg ON gg.id = ggt.groups_id
+		 inner JOIN glpi_entities ge ON ge.id = gg.entities_id
+		 GROUP BY gg.name, ge.completename ) tab
+		 ORDER BY count DESC LIMIT 10
+		 `, startdate, enddate)
+	_, err = glpidb.GetDB().Select(&tickets, sql)
+	return tickets, err
+}
+
+func (m GLPIModel) GetStatPeriodTicketsCounts(startdate string, enddate string) (tickets []StatsCounts, err error) {
+	sql := fmt.Sprintf(
+		`SELECT (select COUNT(id) from glpi_tickets WHERE glpi_tickets.is_deleted=0  AND glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s') AS t1,
+		(select COUNT(id) from glpi_tickets WHERE glpi_tickets.is_deleted=0  AND TYPE=1 AND glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s') AS t1_1 ,
+		(select COUNT(id) from glpi_tickets WHERE glpi_tickets.is_deleted=0  AND TYPE=2 AND glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s') AS t1_2,
+		(select COUNT(id) from glpi_tickets WHERE glpi_tickets.is_deleted=0  AND glpi_tickets.solvedate>= '%[1]s' AND glpi_tickets.solvedate<= '%[2]s') AS t2,
+		(select COUNT(id) from glpi_tickets WHERE glpi_tickets.is_deleted=0  AND TYPE=1 AND glpi_tickets.solvedate>= '%[1]s' AND glpi_tickets.solvedate<= '%[2]s') AS t2_1,
+		(select COUNT(id) from glpi_tickets WHERE glpi_tickets.is_deleted=0  AND TYPE=2 AND glpi_tickets.solvedate>= '%[1]s' AND glpi_tickets.solvedate<= '%[2]s') AS t2_2,
+		(SELECT count(glpi_tickets.id) FROM glpi_tickets WHERE  glpi_tickets.is_deleted<>TRUE AND ( glpi_tickets.status = 4 OR glpi_tickets.status =3 OR glpi_tickets.status =2)) AS  t3,
+		(SELECT count(glpi_tickets.id) FROM glpi_tickets WHERE  glpi_tickets.is_deleted<>TRUE AND ( glpi_tickets.status = 2 OR glpi_tickets.status =3)) AS  t3_1,
+		(SELECT count(glpi_tickets.id) FROM glpi_tickets WHERE  glpi_tickets.is_deleted<>TRUE AND ( glpi_tickets.status = 3 )) AS  t3_2
+		FROM glpi_tickets LIMIT 1
+		 `, startdate, enddate)
+	_, err = glpidb.GetDB().Select(&tickets, sql)
+	return tickets, err
+}
+func (m GLPIModel) GetStatPeriodOrgTreemap(startdate string, enddate string) (tickets []TreemapData, err error) {
+	sql := fmt.Sprintf(
+		`SELECT glpi_entities.name AS x, count(glpi_tickets.id) AS y  FROM glpi_tickets
+		INNER JOIN glpi_entities ON glpi_tickets.entities_id=glpi_entities.id
+		WHERE glpi_tickets.is_deleted=0  AND glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s'
+		GROUP BY x ORDER BY y desc
+		 `, startdate, enddate)
+	_, err = glpidb.GetDB().Select(&tickets, sql)
+	return tickets, err
+}
+
+func (m GLPIModel) GetStatPeriodRequestTypes(startdate string, enddate string) (tickets []StatsTop10, err error) {
+	sql := fmt.Sprintf(
+		`SELECT (case  requesttypes_id
+     		when 1 then 'Техподдержка'
+     		when 2 then 'E-Mail'
+     		when 3 then 'Телефон'
+     		when 4 then 'Уснто'
+     		when 5 then 'Письмо'
+     		when 6 then 'Другой'
+     		when 7 then 'WEB форма'
+     		when 8 then 'SAP HRP'
+     		when 9 then 'Mattermost'
+     		ELSE 'Техподдержка'
+			END)  AS name,
+			COUNT(id) AS count from glpi_tickets WHERE glpi_tickets.is_deleted=0  AND glpi_tickets.date>= '%[1]s' AND glpi_tickets.date<= '%[2]s'
+			GROUP BY requesttypes_id
+		 `, startdate, enddate)
+	_, err = glpidb.GetDB().Select(&tickets, sql)
+	return tickets, err
+}
+
+func (m GLPIModel) GetStatPeriodRegionDayCounts(startdate string, enddate string, maxday int) (tickets []RegionsDayStats, err error) {
+	sql := fmt.Sprintf(
+		`SELECT DATE AS 'Day', org , ifnull(COUNT, 0) AS count FROM (
+    SELECT 1 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 1 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 1 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 1 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 1 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 1 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 2 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 2 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 2 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 2 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 2 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 2 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 3 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 3 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 3 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 3 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 3 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 3 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 4 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 4 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 4 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 4 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 4 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 4 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 5 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 5 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 5 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 5 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 5 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 5 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 6 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 6 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 6 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 6 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 6 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 6 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 7 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 7 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 7 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 7 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 7 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 7 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 8 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 8 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 8 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 8 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 8 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 8 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 9 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 9 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 9 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 9 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 9 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 9 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 10 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 10 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 10 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 10 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 10 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 10 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 11 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 11 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 11 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 11 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 11 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 11 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 12 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 12 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 12 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 12 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 12 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 12 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 13 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 13 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 13 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 13 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 13 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 13 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 14 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 14 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 14 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 14 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 14 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 14 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 15 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 15 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 15 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 15 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 15 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 15 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 16 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 16 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 16 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 16 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 16 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 16 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 17 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 17 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 17 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 17 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 17 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 17 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 18 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 18 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 18 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 18 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 18 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 18 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 19 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 19 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 19 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 19 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 19 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 19 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 20 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 20 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 20 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 20 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 20 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 20 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 21 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 21 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 21 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 21 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 21 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 21 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 22 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 22 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 22 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 22 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 22 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 22 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 23 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 23 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 23 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 23 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 23 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 23 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 24 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 24 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 24 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 24 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 24 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 24 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 25 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 25 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 25 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 25 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 25 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 25 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 26 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 26 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 26 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 26 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 26 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 26 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 27 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 27 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 27 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 27 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 27 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 27 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 28 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 28 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 28 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 28 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 28 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 28 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 29 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 29 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 29 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 29 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 29 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 29 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 30 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 30 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 30 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 30 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 30 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 30 AS DATE, 'ИВЦ6' AS org UNION ALL
+    SELECT 31 AS DATE, 'ИРЦ Минск' AS org UNION ALL
+    SELECT 31 AS DATE, 'ИВЦ2' AS org UNION ALL
+    SELECT 31 AS DATE, 'ИВЦ3' AS org UNION ALL
+    SELECT 31 AS DATE, 'ИВЦ4' AS org UNION ALL
+    SELECT 31 AS DATE, 'ИВЦ5' AS org UNION ALL
+    SELECT 31, 'ИВЦ6' AS org) AS MonthDate
+LEFT JOIN (SELECT COUNT(id) AS count, YEAR (DATE) AS year, MONTH (DATE)  AS month, DAY (DATE) AS DAY, name
+FROM ( SELECT glpi_tickets.id,DATE, TRIM(SUBSTRING_INDEX(SUBSTRING(completename, 7), '>',1)) AS name from glpi_tickets
+LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
+WHERE glpi_tickets.entities_id>0 AND glpi_tickets.entities_id!=519 AND glpi_tickets.is_deleted=0 AND date>='%[1]s' AND date <='%[2]s'
+) gt GROUP BY DAY (DATE), MONTH (date) , YEAR (DATE), name ORDER BY DATE) T1 ON MonthDate.Date = T1.DAY  AND MonthDate.org = T1.name
+WHERE MonthDate.DATE <= %[3]d
+ORDER BY Date`, startdate, enddate, maxday)
+	_, err = glpidb.GetDB().Select(&tickets, sql)
+	return tickets, err
 }

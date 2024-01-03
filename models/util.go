@@ -89,6 +89,7 @@ func IsStringInArrayIdName(str string, arr []IdName) bool {
 	return false
 }
 func GetAccessToResource(resource string, user string) (res int) {
+	domain := strings.Split(fmt.Sprintf("%s", user), "@")[1]
 	var userIPModel = new(UserIPModel)
 	res = -1
 	userRoles, err := userIPModel.GetUserRoles(user)
@@ -98,7 +99,13 @@ func GetAccessToResource(resource string, user string) (res int) {
 	if IsStringInArrayIdName("Администратор системы", userRoles) {
 		return 1
 	}
-	accessRole, err := userIPModel.GetUserResourceAccess(resource, user)
+	if IsStringInArrayIdName("Администратор", userRoles) {
+		return 1
+	}
+	if IsStringInArrayIdName("Технический специалист", userRoles) && domain == resource {
+		return 1
+	}
+	accessRole, _ := userIPModel.GetUserResourceAccess(resource, user)
 
 	return accessRole
 }

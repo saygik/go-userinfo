@@ -45,16 +45,22 @@ func (m ADUserModel) AllDomains() []ad.ADArray {
 func (m ADUserModel) ClearAllDomainsUsers() {
 	redisClient := db.GetRedis()
 	redisClient.Del(ctx, "ad")
+	redisClient.Del(ctx, "adc")
 }
+
 func (m ADUserModel) GetAllDomainsUsers() {
 	allADs := ad.GetAllADClients()
 	redisClient := db.GetRedis()
+
 	for domain, oneAD := range allADs {
 		users, err := oneAD.GetAllUsers()
+		comps, _ := oneAD.GetAllComputers()
+
 		if err == nil || len(users) > 0 {
 			//break // break here
 			println("Get from ad to redis from " + domain)
 			ips, _ := UserIPModel{}.All(domain)
+			avatars, _ := UserIPModel{}.AllAvatars(domain)
 			presences, _ := SkypeModel{}.AllPresences()
 			for _, user := range users {
 				user["domain"] = domain
@@ -64,7 +70,6 @@ func (m ADUserModel) GetAllDomainsUsers() {
 				if IsStringInArray("Пользователи интернета Белый список", user["memberOf"]) {
 					user["internetwl"] = true
 				}
-				delete(user, "memberOf")
 				if len(ips) > 0 {
 					for _, ip := range ips {
 						if user["userPrincipalName"] == ip.Login {
@@ -73,6 +78,17 @@ func (m ADUserModel) GetAllDomainsUsers() {
 						}
 					}
 				}
+				if len(avatars) > 0 {
+					for _, avatar := range avatars {
+						if user["userPrincipalName"] == avatar.Name {
+							user["avatar"] = avatar.Avatar
+						}
+					}
+				}
+
+				// if _, ok := user["avatar"]; ok {
+				// 	user["avatar"] = "avatar1"
+				// }
 				if len(presences) > 0 {
 					for _, presence := range presences {
 						if user["userPrincipalName"] == presence.Userathost {
@@ -83,6 +99,8 @@ func (m ADUserModel) GetAllDomainsUsers() {
 
 					}
 				}
+				jsonUser, _ := json.Marshal(user)
+				redisClient.HSet(ctx, "allusers", user["userPrincipalName"], jsonUser).Err()
 			}
 
 		}
@@ -90,12 +108,103 @@ func (m ADUserModel) GetAllDomainsUsers() {
 			return fmt.Sprintf("%v", users[i]["cn"]) < fmt.Sprintf("%v", users[j]["cn"])
 		})
 		jsonUsers, _ := json.Marshal(users)
+		jsonComps, _ := json.Marshal(comps)
 		err1 := redisClient.HSet(ctx, "ad", domain, jsonUsers).Err()
 		if err1 != nil {
 			fmt.Println("key does not exists")
 			return
 		}
+		redisClient.HSet(ctx, "adc", domain, jsonComps).Err()
+
 	}
+}
+
+func (m ADUserModel) AllAdCounts() (users int, computers int, error1 error) {
+	var r []map[string]interface{}
+
+	redisClient := db.GetRedis()
+	if redisClient == nil {
+		return 0, 0, errors.New("Redis not found")
+	}
+	redisADUsers, err := redisClient.HGetAll(ctx, "ad").Result()
+	if err != nil {
+		return 0, 0, err
+	}
+	redisADComputers, err := redisClient.HGetAll(ctx, "adc").Result()
+	if err != nil {
+		return 0, 0, err
+	}
+	users = 0
+	computers = 0
+	for _, oneDomain := range redisADUsers {
+		json.Unmarshal([]byte(oneDomain), &r)
+		users = users + len(r)
+	}
+	for _, oneDomain := range redisADComputers {
+		json.Unmarshal([]byte(oneDomain), &r)
+		computers = computers + len(r)
+	}
+
+	return users, computers, nil
+
+}
+
+// All Computers...
+func (m ADUserModel) AllAdComputers(user string) ([]map[string]interface{}, error) {
+
+	var res []map[string]interface{}
+	redisClient := db.GetRedis()
+	if redisClient == nil {
+		return nil, errors.New("Redis not found")
+	}
+	redisADUsers, err := redisClient.HGetAll(ctx, "adc").Result()
+	if err != nil {
+		return nil, err
+	}
+	for domainName, oneDomain := range redisADUsers {
+		access := GetAccessToResource(domainName, user)
+		if access == -1 {
+			continue
+		}
+		var r []map[string]interface{}
+		json.Unmarshal([]byte(oneDomain), &r)
+
+		res = append(res, r...)
+	}
+	return res, nil
+}
+
+// All Ad Users Short info...
+func (m ADUserModel) AllAdUsersShort() ([]map[string]interface{}, error) {
+	redisClient := db.GetRedis()
+	var ctx = context.Background()
+	var users []map[string]interface{}
+
+	redisADUsers, err := redisClient.HGetAll(ctx, "allusers").Result()
+	if err != nil {
+		return []map[string]interface{}{}, err
+	}
+	for _, value := range redisADUsers {
+		var user map[string]interface{}
+		json.Unmarshal([]byte(value), &user)
+		delete(user, "ip")
+		delete(user, "pwdLastSet")
+		delete(user, "proxyAddresses")
+		delete(user, "passwordDontExpire")
+		delete(user, "passwordCantChange")
+		delete(user, "distinguishedName")
+		delete(user, "userAccountControl")
+		delete(user, "memberOf")
+		delete(user, "employeeNumber")
+		delete(user, "presence")
+		delete(user, "url")
+		delete(user, "otherTelephone")
+		user["findedInAD"] = true
+		user["name"] = user["userPrincipalName"]
+		users = append(users, user)
+	}
+	//	json.Unmarshal([]byte(redisADUsers), &users)
+	return users, nil
 }
 
 // All ...
@@ -129,16 +238,18 @@ func (m ADUserModel) AllAd(user string) ([]map[string]interface{}, error) {
 		//accessToTechnicalInfo := (isUserAccessToDomain && domainTechnical) || IsStringInArray("fullAdmin", userRoles) || access
 		accessToTechnicalInfo := access == 1
 		for _, user := range r {
+			delete(user, "employeeNumber")
 			if !accessToTechnicalInfo {
 				delete(user, "ip")
 				delete(user, "pwdLastSet")
 				delete(user, "proxyAddresses")
-				delete(user, "employeeNumber")
 				delete(user, "passwordDontExpire")
 				delete(user, "passwordCantChange")
 				delete(user, "distinguishedName")
 				delete(user, "userAccountControl")
+				delete(user, "memberOf")
 
+				user["restricted"] = true
 			}
 
 			//user["ip"] = "-"
@@ -187,6 +298,8 @@ func (m ADUserModel) All(domain string) ([]map[string]interface{}, error) {
 	//t := time.Now()
 	//fmt.Println(t.Format("20060102150405"))
 	ips, err := UserIPModel{}.All(domain)
+	avatars, _ := UserIPModel{}.AllAvatars(domain)
+
 	presences, err := SkypeModel{}.AllPresences()
 
 	for _, user := range users {
@@ -202,6 +315,13 @@ func (m ADUserModel) All(domain string) ([]map[string]interface{}, error) {
 			for _, ip := range ips {
 				if user["userPrincipalName"] == ip.Login {
 					user["ip"] = ip.Ip
+				}
+			}
+		}
+		if len(avatars) > 0 {
+			for _, avatar := range avatars {
+				if user["userPrincipalName"] == avatar.Name {
+					user["avatar"] = avatar.Avatar
 				}
 			}
 		}
@@ -268,6 +388,10 @@ func (m ADUserModel) GetCurrentUser(username string) (map[string]interface{}, er
 	} else {
 		user["groups"] = []IdName{}
 	}
+	avatar, err := userIPModel.GetUserAvatar(username)
+	if err == nil {
+		user["avatar"] = avatar
+	}
 
 	user["role"] = role
 	user["domain"] = domain
@@ -303,7 +427,7 @@ func (m ADUserModel) GetOneUserPropertys(username string, techUser string) (map[
 	if err != nil {
 		return nil, err
 	}
-
+	var userIPModel = new(UserIPModel)
 	ADUsers := redisADUsers[domain]
 
 	if err == nil && ADUsers != "" {
@@ -321,6 +445,13 @@ func (m ADUserModel) GetOneUserPropertys(username string, techUser string) (map[
 					delete(user, "passwordCantChange")
 					delete(user, "distinguishedName")
 					delete(user, "userAccountControl")
+					delete(user, "memberOf")
+
+				}
+
+				avatar, err := userIPModel.GetUserAvatar(username)
+				if err == nil {
+					user["avatar"] = avatar
 				}
 				return user, nil
 			}

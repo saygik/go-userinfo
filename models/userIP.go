@@ -14,8 +14,13 @@ type User struct {
 	Computer string `db:"computer" json:"computer"`
 }
 type SoftUser struct {
-	Id   int64  `db:"id" json:"id"`
-	Name string `db:"user_name" json:"name"`
+	Id        int64                  `db:"id" json:"id"`
+	Name      string                 `db:"user_name" json:"name"`
+	Login     string                 `db:"user_login" json:"login,omitempty"`
+	Comment   string                 `db:"user_comment" json:"comment,omitempty"`
+	Fio       string                 `db:"fio" json:"fio,omitempty"`
+	External  bool                   `db:"external" json:"external,omitempty"`
+	Propertys map[string]interface{} `json:"props"`
 }
 
 type UserActivity struct {
@@ -34,11 +39,41 @@ type AppResources struct {
 	Name string `db:"name" json:"name"`
 	Edit string `db:"edit" json:"edit"`
 }
+type IdNameAvatar struct {
+	Id     int64  `db:"id" json:"id"`
+	Name   string `db:"name" json:"name"`
+	Avatar string `db:"avatar" json:"avatar"`
+}
 
 // GLPI User find by Mail ...
 func (m UserIPModel) All(domain string) (users []User, err error) {
 	_, err = db.GetDB().Select(&users, "GetAllUserIPByDomain $1", domain)
 	return users, err
+}
+func (m UserIPModel) AllAvatars(domain string) (users []IdNameAvatar, err error) {
+	_, err = db.GetDB().Select(&users, "GetAllUsersAvatars $1", domain)
+	return users, err
+}
+
+/********** Avatars*/
+func (m UserIPModel) GetUserAvatar(userID string) (avatar string, err error) {
+	err = db.GetDB().QueryRow("GetUserAvatar $1", userID).Scan(&avatar)
+	return avatar, err
+}
+func (m UserIPModel) SetUserAvatar(userID string, avatar string) (msgResponce string, err error) {
+
+	//	err = db.GetDB().QueryRow("SetUserAvatar $1,$2", userID, avatar).Scan(&msgResponce)
+	//	return msgResponce, err
+	res, err := db.GetDB().Exec("SetUserAvatar $1,$2", userID, avatar)
+	if res != nil {
+		_, err1 := res.RowsAffected()
+		if err1 != nil {
+			return "No rows affected", err
+		}
+		return "Avatar updated or created", err
+	}
+	return "No rows affected", err
+
 }
 
 func (m UserIPModel) GetUserRoles(userID string) (roles []IdName, err error) {
@@ -134,6 +169,17 @@ func (m UserIPModel) DelOneUserSoftware(user string, id int64) (rows int64, err 
 }
 func (m UserIPModel) AddOneUserSoftware(form forms.SoftwareForm) (rows int64, err error) {
 	res, err := db.GetDB().Exec("AddOneUserSoftware $1,$2", form.User, form.Id)
+	if res != nil {
+		ra, err1 := res.RowsAffected()
+		if err1 != nil {
+			return 0, err1
+		}
+		return ra, nil
+	}
+	return 0, err
+}
+func (m UserIPModel) AddOneSoftwareUser(form forms.SoftwareUsersForm) (rows int64, err error) {
+	res, err := db.GetDB().Exec("AddOneSoftwareUser $1,$2,$3,$4,$5,$6", form.User, form.Id, form.Login, form.Comment, form.Fio, form.External)
 	if res != nil {
 		ra, err1 := res.RowsAffected()
 		if err1 != nil {

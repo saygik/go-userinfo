@@ -35,3 +35,15 @@ type SoftwareForm struct {
 	Id   int64  `form:"id" json:"id" binding:"required,number"`
 	User string `form:"user" json:"user"`
 }
+type SoftwareUsersForm struct {
+	Id       int64  `form:"id" json:"id"`
+	User     string `form:"user" json:"user" binding:"required"`
+	Login    string `form:"login" json:"login" `
+	Comment  string `form:"comment" json:"comment" `
+	Fio      string `form:"fio" json:"fio" `
+	External bool   `form:"external" json:"external" `
+}
+
+type AvatarForm struct {
+	Avatar string `form:"avatar" json:"avatar"`
+}

@@ -19,7 +19,8 @@ type MattermostUser struct {
 	Email       string `json:"email"`
 	Nickname    string `json:"nickname,omitempty"`
 	Roles       string `json:"roles,omitempty"`
-	IsBot       bool   `json:"is_bot,,omitempty"`
+	IsBot       bool   `json:"is_bot,omitempty"`
+	Registred   bool   `json:"registred"`
 }
 
 // GLPI User find by Mail ...
