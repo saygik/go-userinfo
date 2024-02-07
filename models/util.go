@@ -57,6 +57,7 @@ type DataList struct {
 	Meta JSONRaw `db:"meta" json:"meta"`
 }
 
+// Перенесено
 func IsStringInArray(str string, arr interface{}) bool {
 	if arr == nil {
 		return false

@@ -8,6 +8,7 @@ import (
 // UserModel ...
 type UserIPModel struct{}
 
+// Перенесено
 type User struct {
 	Login    string `db:"login" json:"login"`
 	Ip       string `db:"ip" json:"ip"`
@@ -39,17 +40,21 @@ type AppResources struct {
 	Name string `db:"name" json:"name"`
 	Edit string `db:"edit" json:"edit"`
 }
+
+// Перенесено
 type IdNameAvatar struct {
 	Id     int64  `db:"id" json:"id"`
 	Name   string `db:"name" json:"name"`
 	Avatar string `db:"avatar" json:"avatar"`
 }
 
-// GLPI User find by Mail ...
+// Перенесено
 func (m UserIPModel) All(domain string) (users []User, err error) {
 	_, err = db.GetDB().Select(&users, "GetAllUserIPByDomain $1", domain)
 	return users, err
 }
+
+// Перенесено
 func (m UserIPModel) AllAvatars(domain string) (users []IdNameAvatar, err error) {
 	_, err = db.GetDB().Select(&users, "GetAllUsersAvatars $1", domain)
 	return users, err

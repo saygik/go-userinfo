@@ -55,6 +55,7 @@ func (ctrl UserController) Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
 }
 
+// Устаревшее
 func (ctrl UserController) LoginOauth(c *gin.Context) {
 	// cd := c.Request.URL.RawQuery
 	// fmt.Printf(cd)
