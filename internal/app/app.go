@@ -13,7 +13,7 @@ type App struct {
 
 func New() (*App, error) {
 	app := &App{}
-	cfg, err := config.NewConfig("config")
+	cfg, err := config.NewConfig("config.json")
 	if err != nil {
 		return nil, err
 	}

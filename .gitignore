@@ -31,4 +31,4 @@ cert/
 logs.txt
 __debug_bin
 adconfig.json.bak
-config
+config.json
