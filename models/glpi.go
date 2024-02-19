@@ -220,27 +220,7 @@ func (m GLPIModel) GetSoftwares() (softwares []Software, err error) {
 		LEFT JOIN glpi_groups ON glpi_softwares.groups_id_tech=glpi_groups.id
 		WHERE glpi_softwares.is_deleted=0`)
 	_, err = glpidb.GetDB().Select(&softwares, sql)
-	// if err != nil {
-	// 	return softwares, err
-	// }
-	// admins, err1 := m.GetSoftwaresAdmins()
-	// if err != nil {
-	// 	return softwares, err1
-	// }
-	// softAdmins := []string{}
-	// for i, soft := range softwares {
-	// 	for _, admin := range admins {
-	// 		if soft.Groups_id_tech == admin.Id {
-	// 			softAdmins = append(softAdmins, admin.Name)
-	// 		}
-	// 	}
-	// 	if len(softAdmins) > 0 {
-	// 		softwares[i].Admins = []map[string]interface{}{}
-	// 		softAdmins = nil
-	// 	} else {
-	// 		softwares[i].Admins = []map[string]interface{}{}
-	// 	}
-	// }
+
 	return softwares, err
 }
 func (m GLPIModel) GetSoftwaresAdmins() (admins []SoftwareAdmins, err error) {

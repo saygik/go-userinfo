@@ -7,7 +7,7 @@ import (
 
 type App struct {
 	cfg config.Config
-	C   *Container
+	c   *Container
 	log *logrus.Logger
 }
 
@@ -34,7 +34,7 @@ func New() (*App, error) {
 	}
 	adClients := NewADClients(cfg.AD)
 	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients)
-	app.C = c
-	app.C.GetUseCase().FillRedisCaсheFromAD()
+	app.c = c
+	app.c.GetUseCase().FillRedisCaсheFromAD()
 	return app, nil
 }

@@ -1,9 +1,12 @@
 package ad
 
-func (r *Repository) DomainList() []string {
-	var domainsNames []string
+import "github.com/saygik/go-userinfo/internal/entity"
+
+func (r *Repository) DomainList() []entity.DomainList {
+	var domainsNames []entity.DomainList
 	for _, oneADConfig := range r.ads {
-		domainsNames = append(domainsNames, oneADConfig.Domain)
+		domain := entity.DomainList{Name: oneADConfig.Domain, Title: oneADConfig.Title}
+		domainsNames = append(domainsNames, domain)
 	}
 	return domainsNames
 }

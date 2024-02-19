@@ -155,6 +155,8 @@ github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTE
 github.com/rogpeppe/go-internal v1.8.0/go.mod h1:WmiCO8CzOY8rg0OYDC4/i/2WRWAB6poM+XZ2dLUbcbE=
 github.com/saygik/go-ad-client v0.0.0-20240103081240-401e39242b84 h1:roA1mFvgOjOSvb128N8S+0KQGh6ph0WSr0frhdsEfcc=
 github.com/saygik/go-ad-client v0.0.0-20240103081240-401e39242b84/go.mod h1:z3YCs/PuuxUMHirwi1QOlrtNQtqkBrYDtiP2iUT48co=
+github.com/saygik/go-ad-client v0.0.0-20240214102837-546b18de5e33 h1:fCP3QkTH5/JsRj3V9kv1zkx22azI13A/4R6pqV+fErE=
+github.com/saygik/go-ad-client v0.0.0-20240214102837-546b18de5e33/go.mod h1:z3YCs/PuuxUMHirwi1QOlrtNQtqkBrYDtiP2iUT48co=
 github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=
 github.com/sirupsen/logrus v1.9.3/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
 github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d/go.mod h1:OnSkiWE9lh6wB0YB77sQom3nweQdgAjqCqsofrRNTgc=

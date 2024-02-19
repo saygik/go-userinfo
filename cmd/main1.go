@@ -161,6 +161,8 @@ func main1() {
 	{
 
 		user := new(controllers.UserController)
+		glpi_controller := new(controllers.GLPIController)
+		controllers.DefaultDomain = os.Getenv("DEFAULT_DOMAIN")
 		// Устаревшее
 		v1.GET("/loginoauth", user.LoginOauth)
 
@@ -171,21 +173,26 @@ func main1() {
 		v1.POST("/token/refresh", auth.Refresh)
 		userIP := new(controllers.UserIPController)
 
-		controllers.DefaultDomain = os.Getenv("DEFAULT_DOMAIN")
+		//-       перенесено
+		v1.GET("/users/allad", TokenAuthMiddleware(), aduser.AllAd)
+		v1.GET("/user/ad/:username", TokenAuthMiddleware(), aduser.GetUserByName)
+		v1.GET("/cuser/whoami", TokenAuthMiddleware(), aduser.Find)
+		v1.GET("/cuser/resources", TokenAuthMiddleware(), userIP.CurrentUserResources)
+		v1.GET("/cuser/glpi", TokenAuthMiddleware(), glpi_controller.CurrentUserGLPI)
+		v1.GET("/computers/allad", TokenAuthMiddleware(), aduser.AllAdComputers)
+
+		v1.GET("/user/softwares/:username", glpi_controller.GetUserSoftwares)
+
+		//-------------------
 		v1.GET("/users/ip", userIP.All)
 		v1.GET("/users/ip/:domain", userIP.All)
 		v1.GET("/user/ip", userIP.SetIp)
 		v1.GET("/user/ip/:username", userIP.GetUserByName)
 		v1.PUT("/user/avatar/:username", TokenAuthMiddleware(), userIP.UpdateUserAvatar)
 		v1.GET("/user/activity/:username", TokenAuthMiddleware(), userIP.GetUserWeekActivity)
-		v1.GET("/user/ad/:username", TokenAuthMiddleware(), aduser.GetUserByName)
-		v1.GET("/cuser/whoami", TokenAuthMiddleware(), aduser.Find)
-		v1.GET("/cuser/resources", TokenAuthMiddleware(), userIP.CurrentUserResources)
 
 		v1.GET("/users/ad/:domain", TokenAuthMiddleware(), aduser.All)
-		v1.GET("/users/allad", TokenAuthMiddleware(), aduser.AllAd)
 		v1.GET("/users/short-ad-info", TokenAuthMiddleware(), aduser.AllAdUsersShort)
-		v1.GET("/computers/allad", TokenAuthMiddleware(), aduser.AllAdComputers)
 
 		v1.GET("/ad/stats/counts", aduser.AllAdCounts)
 		v1.GET("/users/ad/:domain/:group", aduser.GroupUsers)
@@ -210,13 +217,12 @@ func main1() {
 		v1.GET("/matt/users", mattermost_controller.GetAll)
 
 		/**************** GLPI ************************/
-		glpi_controller := new(controllers.GLPIController)
+
 		v1.GET("/user/glpi/:username", UserFromTokenTokenMiddleware(), glpi_controller.GetUserByName)
 
 		v1.GET("/softwares", TokenAuthMiddleware(), glpi_controller.GetSoftwares)
 		v1.GET("/software/:id", TokenAuthMiddleware(), glpi_controller.GetSoftware)
 		v1.GET("/software/:id/users", TokenAuthMiddleware(), glpi_controller.GetSoftwareUsers)
-		v1.GET("/user/softwares/:username", glpi_controller.GetUserSoftwares)
 		v1.DELETE("/user/software/:username/:id", glpi_controller.DelOneUserSoftware)
 		v1.POST("/user/software/:username", glpi_controller.AddOneUserSoftware)
 		v1.POST("/software/user/:software", glpi_controller.AddOneSoftwareUser)
@@ -227,7 +233,6 @@ func main1() {
 		v1.GET("/glpi/ticket/:id", TokenAuthMiddleware(), glpi_controller.GetTicket)          // * Все незакрытые заявки //
 
 		v1.GET("/users/glpi", TokenAuthMiddleware(), glpi_controller.GetUsers)
-		v1.GET("/cuser/glpi", TokenAuthMiddleware(), glpi_controller.CurrentUserGLPI)
 
 		v1.GET("/glpi/tickets/stats", glpi_controller.GetStatTickets)
 		v1.GET("/glpi/tickets/statsdays", glpi_controller.GetStatTicketsDays)

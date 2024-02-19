@@ -15,7 +15,6 @@ import (
 
 type ADConfig struct {
 	Key            string        `json:"key"`
-	Domain         string        `json:"domain"`
 	Name           string        `json:"name"`
 	Base           string        `json:"base"`
 	Dc             string        `json:"dc"`
@@ -40,10 +39,14 @@ type DBConfig struct {
 	Secret   string
 }
 type APIConfig struct {
-	Server        string `json:"server" binding:"required"`
-	Token         string `json:"token" binding:"required"`
+	Server string `json:"server" binding:"required"`
+	Token  string `json:"token" binding:"required"`
+}
+type JWT struct {
 	AccessSecret  string `json:"access-secret" binding:"required"`
 	RefreshSecret string `json:"refreshsecret" binding:"required"`
+	AtExpires     int    `json:"atexpires" binding:"required"`
+	RtExpires     int    `json:"rtexpires" binding:"required"`
 }
 type Repository struct {
 	Mssql      DBConfig
@@ -52,7 +55,8 @@ type Repository struct {
 	Mattermost APIConfig
 }
 type Config struct {
-	App        AppConfig  `json:"app" binding:"required"`
+	App        AppConfig `json:"app" binding:"required"`
+	Jwt        JWT
 	AD         []ADConfig `json:"ad" binding:"required"`
 	Repository Repository `json:"repository" binding:"required"`
 }

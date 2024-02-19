@@ -5,10 +5,10 @@ import (
 	"github.com/saygik/go-userinfo/internal/config"
 )
 
-type adArray struct {
-	Name  string `json:"name"`
-	Title string `json:"title"`
-}
+// type adArray struct {
+// 	Name  string `json:"name"`
+// 	Title string `json:"title"`
+// }
 
 func NewADClients(adConfigs []config.ADConfig) map[string]*adClient.ADClient {
 	var adClients = map[string]*adClient.ADClient{}
@@ -23,7 +23,8 @@ func NewADClients(adConfigs []config.ADConfig) map[string]*adClient.ADClient {
 
 func newAddConnection(config config.ADConfig) *adClient.ADClient {
 	client := &adClient.ADClient{
-		Domain:         config.Domain,
+		Title:          config.Name,
+		Domain:         config.Key,
 		Base:           config.Base,
 		Host:           config.Dc,
 		Port:           389,

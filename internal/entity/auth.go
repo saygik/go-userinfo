@@ -1,5 +1,10 @@
 package entity
 
+type Token struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
 type TokenDetails struct {
 	AccessToken  string
 	RefreshToken string
@@ -12,4 +17,10 @@ type TokenDetails struct {
 type LoginForm struct {
 	Email    string `form:"email" json:"email" binding:"required,email"`
 	Password string `form:"password" json:"password" binding:"required"`
+}
+
+// AccessDetails ...
+type AccessDetails struct {
+	AccessUUID string
+	UserID     string
 }

@@ -5,8 +5,10 @@ import (
 	"github.com/redis/go-redis/v9"
 	adClient "github.com/saygik/go-ad-client"
 	"github.com/saygik/go-userinfo/internal/adapter/repository/ad"
+	"github.com/saygik/go-userinfo/internal/adapter/repository/glpi"
 	"github.com/saygik/go-userinfo/internal/adapter/repository/mssql"
 	"github.com/saygik/go-userinfo/internal/adapter/repository/redisclient"
+	"github.com/saygik/go-userinfo/internal/auth/jwt"
 	"github.com/saygik/go-userinfo/internal/usecase"
 )
 
@@ -27,17 +29,23 @@ func NewAppContainer(mssqlConnect *gorp.DbMap, glpiConnect *gorp.DbMap, r *redis
 	return c
 }
 func (c *Container) GetUseCase() *usecase.UseCase {
-	return usecase.New(c.getMssqlRepository(), c.getRedisRepository(), c.getADRepository())
+	return usecase.New(c.getMssqlRepository(), c.getRedisRepository(), c.getADRepository(), c.getGlpiRepository())
 }
 
-func (c *Container) getMssqlRepository() usecase.Repository {
+func (c *Container) getMssqlRepository() *mssql.Repository {
 	return mssql.NewRepository(c.mssql)
 }
-
-func (c *Container) getRedisRepository() usecase.Redis {
-	return redisclient.New(c.rc)
+func (c *Container) getGlpiRepository() *glpi.Repository {
+	return glpi.NewRepository(c.glpi)
 }
 
-func (c *Container) getADRepository() usecase.AD {
+func (c *Container) getRedisRepository() *redisclient.Repository {
+	return redisclient.New(c.rc)
+}
+func (c *Container) GetAuth(accessSecret string, refreshSecret string, atExpires int, rtExpires int) *jwt.Auth {
+	return jwt.New(c.getRedisRepository(), jwt.JwtCfg{AccessSecret: accessSecret, RefreshSecret: refreshSecret, AtExpires: atExpires, RtExpires: rtExpires})
+}
+
+func (c *Container) getADRepository() *ad.Repository {
 	return ad.New(c.ads)
 }

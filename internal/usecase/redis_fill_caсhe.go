@@ -9,17 +9,19 @@ import (
 
 func (u *UseCase) ClearRedisCaсhe() {
 	//u.r.clearAllDomainsUsers()
+	u.redis.ClearAllDomainsUsers()
 }
 
 func (u *UseCase) FillRedisCaсheFromAD() error {
 	adl := u.ad.DomainList()
+	//	u.redis.ClearAllDomainsUsers()
 	for _, one := range adl {
 		users, err := u.ad.GetDomainUsers("brnv.rw")
 		comps, _ := u.ad.GetDomainComputers("brnv.rw")
 		if err == nil || len(users) > 0 {
-			println("Get from ad to redis from " + one)
-			ips, _ := u.repo.GetDomainUsersIP(one)
-			avatars, _ := u.repo.GetDomainUsersAvatars(one)
+			println("Get from ad to redis from " + one.Name)
+			ips, _ := u.repo.GetDomainUsersIP(one.Name)
+			avatars, _ := u.repo.GetDomainUsersAvatars(one.Name)
 			for _, user := range users {
 				user["domain"] = one
 				if IsStringInArray("Пользователи интернета", user["memberOf"]) {
@@ -55,11 +57,13 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 		})
 		jsonUsers, _ := json.Marshal(users)
 		jsonComps, _ := json.Marshal(comps)
-		err1 := u.redis.AddKeyFieldValue("ad", one, jsonUsers)
+		u.redis.DelKeyField("ad", one.Name)
+		err1 := u.redis.AddKeyFieldValue("ad", one.Name, jsonUsers)
 		if err1 != nil {
 			return errors.New("key does not exists")
 		}
-		u.redis.AddKeyFieldValue("adc", one, jsonComps)
+		u.redis.DelKeyField("adc", one.Name)
+		u.redis.AddKeyFieldValue("adc", one.Name, jsonComps)
 	}
 	return nil
 }

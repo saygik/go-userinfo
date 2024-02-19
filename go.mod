@@ -13,7 +13,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/koltyakov/gosip v0.0.0-20231220150131-60203a6b7c36
 	github.com/redis/go-redis/v9 v9.4.0
-	github.com/saygik/go-ad-client v0.0.0-20240103081240-401e39242b84
+	github.com/saygik/go-ad-client v0.0.0-20240214102837-546b18de5e33
 	github.com/sirupsen/logrus v1.9.3
 	github.com/toorop/gin-logrus v0.0.0-20210225092905-2c785434f26f
 	github.com/twinj/uuid v1.0.0
