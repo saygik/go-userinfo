@@ -15,7 +15,7 @@ func (u *UseCase) GetUserADPropertys(username string, techUser string) (map[stri
 
 	accessToTechnicalInfo := access == 1
 
-	user, err := u.GetUser(username)
+	user, err := u.GetUser(username, techUser)
 	if err != nil {
 		return nil, err
 	}
@@ -31,6 +31,7 @@ func (u *UseCase) GetUserADPropertys(username string, techUser string) (map[stri
 		delete(user, "memberOf")
 
 	}
+
 	return user, nil
 
 }

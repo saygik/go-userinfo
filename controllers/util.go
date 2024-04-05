@@ -3,7 +3,6 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"regexp"
 	"strings"
@@ -31,9 +30,9 @@ func ReadUserIP(r *http.Request) string {
 
 }
 
-func ReadUserName(ip string) (names []string, err error) {
-	return net.LookupAddr(ip)
-}
+// func ReadUserName(ip string) (names []string, err error) {
+// 	return net.LookupAddr(ip)
+// }
 
 var emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 

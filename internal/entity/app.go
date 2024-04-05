@@ -1,12 +1,18 @@
 package entity
 
 type IdName struct {
-	Id   int64  `db:"id" json:"id"`
+	Id   int    `db:"id" json:"id"`
 	Name string `db:"name" json:"name"`
 }
 
+type IdNameType struct {
+	Id   int    `db:"id" json:"id"`
+	Name string `db:"name" json:"name"`
+	Type int    `db:"type" json:"type"`
+}
+
 type AppResource struct {
-	Id   int64  `db:"id" json:"id"`
+	Id   int    `db:"id" json:"id"`
 	Name string `db:"name" json:"name"`
 	Edit string `db:"edit" json:"edit"`
 }

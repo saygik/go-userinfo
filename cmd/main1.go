@@ -163,6 +163,7 @@ func main1() {
 		user := new(controllers.UserController)
 		glpi_controller := new(controllers.GLPIController)
 		controllers.DefaultDomain = os.Getenv("DEFAULT_DOMAIN")
+		manuals_controller := new(controllers.ManualsController)
 		// Устаревшее
 		v1.GET("/loginoauth", user.LoginOauth)
 
@@ -182,14 +183,32 @@ func main1() {
 		v1.GET("/computers/allad", TokenAuthMiddleware(), aduser.AllAdComputers)
 
 		v1.GET("/user/softwares/:username", glpi_controller.GetUserSoftwares)
+		v1.GET("/user/activity/:username", TokenAuthMiddleware(), userIP.GetUserWeekActivity)
+		v1.GET("/softwares", TokenAuthMiddleware(), glpi_controller.GetSoftwares)
+		v1.POST("/user/software/:username", glpi_controller.AddOneUserSoftware)
+		v1.DELETE("/user/software/:username/:id", glpi_controller.DelOneUserSoftware)
+		v1.POST("/software/user/:software", glpi_controller.AddOneSoftwareUser)
+		v1.GET("/manuals/orgcodes", manuals_controller.AllOrgCodes)
 
+		v1.GET("/glpi/nctickets", TokenAuthMiddleware(), glpi_controller.GetTicketsNonClosed) // * Все незакрытые заявки //
+		v1.GET("/users/glpi", TokenAuthMiddleware(), glpi_controller.GetUsers)
+		v1.GET("/glpi/ticket/:id", TokenAuthMiddleware(), glpi_controller.GetTicket) // * Заявка
+		v1.GET("/glpi/otkazes", glpi_controller.GetOtkazes)                          // * Все отказвы //
+
+		v1.GET("/glpi/tickets/stats", glpi_controller.GetStatTickets)
+		v1.GET("/glpi/failures/stats", glpi_controller.GetStatFailures)
+		v1.GET("/glpi/stats/period-regions-month-days", glpi_controller.GetStatPeriodRegionDayCounts)
+		v1.GET("/glpi/tickets/statsdays", glpi_controller.GetStatTicketsDays)
+		v1.GET("/glpi/stats/top10performers", glpi_controller.GetStatTop10Performers)
+		v1.GET("/glpi/stats/top10iniciators", glpi_controller.GetStatTop10Iniciators)
+		v1.GET("/glpi/stats/top10groups", glpi_controller.GetStatTop10Groups)
+		v1.PUT("/user/avatar/:username", TokenAuthMiddleware(), userIP.UpdateUserAvatar)
 		//-------------------
+
 		v1.GET("/users/ip", userIP.All)
 		v1.GET("/users/ip/:domain", userIP.All)
 		v1.GET("/user/ip", userIP.SetIp)
 		v1.GET("/user/ip/:username", userIP.GetUserByName)
-		v1.PUT("/user/avatar/:username", TokenAuthMiddleware(), userIP.UpdateUserAvatar)
-		v1.GET("/user/activity/:username", TokenAuthMiddleware(), userIP.GetUserWeekActivity)
 
 		v1.GET("/users/ad/:domain", TokenAuthMiddleware(), aduser.All)
 		v1.GET("/users/short-ad-info", TokenAuthMiddleware(), aduser.AllAdUsersShort)
@@ -220,35 +239,16 @@ func main1() {
 
 		v1.GET("/user/glpi/:username", UserFromTokenTokenMiddleware(), glpi_controller.GetUserByName)
 
-		v1.GET("/softwares", TokenAuthMiddleware(), glpi_controller.GetSoftwares)
 		v1.GET("/software/:id", TokenAuthMiddleware(), glpi_controller.GetSoftware)
 		v1.GET("/software/:id/users", TokenAuthMiddleware(), glpi_controller.GetSoftwareUsers)
-		v1.DELETE("/user/software/:username/:id", glpi_controller.DelOneUserSoftware)
-		v1.POST("/user/software/:username", glpi_controller.AddOneUserSoftware)
-		v1.POST("/software/user/:software", glpi_controller.AddOneSoftwareUser)
 
-		v1.GET("/glpi/sum/otkaz", glpi_controller.GetStatOtkazSum)                            // * Всего отказов //
-		v1.GET("/glpi/otkazes", glpi_controller.GetOtkazes)                                   // * Все отказвы //
-		v1.GET("/glpi/nctickets", TokenAuthMiddleware(), glpi_controller.GetTicketsNonClosed) // * Все незакрытые заявки //
-		v1.GET("/glpi/ticket/:id", TokenAuthMiddleware(), glpi_controller.GetTicket)          // * Все незакрытые заявки //
+		v1.GET("/glpi/sum/otkaz", glpi_controller.GetStatOtkazSum) // * Всего отказов //
 
-		v1.GET("/users/glpi", TokenAuthMiddleware(), glpi_controller.GetUsers)
-
-		v1.GET("/glpi/tickets/stats", glpi_controller.GetStatTickets)
-		v1.GET("/glpi/tickets/statsdays", glpi_controller.GetStatTicketsDays)
-
-		v1.GET("/glpi/failures/stats", glpi_controller.GetStatFailures)
 		v1.GET("/glpi/regions/stats", glpi_controller.GetStatRegions)
-		v1.GET("/glpi/stats/top10performers", glpi_controller.GetStatTop10Performers)
-		v1.GET("/glpi/stats/top10iniciators", glpi_controller.GetStatTop10Iniciators)
-		v1.GET("/glpi/stats/top10groups", glpi_controller.GetStatTop10Groups)
+
 		v1.GET("/glpi/stats/periodcounts", glpi_controller.GetStatPeriodTicketsCounts)
 		v1.GET("/glpi/stats/periodrequestypes", glpi_controller.GetStatPeriodRequestTypes)
 		v1.GET("/glpi/stats/period-org-treemap", glpi_controller.GetStatPeriodOrgTreemap)
-		v1.GET("/glpi/stats/period-regions-month-days", glpi_controller.GetStatPeriodRegionDayCounts)
-
-		manuals_controller := new(controllers.ManualsController)
-		v1.GET("/manuals/orgcodes", manuals_controller.AllOrgCodes)
 
 	}
 

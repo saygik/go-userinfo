@@ -74,12 +74,13 @@ func (m Auth) CreateToken(userLogin string) (*TokenDetails, error) {
 	ate, _ := time.ParseDuration(fmt.Sprintf("%dh", m.cfg.AtExpires))
 	rte, _ := time.ParseDuration(fmt.Sprintf("%dh", m.cfg.RtExpires))
 	td.AtExpires = time.Now().Add(ate).Unix()
-	//  td.AtExpires = time.Now().Add(time.Minute * 60).Unix()
+
 	td.AccessUUID = uuid.NewV4().String()
 
 	td.RtExpires = time.Now().Add(rte).Unix()
 	//	td.RtExpires = time.Now().Add(time.Hour * 24 * 7).Unix()
-	//td.RtExpires = time.Now().Add(time.Minute * 5).Unix()
+	// td.AtExpires = time.Now().Add(time.Second * 15).Unix()
+	// td.RtExpires = time.Now().Add(time.Minute * 1).Unix()
 	td.RefreshUUID = uuid.NewV4().String()
 
 	var err error
@@ -124,6 +125,9 @@ func (m Auth) CreateAuth(userLogin string, td *TokenDetails) error {
 	}
 	//	errRefresh := db.GetRedis().Set(ctx, td.RefreshUUID, userJSON, rt.Sub(now)).Err()
 	errRefresh := m.rc.AddKeyValue(td.RefreshUUID, userJSON, rt.Sub(now))
+	// dd, _ := m.rc.GetKeyValue(td.RefreshUUID)
+	// ff := dd
+	// _ = ff
 	if errRefresh != nil {
 		return errRefresh
 	}

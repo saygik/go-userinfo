@@ -19,7 +19,6 @@ func (u *UseCase) GetDomainList(user string) []entity.DomainList {
 		if access != -1 {
 			res = append(res, oneDomain)
 		}
-
 	}
 	return res
 }

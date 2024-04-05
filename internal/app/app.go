@@ -1,6 +1,8 @@
 package app
 
 import (
+	"time"
+
 	"github.com/saygik/go-userinfo/internal/config"
 	"github.com/sirupsen/logrus"
 )
@@ -33,8 +35,25 @@ func New() (*App, error) {
 		return nil, err
 	}
 	adClients := NewADClients(cfg.AD)
-	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients)
+
+	mattClient := app.newMattermostConnection(cfg.Repository.Mattermost.Server, cfg.Repository.Mattermost.Token)
+	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, mattClient)
 	app.c = c
+	app.c.GetUseCase().ClearRedisCaсhe()
 	app.c.GetUseCase().FillRedisCaсheFromAD()
+	ticker := time.NewTicker(30 * time.Minute)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				// do stuff
+				app.c.GetUseCase().FillRedisCaсheFromAD()
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 	return app, nil
 }

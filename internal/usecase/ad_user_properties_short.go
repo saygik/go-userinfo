@@ -2,7 +2,7 @@ package usecase
 
 func (u *UseCase) GetUserADPropertysShort(username string) map[string]interface{} {
 
-	user, err := u.GetUser(username)
+	user, err := u.GetUserShort(username)
 	if err != nil {
 		userProperties := map[string]interface{}{}
 		userProperties["name"] = username

@@ -7,17 +7,12 @@ import (
 	"sort"
 )
 
-func (u *UseCase) ClearRedisCaсhe() {
-	//u.r.clearAllDomainsUsers()
-	u.redis.ClearAllDomainsUsers()
-}
-
 func (u *UseCase) FillRedisCaсheFromAD() error {
 	adl := u.ad.DomainList()
 	//	u.redis.ClearAllDomainsUsers()
 	for _, one := range adl {
-		users, err := u.ad.GetDomainUsers("brnv.rw")
-		comps, _ := u.ad.GetDomainComputers("brnv.rw")
+		users, err := u.ad.GetDomainUsers(one.Name)
+		comps, _ := u.ad.GetDomainComputers(one.Name)
 		if err == nil || len(users) > 0 {
 			println("Get from ad to redis from " + one.Name)
 			ips, _ := u.repo.GetDomainUsersIP(one.Name)
@@ -47,7 +42,11 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 				}
 
 				jsonUser, _ := json.Marshal(user)
-				u.redis.AddKeyFieldValue("allusers", user["userPrincipalName"].(string), jsonUser)
+				upn, ok := user["userPrincipalName"].(string)
+				if ok {
+					u.redis.AddKeyFieldValue("allusers", upn, jsonUser)
+				}
+
 				//				redisClient.HSet(ctx, "allusers", user["userPrincipalName"], jsonUser).Err()
 			}
 

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/saygik/go-userinfo/internal/entity"
 )
 
 // getUserID ...
@@ -18,7 +19,7 @@ func getUserID(c *gin.Context) (userID string) {
 
 func (h *Handler) CurrentUser(c *gin.Context) {
 	if userID := getUserID(c); userID != "" {
-		adUser, adErr := h.uc.GetUser(userID)
+		adUser, adErr := h.uc.GetUser(userID, userID)
 		if adErr != nil {
 			c.JSON(http.StatusNotAcceptable, gin.H{"message": "Invalid credentials", "error": adErr.Error()})
 			return
@@ -47,9 +48,69 @@ func (h *Handler) CurrentUserResources(c *gin.Context) {
 func (h *Handler) DomainList(c *gin.Context) {
 	userID := ""
 	if userID = getUserID(c); userID == "" {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domains", "error": "Empty domain name"})
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
 		return
 	}
 	domainList := h.uc.GetDomainList(userID)
 	c.JSON(http.StatusOK, gin.H{"data": domainList})
+}
+
+func (h *Handler) SetIp(c *gin.Context) {
+	var userForm entity.UserActivityForm
+	err := c.ShouldBindQuery(&userForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get user info from request", "error": err.Error()})
+		return
+	}
+	userForm.Ip = ReadUserIP(c.Request)
+	msgResponce, err := h.uc.SetUserIp(userForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not set user ip", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": msgResponce})
+
+}
+
+func (h *Handler) AppResources(c *gin.Context) {
+	userID := ""
+	if userID = getUserID(c); userID == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	resources, err := h.uc.GetAppResources(userID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить список ресурсов приложения", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": resources})
+}
+
+func (h *Handler) AppRoles(c *gin.Context) {
+	userID := ""
+	if userID = getUserID(c); userID == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	roles, err := h.uc.GetAppRoles(userID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить список ролей приложения", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": roles})
+}
+
+func (h *Handler) AppGroups(c *gin.Context) {
+	userID := ""
+	if userID = getUserID(c); userID == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	groups, err := h.uc.GetAppGroups(userID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить список групп пользователей приложения", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": groups})
 }

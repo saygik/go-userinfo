@@ -6,7 +6,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (r *Repository) GetUserProfiles(id int64) (profiles []entity.GLPIUserProfile, err error) {
+func (r *Repository) GetUserProfiles(id int) (profiles []entity.GLPIUserProfile, err error) {
 	sql := fmt.Sprintf(
 		`SELECT glpi_profiles_users.profiles_id AS id, glpi_profiles.name AS 'name', glpi_entities.completename AS ename, glpi_profiles_users.is_recursive AS 'recursive',
 		glpi_entities.id AS 'eid', IFNULL(JSON_EXTRACT(ancestors_cache, '$.*'),JSON_ARRAY(0)) AS 'orgs'

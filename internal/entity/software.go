@@ -24,3 +24,18 @@ type SoftwareAdmins struct {
 	Id   int64  `db:"id" json:"id"`
 	Name string `db:"name" json:"name"`
 }
+
+type SoftwareForm struct {
+	Id   int64  `form:"id" json:"id" binding:"required,number"`
+	User string `form:"user" json:"user"`
+}
+
+type SoftUser struct {
+	Id        int64                  `db:"id" json:"id"`
+	Name      string                 `db:"user_name" json:"name"`
+	Login     string                 `db:"user_login" json:"login,omitempty"`
+	Comment   string                 `db:"user_comment" json:"comment,omitempty"`
+	Fio       string                 `db:"fio" json:"fio,omitempty"`
+	External  bool                   `db:"external" json:"external,omitempty"`
+	Propertys map[string]interface{} `json:"props"`
+}
