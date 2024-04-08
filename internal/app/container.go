@@ -1,6 +1,7 @@
 package app
 
 import (
+	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/go-gorp/gorp"
 	"github.com/redis/go-redis/v9"
 	adClient "github.com/saygik/go-ad-client"

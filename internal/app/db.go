@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 
+	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/go-gorp/gorp"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/saygik/go-userinfo/internal/config"
 )
 
