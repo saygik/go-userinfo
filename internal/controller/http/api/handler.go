@@ -26,44 +26,50 @@ type UseCase interface {
 	GetAppResources(string) ([]entity.IdName, error)                // Все ресурсы приложения
 	Authenticate(entity.LoginForm) (bool, map[string]string, error) // Аутентификация
 	SetUserIp(entity.UserActivityForm) (string, error)
-	GetADUsers(string) ([]map[string]interface{}, error)                        // Пользователи домена
-	GetADUsersPublicInfo(string) ([]map[string]interface{}, error)              // Пользователи домена соклащённая информация
-	GetADComputers(string) ([]map[string]interface{}, error)                    // Компьютеры домена
-	GetUser(string, string) (map[string]interface{}, error)                     // Свойства пользователя домена
-	GetUserADPropertys(string, string) (map[string]interface{}, error)          // Разрешённые сппециалисту свойства пользователя домена
-	GetCurrentUserResources(string) ([]entity.AppResource, error)               // Разрешённые ресурсы
-	GetGlpiUser(string) (entity.GLPIUser, error)                                // Пользователь GLPI
-	GetGlpiUserForTechnical(string, string) (entity.GLPIUser, error)            // Пользователь GLPI для технического специалиста
-	GetAdCounts() (int, int, error)                                             // Основная статистика доменов
-	GetDomainList(string) []entity.DomainList                                   // Список доменов
-	GetUserSoftwares(string) ([]entity.Software, error)                         // Список систем пользователя
-	GetSoftwares() ([]entity.Software, error)                                   // Список всех систем
-	GetSoftware(string) (entity.Software, error)                                // Одна система
-	GetSoftwareUsers(string) ([]map[string]interface{}, error)                  // Список пользователей одной системы
-	AddUserSoftware(entity.SoftwareForm) error                                  // Добавление системы пользователя
-	AddOneSoftwareUser(string, entity.SoftUser) (map[string]interface{}, error) // Добавление пользователя в систему
-	DelUserSoftware(entity.SoftwareForm) error                                  // Удаление системы пользователя
-	GetUserADActivity(string, string) ([]entity.UserActivity, error)            // Активность доменов
-	SetUserAvatar(string, string, string) error                                 // Установить пользователю аватар
-	GetOrgCodes() ([]entity.OrgWithCodes, error)                                // Коды организаций
-	GetMattermostUsers() ([]entity.MattermostUser, error)                       // Все пользователи Mattermost
-	GetGLPITicketsNonClosed(string) ([]entity.GLPI_Ticket, error)               // Все нерешённые заявки GLPI
-	GetGLPIUsers() ([]entity.GLPIUserShort, error)                              // Все пользователи GLPI
-	GetGLPITicket(string, string) (entity.GLPI_Ticket, error)                   // Одна заявка GLPI
-	GetGLPIProblem(string, string) (entity.GLPI_Problem, error)                 // Одна проблема GLPI
-	GetGLPIOtkazes(string, string) ([]entity.GLPI_Otkaz, error)                 // Отказы GLPI за период
-	GetGLPIProblems(string, string) ([]entity.GLPI_Problem, error)              // Проблемы GLPI за период
-	GetStatTickets() ([]entity.GLPITicketsStats, error)
-	GetStatFailures() ([]entity.GLPITicketsStats, error)
-	GetStatPeriodRegionDayCounts(string, string, int) ([]entity.RegionsDayStats, error)
-	GetStatTicketsDays(string, string) ([]entity.GLPITicketsStats, error)
-	GetStatTop10Performers(string, string) ([]entity.GLPIStatsTop10, error)
-	GetStatTop10Iniciators(string, string) ([]entity.GLPIStatsTop10, error)
-	GetStatTop10Groups(string, string) ([]entity.GLPIStatsTop10, error)
-	GetStatPeriodTicketsCounts(string, string) ([]entity.GLPIStatsCounts, error)
-	GetStatPeriodRequestTypes(string, string) ([]entity.GLPIStatsTop10, error)
-	GetStatRegions(string, string) ([]entity.GLPIRegionsStats, error)
-	GetStatPeriodOrgTreemap(string, string) ([]entity.TreemapData, error)
+	GetADUsers(string) ([]map[string]interface{}, error)                                // Пользователи домена
+	GetADUsersPublicInfo(string) ([]map[string]interface{}, error)                      // Пользователи домена соклащённая информация
+	GetADComputers(string) ([]map[string]interface{}, error)                            // Компьютеры домена
+	GetUser(string, string) (map[string]interface{}, error)                             // Свойства пользователя домена
+	GetUserADPropertys(string, string) (map[string]interface{}, error)                  // Разрешённые сппециалисту свойства пользователя домена
+	GetCurrentUserResources(string) ([]entity.AppResource, error)                       // Разрешённые ресурсы
+	GetGlpiUser(string) (entity.GLPIUser, error)                                        // Пользователь GLPI
+	GetGlpiUserForTechnical(string, string) (entity.GLPIUser, error)                    // Пользователь GLPI для технического специалиста
+	GetAdCounts() (int, int, error)                                                     // Основная статистика доменов
+	GetDomainList(string) []entity.DomainList                                           // Список доменов
+	GetADGroupUsers(string, string) ([]map[string]interface{}, error)                   //
+	GetUserSoftwares(string) ([]entity.Software, error)                                 // Список систем пользователя
+	GetSoftwares() ([]entity.Software, error)                                           // Список всех систем
+	GetSoftware(string) (entity.Software, error)                                        // Одна система
+	GetSoftwareUsers(string) ([]map[string]interface{}, error)                          // Список пользователей одной системы
+	AddUserSoftware(entity.SoftwareForm) error                                          // Добавление системы пользователя
+	AddOneSoftwareUser(string, entity.SoftUser) (map[string]interface{}, error)         // Добавление пользователя в систему
+	DelUserSoftware(entity.SoftwareForm) error                                          // Удаление системы пользователя
+	GetUserADActivity(string, string) ([]entity.UserActivity, error)                    // Активность доменов
+	SetUserAvatar(string, string, string) error                                         // Установить пользователю аватар
+	GetOrgCodes() ([]entity.OrgWithCodes, error)                                        // Коды организаций
+	GetMattermostUsers() ([]entity.MattermostUser, error)                               // Все пользователи Mattermost
+	GetGLPITicketsNonClosed(string) ([]entity.GLPI_Ticket, error)                       // Все нерешённые заявки GLPI
+	GetGLPIUsers() ([]entity.GLPIUserShort, error)                                      // Все пользователи GLPI
+	GetGLPITicket(string, string) (entity.GLPI_Ticket, error)                           // Одна заявка GLPI
+	GetGLPIProblem(string, string) (entity.GLPI_Problem, error)                         // Одна проблема GLPI
+	GetGLPIOtkazes(string, string) ([]entity.GLPI_Otkaz, error)                         // Отказы GLPI за период
+	GetGLPIProblems(string, string) ([]entity.GLPI_Problem, error)                      // Проблемы GLPI за период
+	GetStatTickets() ([]entity.GLPITicketsStats, error)                                 //
+	GetStatFailures() ([]entity.GLPITicketsStats, error)                                //
+	GetStatPeriodRegionDayCounts(string, string, int) ([]entity.RegionsDayStats, error) //
+	GetStatTicketsDays(string, string) ([]entity.GLPITicketsStats, error)               //
+	GetStatTop10Performers(string, string) ([]entity.GLPIStatsTop10, error)             //
+	GetStatTop10Iniciators(string, string) ([]entity.GLPIStatsTop10, error)             //
+	GetStatTop10Groups(string, string) ([]entity.GLPIStatsTop10, error)                 //
+	GetStatPeriodTicketsCounts(string, string) ([]entity.GLPIStatsCounts, error)        //
+	GetStatPeriodRequestTypes(string, string) ([]entity.GLPIStatsTop10, error)          //
+	GetStatRegions(string, string) ([]entity.GLPIRegionsStats, error)                   //
+	GetStatPeriodOrgTreemap(string, string) ([]entity.TreemapData, error)               //
+	GetSchedule(string) (entity.Schedule, error)                                        // Один календарь
+	GetScheduleTasks(string) ([]entity.ScheduleTask, error)                             //
+	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTask, error)                   //
+	DelScheduleTask(string) error                                                       //
+	UpdateScheduleTask(entity.ScheduleTask) error                                       //
 }
 
 type JWT interface {
@@ -101,6 +107,7 @@ func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, jw JWT) {
 	h.NewSoftwareRouterGroup()
 	h.NewManualRouterGroup()
 	h.NewMattermostRouterGroup()
+	h.NewScheduleRouterGroup()
 	h.rtr.NoRoute(h.NoRoute)
 }
 

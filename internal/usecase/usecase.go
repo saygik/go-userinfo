@@ -28,6 +28,11 @@ type Repository interface {
 	GetSoftwareUsers(int) ([]entity.SoftUser, error)
 	SetUserAvatar(string, string) error
 	SetUserIp(entity.UserActivityForm) (string, error)
+	GetSchedule(string) (entity.Schedule, error)
+	GetScheduleTasks(string) ([]entity.ScheduleTask, error)
+	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTask, error)
+	UpdateScheduleTask(entity.ScheduleTask) error
+	DelScheduleTask(string) error
 }
 type Redis interface {
 	ClearAllDomainsUsers()
@@ -42,6 +47,7 @@ type AD interface {
 	GetDomainComputers(string) ([]map[string]interface{}, error)
 	IsDomainExist(string) bool
 	Authenticate(string, entity.LoginForm) (bool, map[string]string, error)
+	GetGroupUsers(string, string) ([]map[string]interface{}, error)
 }
 
 type GLPI interface {

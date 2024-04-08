@@ -170,3 +170,23 @@ func (h *Handler) DelUserGroup(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": "OK"})
 }
+
+// All users in group...
+func (h *Handler) GroupUsers(c *gin.Context) {
+	domain := c.Param("domain")
+	if domain == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить домен пользователя.", "error": "Empty domain name"})
+		return
+	}
+	group := c.Param("group")
+	if domain == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить группу пользователя.", "error": "Empty group name"})
+		return
+	}
+	users, err := h.uc.GetADGroupUsers(domain, group)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно определить пользователей группы.", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": users})
+}
