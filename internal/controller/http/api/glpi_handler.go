@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/saygik/go-userinfo/internal/entity"
 )
 
 func (h *Handler) GlpiCurrentUser(c *gin.Context) {
@@ -57,6 +58,19 @@ func (h *Handler) GetGLPIUsers(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }
+
+func (h *Handler) GetGLPITicketSolutionTemplates(c *gin.Context) {
+
+	ticketId := c.Param("id")
+	profiles, err := h.uc.GetGLPITicketSolutionTemplates(ticketId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "ошибка получения шаблонов решений из GLPI", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Шаблоны решений", "data": profiles})
+
+}
 func (h *Handler) GetTicket(c *gin.Context) {
 	user := getUserID(c)
 	if user == "" {
@@ -71,6 +85,59 @@ func (h *Handler) GetTicket(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Ticket finded", "data": ticket})
+
+}
+
+func (h *Handler) AddTicketUser(c *gin.Context) {
+	user := getUserID(c)
+	if user == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	var commentForm entity.GLPITicketUserForm
+
+	//err := decoder.Decode(&scheduleForm)
+	err := c.ShouldBindJSON(&commentForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить пользователя GLPI: " + err.Error()})
+		return
+	}
+
+	commentForm.User = user
+	err = h.uc.AddTicketUser(commentForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "ошибка добавления пользователя заявки в GLPI", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Пользователь добавлен"})
+
+}
+func (h *Handler) AddTicketComment(c *gin.Context) {
+	user := getUserID(c)
+	if user == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	var commentForm entity.NewCommentForm
+
+	//err := decoder.Decode(&scheduleForm)
+	err := c.ShouldBindJSON(&commentForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить добавляемую систему: " + err.Error()})
+		return
+	}
+
+	commentForm.RequestTypesId = 11
+	commentForm.ItemType = "Ticket"
+	commentForm.User = user
+	err = h.uc.AddTicketComment(commentForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "ошибка добавления комментария в GLPI", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Комментарий добавлен"})
 
 }
 
@@ -325,5 +392,36 @@ func (h *Handler) GetProblem(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Ticket finded", "data": ticket})
+
+}
+func (h *Handler) GetHRPTickets(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "HRP bot activated"})
+}
+
+func (h *Handler) AddTicketSolution(c *gin.Context) {
+	user := getUserID(c)
+	if user == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	var commentForm entity.NewCommentForm
+
+	//err := decoder.Decode(&scheduleForm)
+	err := c.ShouldBindJSON(&commentForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "ошибка добавления решения в GLPI: " + err.Error()})
+		return
+	}
+
+	commentForm.Status = 2
+	commentForm.ItemType = "Ticket"
+	commentForm.User = user
+	err = h.uc.AddTicketSolution(commentForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "ошибка добавления решения в GLPI", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Комментарий добавлен"})
 
 }

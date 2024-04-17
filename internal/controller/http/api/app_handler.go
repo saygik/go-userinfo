@@ -19,7 +19,7 @@ func getUserID(c *gin.Context) (userID string) {
 
 func (h *Handler) CurrentUser(c *gin.Context) {
 	if userID := getUserID(c); userID != "" {
-		adUser, adErr := h.uc.GetUser(userID, userID)
+		adUser, adErr := h.uc.GetCurrentUser(userID, userID)
 		if adErr != nil {
 			c.JSON(http.StatusNotAcceptable, gin.H{"message": "Invalid credentials", "error": adErr.Error()})
 			return

@@ -37,7 +37,8 @@ func New() (*App, error) {
 	adClients := NewADClients(cfg.AD)
 
 	mattClient := app.newMattermostConnection(cfg.Repository.Mattermost.Server, cfg.Repository.Mattermost.Token)
-	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, mattClient)
+	glpiApiClient := app.newGLPIApiConnection(cfg.Repository.GlpiApi.Server, cfg.Repository.GlpiApi.Token, cfg.Repository.GlpiApi.UserToken)
+	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, mattClient, glpiApiClient)
 	app.c = c
 	app.c.GetUseCase().ClearRedisCaсhe()
 	app.c.GetUseCase().FillRedisCaсheFromAD()
@@ -51,6 +52,20 @@ func New() (*App, error) {
 				app.c.GetUseCase().FillRedisCaсheFromAD()
 			case <-quit:
 				ticker.Stop()
+				return
+			}
+		}
+	}()
+	ticker2 := time.NewTicker(1 * time.Minute)
+	quit2 := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker2.C:
+				// do stuff
+				app.c.GetUseCase().GetHRPTickets()
+			case <-quit2:
+				ticker2.Stop()
 				return
 			}
 		}

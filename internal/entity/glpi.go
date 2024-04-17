@@ -24,6 +24,7 @@ type GLPIUser struct {
 	Self     string            `db:"self" json:"self"`
 	Date     string            `db:"date" json:"date"`
 	Org      string            `db:"org" json:"org"`
+	Api      bool              `db:"api" json:"api"`
 	Type     int               `db:"type" json:"type"`
 	Author   int               `db:"author" json:"author"`
 	Executor int               `db:"executor" json:"executor"`
@@ -50,9 +51,16 @@ type GLPI_Work struct {
 	DateCreation string `db:"date_creation" json:"date_creation"`
 	Name         string `db:"name" json:"name"`
 	Author       string `db:"author" json:"author"`
-	IsPrivate    string `db:"is_private" json:"is_private"`
+	IsPrivate    bool   `db:"is_private" json:"is_private"`
 	Type         string `db:"type" json:"type"`
-	Status       string `db:"status" json:"status"`
+	Status       int    `db:"status" json:"status"`
+}
+
+type GLPI_Ticket_Profile struct {
+	Id      string `db:"id" json:"id"`
+	Content string `db:"content" json:"content"`
+	Name    string `db:"name" json:"name"`
+	Company string `db:"company" json:"company"`
 }
 
 // GLPI_Ticket присутствие пользователя в заявке

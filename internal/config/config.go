@@ -39,8 +39,9 @@ type DBConfig struct {
 	Secret   string
 }
 type APIConfig struct {
-	Server string `json:"server" binding:"required"`
-	Token  string `json:"token" binding:"required"`
+	Server    string `json:"server" binding:"required"`
+	Token     string `json:"token" binding:"required"`
+	UserToken string `json:"usertoken"`
 }
 type JWT struct {
 	AccessSecret  string `json:"access-secret" binding:"required"`
@@ -53,6 +54,7 @@ type Repository struct {
 	Redis      DBConfig
 	Glpi       DBConfig
 	Mattermost APIConfig
+	GlpiApi    APIConfig
 }
 type Config struct {
 	App        AppConfig `json:"app" binding:"required"`

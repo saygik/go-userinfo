@@ -7,8 +7,12 @@ func (h *Handler) NewGlpiRouterGroup() *gin.RouterGroup {
 	rg.GET("/whoami", h.TokenAuthMiddleware(), h.GlpiCurrentUser)
 	rg.GET("/user/:username", h.TokenAuthMiddleware(), h.GetGLPIUser)
 	rg.GET("/nctickets", h.TokenAuthMiddleware(), h.GetTicketsNonClosed)
-	rg.GET("/ticket/:id", h.TokenAuthMiddleware(), h.GetTicket)   // * Заявка
-	rg.GET("/problem/:id", h.TokenAuthMiddleware(), h.GetProblem) // * Проблема
+	rg.GET("/ticket/:id", h.TokenAuthMiddleware(), h.GetTicket)                                // * Заявка
+	rg.GET("/ticket/solutions/:id", h.TokenAuthMiddleware(), h.GetGLPITicketSolutionTemplates) // * Шаблоны решений заявки
+	rg.POST("/ticket/user/:id", h.TokenAuthMiddleware(), h.AddTicketUser)                      // * Добавление пользователя заявки
+	rg.POST("/comment/ticket/:id", h.TokenAuthMiddleware(), h.AddTicketComment)                // * Комментарий заявки
+	rg.POST("/solution/ticket/:id", h.TokenAuthMiddleware(), h.AddTicketSolution)              // * Решение заявки
+	rg.GET("/problem/:id", h.TokenAuthMiddleware(), h.GetProblem)                              // * Проблема
 	rg.GET("/users", h.TokenAuthMiddleware(), h.GetGLPIUsers)
 	rg.GET("/otkazes", h.TokenAuthMiddleware(), h.GetOtkazes)                                                // * Отказы
 	rg.GET("/problems", h.TokenAuthMiddleware(), h.GetProblems)                                              // * Проблемы
@@ -23,6 +27,8 @@ func (h *Handler) NewGlpiRouterGroup() *gin.RouterGroup {
 	rg.GET("/statistics/periodrequestypes", h.TokenAuthMiddleware(), h.GetStatPeriodRequestTypes)
 	rg.GET("/statistics/regions", h.TokenAuthMiddleware(), h.GetStatRegions)
 	rg.GET("/statistics/period-org-treemap", h.TokenAuthMiddleware(), h.GetStatPeriodOrgTreemap)
+
+	rg.GET("/hrp", h.GetHRPTickets)
 
 	return rg
 }

@@ -33,6 +33,7 @@ type Repository interface {
 	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTask, error)
 	UpdateScheduleTask(entity.ScheduleTask) error
 	DelScheduleTask(string) error
+	GetOneDelegateMailBoxes(string) ([]entity.MailBoxDelegates, error)
 }
 type Redis interface {
 	ClearAllDomainsUsers()
@@ -61,6 +62,7 @@ type GLPI interface {
 	GetSoftwaresAdmins() ([]entity.SoftwareAdmins, error)
 	GetUsers() ([]entity.GLPIUserShort, error)
 	GetTicket(string) (entity.GLPI_Ticket, error)
+	GetGLPITicketSolutionTemplates(string) ([]entity.GLPI_Ticket_Profile, error)
 	GetTicketUsers(string) (users []entity.GLPIUser, err error)
 	GetTicketGroupForCurrentUser(string, int) ([]entity.GLPIGroup, error)
 	GetTicketWorks(string) ([]entity.GLPI_Work, error)
@@ -84,26 +86,36 @@ type GLPI interface {
 	GetStatPeriodRequestTypes(string, string) ([]entity.GLPIStatsTop10, error)
 	GetStatRegions(string, string) ([]entity.GLPIRegionsStats, error)
 	GetStatPeriodOrgTreemap(string, string) ([]entity.TreemapData, error)
+	GetHRPTickets() ([]entity.GLPI_Ticket, error)
+	SetHRPTicket(int) error
+	GetUserApiTokenByName(string) (entity.IdName, error)
 }
 
 type Mattermost interface {
 	GetUsers() ([]entity.MattermostUser, error)
 }
-
-type UseCase struct {
-	repo  Repository
-	redis Redis
-	ad    AD
-	glpi  GLPI
-	matt  Mattermost
+type GlpiApi interface {
+	CreateComment(entity.NewCommentInputForm) (int, error)
+	CreateSolution(entity.NewCommentInputForm) (int, error)
+	AddTicketUser(entity.GLPITicketUserInputForm) (int, error)
 }
 
-func New(r Repository, redis Redis, adRepo AD, glpiRepo GLPI, matt Mattermost) *UseCase {
+type UseCase struct {
+	repo    Repository
+	redis   Redis
+	ad      AD
+	glpi    GLPI
+	matt    Mattermost
+	glpiApi GlpiApi
+}
+
+func New(r Repository, redis Redis, adRepo AD, glpiRepo GLPI, matt Mattermost, glpiApi GlpiApi) *UseCase {
 	return &UseCase{
-		repo:  r,
-		redis: redis,
-		ad:    adRepo,
-		glpi:  glpiRepo,
-		matt:  matt,
+		repo:    r,
+		redis:   redis,
+		ad:      adRepo,
+		glpi:    glpiRepo,
+		matt:    matt,
+		glpiApi: glpiApi,
 	}
 }

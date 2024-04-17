@@ -25,6 +25,9 @@ func (u *UseCase) GetGlpiUserForTechnical(userName string, techName string) (ent
 	if err != nil {
 		return entity.GLPIUser{}, u.Error("пользователь не найден в системе GLPI")
 	}
+	if userName == techName {
+		return user, nil
+	}
 	if !isTechnicalAdminOfUser(user, userTech) {
 		return entity.GLPIUser{}, u.Error("у вас нет прав на этого пользователя в системе GLPI")
 	}

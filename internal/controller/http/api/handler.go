@@ -30,6 +30,7 @@ type UseCase interface {
 	GetADUsersPublicInfo(string) ([]map[string]interface{}, error)                      // Пользователи домена соклащённая информация
 	GetADComputers(string) ([]map[string]interface{}, error)                            // Компьютеры домена
 	GetUser(string, string) (map[string]interface{}, error)                             // Свойства пользователя домена
+	GetCurrentUser(string, string) (map[string]interface{}, error)                      // Свойства залогиненного пользователя домена
 	GetUserADPropertys(string, string) (map[string]interface{}, error)                  // Разрешённые сппециалисту свойства пользователя домена
 	GetCurrentUserResources(string) ([]entity.AppResource, error)                       // Разрешённые ресурсы
 	GetGlpiUser(string) (entity.GLPIUser, error)                                        // Пользователь GLPI
@@ -51,6 +52,7 @@ type UseCase interface {
 	GetGLPITicketsNonClosed(string) ([]entity.GLPI_Ticket, error)                       // Все нерешённые заявки GLPI
 	GetGLPIUsers() ([]entity.GLPIUserShort, error)                                      // Все пользователи GLPI
 	GetGLPITicket(string, string) (entity.GLPI_Ticket, error)                           // Одна заявка GLPI
+	GetGLPITicketSolutionTemplates(string) ([]entity.GLPI_Ticket_Profile, error)        // Шаблоны решений заявки
 	GetGLPIProblem(string, string) (entity.GLPI_Problem, error)                         // Одна проблема GLPI
 	GetGLPIOtkazes(string, string) ([]entity.GLPI_Otkaz, error)                         // Отказы GLPI за период
 	GetGLPIProblems(string, string) ([]entity.GLPI_Problem, error)                      // Проблемы GLPI за период
@@ -70,6 +72,10 @@ type UseCase interface {
 	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTask, error)                   //
 	DelScheduleTask(string) error                                                       //
 	UpdateScheduleTask(entity.ScheduleTask) error                                       //
+
+	AddTicketSolution(entity.NewCommentForm) error //
+	AddTicketComment(entity.NewCommentForm) error  //
+	AddTicketUser(entity.GLPITicketUserForm) error //
 }
 
 type JWT interface {
