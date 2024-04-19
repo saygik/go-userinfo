@@ -23,6 +23,12 @@ func (r *Repository) GetTicketWorks(ticketID string) (work []entity.GLPI_Work, e
 	LEFT JOIN glpi_users ON glpi_tickettasks.users_id= glpi_users.id
 	WHERE tickets_id=%[1]s
 	UNION
+	SELECT CONCAT('d-',glpi_documents_items.id) AS id ,CONCAT("<a href='https://support.rw/front/document.send.php?docid=",documents_id, "&tickets_id=",items_id,"' target='_blank'>документ</a>") AS content, 0 as is_private, glpi_documents_items.date_creation, glpi_documents_items.date_mod,"-" AS NAME,CONCAT(realname," ", firstname) AS author ,"document" AS "type", 0 as "status"
+	FROM glpi_documents_items
+	LEFT JOIN glpi_documents ON glpi_documents_items.documents_id= glpi_documents.id
+	LEFT JOIN glpi_users ON glpi_documents.users_id= glpi_users.id
+	WHERE items_id=%[1]s AND itemtype='Ticket'
+	UNION
 	SELECT CONCAT('ti-',glpi_tickets.id) AS id, glpi_tickets.content, 0 as is_private, glpi_tickets.date_creation, glpi_tickets.date_mod,"-" AS NAME,
 	(SELECT user_name FROM glpi_logs WHERE itemtype="Ticket" and items_id=%[1]s order by id  LIMIT 1) AS author, "create" AS type, 0 as "status"
 	  from glpi_tickets WHERE id=%[1]s

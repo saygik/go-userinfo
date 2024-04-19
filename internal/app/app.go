@@ -56,19 +56,19 @@ func New() (*App, error) {
 			}
 		}
 	}()
-	ticker2 := time.NewTicker(1 * time.Minute)
-	quit2 := make(chan struct{})
-	go func() {
-		for {
-			select {
-			case <-ticker2.C:
-				// do stuff
-				app.c.GetUseCase().GetHRPTickets()
-			case <-quit2:
-				ticker2.Stop()
-				return
-			}
-		}
-	}()
+	// ticker2 := time.NewTicker(1 * time.Minute)
+	// quit2 := make(chan struct{})
+	// go func() {
+	// 	for {
+	// 		select {
+	// 		case <-ticker2.C:
+	// 			// do stuff
+	// 			app.c.GetUseCase().GetHRPTickets()
+	// 		case <-quit2:
+	// 			ticker2.Stop()
+	// 			return
+	// 		}
+	// 	}
+	// }()
 	return app, nil
 }
