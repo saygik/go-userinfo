@@ -34,6 +34,7 @@ type Repository interface {
 	UpdateScheduleTask(entity.ScheduleTask) error
 	DelScheduleTask(string) error
 	GetOneDelegateMailBoxes(string) ([]entity.MailBoxDelegates, error)
+	GetUserGlpiTrackingGroups(string) ([]entity.Id, error)
 }
 type Redis interface {
 	ClearAllDomainsUsers()
@@ -89,6 +90,8 @@ type GLPI interface {
 	GetHRPTickets() ([]entity.GLPI_Ticket, error)
 	SetHRPTicket(int) error
 	GetUserApiTokenByName(string) (entity.IdName, error)
+	GetTicketsInExecutionGroups(string) ([]entity.GLPI_Ticket, error)
+	GetUserTrackingGroups(string) ([]entity.IdName, error)
 }
 
 type Mattermost interface {

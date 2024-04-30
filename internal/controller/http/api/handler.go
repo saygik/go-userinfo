@@ -72,10 +72,10 @@ type UseCase interface {
 	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTask, error)                   //
 	DelScheduleTask(string) error                                                       //
 	UpdateScheduleTask(entity.ScheduleTask) error                                       //
-
-	AddTicketSolution(entity.NewCommentForm) error //
-	AddTicketComment(entity.NewCommentForm) error  //
-	AddTicketUser(entity.GLPITicketUserForm) error //
+	AddTicketSolution(entity.NewCommentForm) error                                      //
+	AddTicketComment(entity.NewCommentForm) error                                       //
+	AddTicketUser(entity.GLPITicketUserForm) error                                      //
+	GetTicketsInExecutionGroups(string) ([]entity.GLPI_Ticket, error)                   // Незакрытые заявки в группах слежения пользователя
 }
 
 type JWT interface {

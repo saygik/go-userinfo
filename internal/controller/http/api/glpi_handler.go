@@ -418,10 +418,27 @@ func (h *Handler) AddTicketSolution(c *gin.Context) {
 	commentForm.User = user
 	err = h.uc.AddTicketSolution(commentForm)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "ошибка добавления решения в GLPI", "error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "ошибка добавления решения в GLPI", "error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Комментарий добавлен"})
+
+}
+
+func (h *Handler) GetTicketsInMyGroups(c *gin.Context) {
+	user := getUserID(c)
+	if user == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+
+	tickets, err := h.uc.GetTicketsInExecutionGroups(user)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "ошибка получения заявок для ваших групп слежения в GLPI", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": tickets})
 
 }

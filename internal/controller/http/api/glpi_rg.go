@@ -7,6 +7,7 @@ func (h *Handler) NewGlpiRouterGroup() *gin.RouterGroup {
 	rg.GET("/whoami", h.TokenAuthMiddleware(), h.GlpiCurrentUser)
 	rg.GET("/user/:username", h.TokenAuthMiddleware(), h.GetGLPIUser)
 	rg.GET("/nctickets", h.TokenAuthMiddleware(), h.GetTicketsNonClosed)
+	rg.GET("/tickets/mygroups", h.TokenAuthMiddleware(), h.GetTicketsInMyGroups)
 	rg.GET("/ticket/:id", h.TokenAuthMiddleware(), h.GetTicket)                                // * Заявка
 	rg.GET("/ticket/solutions/:id", h.TokenAuthMiddleware(), h.GetGLPITicketSolutionTemplates) // * Шаблоны решений заявки
 	rg.POST("/ticket/user/:id", h.TokenAuthMiddleware(), h.AddTicketUser)                      // * Добавление пользователя заявки

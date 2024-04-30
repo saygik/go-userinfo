@@ -17,19 +17,20 @@ type GLPIGroup struct {
 }
 
 type GLPIUser struct {
-	Id       int               `db:"id" json:"id"`
-	Name     string            `db:"name" json:"name"`
-	Fio      string            `db:"fio" json:"fio"`
-	Email    string            `db:"email" json:"email"`
-	Self     string            `db:"self" json:"self"`
-	Date     string            `db:"date" json:"date"`
-	Org      string            `db:"org" json:"org"`
-	Api      bool              `db:"api" json:"api"`
-	Type     int               `db:"type" json:"type"`
-	Author   int               `db:"author" json:"author"`
-	Executor int               `db:"executor" json:"executor"`
-	Profiles []GLPIUserProfile `json:"profiles"`
-	Groups   []IdName          `json:"groups"`
+	Id             int               `db:"id" json:"id"`
+	Name           string            `db:"name" json:"name"`
+	Fio            string            `db:"fio" json:"fio"`
+	Email          string            `db:"email" json:"email"`
+	Self           string            `db:"self" json:"self"`
+	Date           string            `db:"date" json:"date"`
+	Org            string            `db:"org" json:"org"`
+	Api            bool              `db:"api" json:"api"`
+	Type           int               `db:"type" json:"type"`
+	Author         int               `db:"author" json:"author"`
+	Executor       int               `db:"executor" json:"executor"`
+	Profiles       []GLPIUserProfile `json:"profiles"`
+	Groups         []IdName          `json:"groups"`
+	TrackingGroups []IdName          `json:"tracking_groups"`
 }
 
 type GLPIUserShort struct {
@@ -118,6 +119,8 @@ type GLPI_Ticket struct {
 	Recipient     map[string]interface{}    `json:"recipient"`
 	Works         []GLPI_Work               `json:"works"`
 	Problems      []GLPI_Problem            `json:"problems"`
+	GroupId       int                       `db:"group_id" json:"group_id"`
+	GroupName     string                    `db:"group_name" json:"group_name"`
 }
 
 type GLPI_Otkaz struct {

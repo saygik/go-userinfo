@@ -1,5 +1,9 @@
 package entity
 
+type Id struct {
+	Id int `db:"id" json:"id"`
+}
+
 type IdName struct {
 	Id   int    `db:"id" json:"id"`
 	Name string `db:"name" json:"name"`
