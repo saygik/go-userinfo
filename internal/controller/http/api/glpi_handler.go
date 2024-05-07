@@ -113,6 +113,30 @@ func (h *Handler) AddTicketUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Пользователь добавлен"})
 
 }
+
+func (h *Handler) AddTicket(c *gin.Context) {
+	user := getUserID(c)
+	if user == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	var ticketForm entity.NewTicketForm
+
+	err := c.ShouldBindJSON(&ticketForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить параметры добавляемой заявки: " + err.Error()})
+		return
+	}
+	ticketForm.User = user
+	id, err := h.uc.AddTicket(ticketForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "ошибка добавления заявки в GLPI", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"data": id, "message": "Комментарий добавлен"})
+}
+
 func (h *Handler) AddTicketComment(c *gin.Context) {
 	user := getUserID(c)
 	if user == "" {

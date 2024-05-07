@@ -11,6 +11,7 @@ func (h *Handler) NewGlpiRouterGroup() *gin.RouterGroup {
 	rg.GET("/ticket/:id", h.TokenAuthMiddleware(), h.GetTicket)                                // * Заявка
 	rg.GET("/ticket/solutions/:id", h.TokenAuthMiddleware(), h.GetGLPITicketSolutionTemplates) // * Шаблоны решений заявки
 	rg.POST("/ticket/user/:id", h.TokenAuthMiddleware(), h.AddTicketUser)                      // * Добавление пользователя заявки
+	rg.POST("/ticket", h.TokenAuthMiddleware(), h.AddTicket)                                   // * Комментарий заявки
 	rg.POST("/comment/ticket/:id", h.TokenAuthMiddleware(), h.AddTicketComment)                // * Комментарий заявки
 	rg.POST("/solution/ticket/:id", h.TokenAuthMiddleware(), h.AddTicketSolution)              // * Решение заявки
 	rg.GET("/problem/:id", h.TokenAuthMiddleware(), h.GetProblem)                              // * Проблема

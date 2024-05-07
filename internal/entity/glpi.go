@@ -22,6 +22,7 @@ type GLPIUser struct {
 	Fio            string            `db:"fio" json:"fio"`
 	Email          string            `db:"email" json:"email"`
 	Self           string            `db:"self" json:"self"`
+	SelfId         int               `db:"selfid" json:"selfid"`
 	Date           string            `db:"date" json:"date"`
 	Org            string            `db:"org" json:"org"`
 	Api            bool              `db:"api" json:"api"`
@@ -31,6 +32,7 @@ type GLPIUser struct {
 	Profiles       []GLPIUserProfile `json:"profiles"`
 	Groups         []IdName          `json:"groups"`
 	TrackingGroups []IdName          `json:"tracking_groups"`
+	Tickets        []GLPI_Ticket     `json:"tickets"`
 }
 
 type GLPIUserShort struct {

@@ -32,9 +32,8 @@ type ADConfig struct {
 }
 
 type AppConfig struct {
-	Env           string `json:"env"`
-	Port          string `json:"port"`
-	DefaultDomain string `json:"default-domain"`
+	Env  string `json:"env"`
+	Port string `json:"port"`
 }
 type DBConfig struct {
 	Server   string `json:"server" binding:"required"`

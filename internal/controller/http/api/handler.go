@@ -34,7 +34,7 @@ type UseCase interface {
 	GetUserADPropertys(string, string) (map[string]interface{}, error)                  // Разрешённые сппециалисту свойства пользователя домена
 	GetCurrentUserResources(string) ([]entity.AppResource, error)                       // Разрешённые ресурсы
 	GetGlpiUser(string) (entity.GLPIUser, error)                                        // Пользователь GLPI
-	GetGlpiUserForTechnical(string, string) (entity.GLPIUser, error)                    // Пользователь GLPI для технического специалиста
+	GetGlpiUserForTechnical(string, string) (*entity.GLPIUser, error)                   // Пользователь GLPI для технического специалиста
 	GetAdCounts() (int, int, error)                                                     // Основная статистика доменов
 	GetDomainList(string) []entity.DomainList                                           // Список доменов
 	GetADGroupUsers(string, string) ([]map[string]interface{}, error)                   //
@@ -72,8 +72,9 @@ type UseCase interface {
 	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTask, error)                   //
 	DelScheduleTask(string) error                                                       //
 	UpdateScheduleTask(entity.ScheduleTask) error                                       //
-	AddTicketSolution(entity.NewCommentForm) error                                      //
-	AddTicketComment(entity.NewCommentForm) error                                       //
+	AddTicketSolution(entity.NewCommentForm) error                                      // GLPI. Добавление  решения
+	AddTicketComment(entity.NewCommentForm) error                                       // GLPI. Добавление  комментария
+	AddTicket(entity.NewTicketForm) (int, error)                                        // GLPI. Добавление  заявки
 	AddTicketUser(entity.GLPITicketUserForm) error                                      //
 	GetTicketsInExecutionGroups(string) ([]entity.GLPI_Ticket, error)                   // Незакрытые заявки в группах слежения пользователя
 }

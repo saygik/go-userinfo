@@ -60,6 +60,7 @@ type GLPI interface {
 	GetAllSoftwares() ([]entity.Software, error)
 	GetSoftware(int) (entity.Software, error)
 	GetTicketsNonClosed() ([]entity.GLPI_Ticket, error)
+	GetTicketsNonClosedFromIniciator(int) ([]entity.GLPI_Ticket, error)
 	GetSoftwaresAdmins() ([]entity.SoftwareAdmins, error)
 	GetUsers() ([]entity.GLPIUserShort, error)
 	GetTicket(string) (entity.GLPI_Ticket, error)
@@ -98,6 +99,7 @@ type Mattermost interface {
 	GetUsers() ([]entity.MattermostUser, error)
 }
 type GlpiApi interface {
+	CreateTicket(entity.NewTicketInputForm) (int, error)
 	CreateComment(entity.NewCommentInputForm) (int, error)
 	CreateSolution(entity.NewCommentInputForm) (int, error)
 	AddTicketUser(entity.GLPITicketUserInputForm) (int, error)
