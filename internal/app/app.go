@@ -56,19 +56,24 @@ func New() (*App, error) {
 			}
 		}
 	}()
-	// ticker2 := time.NewTicker(1 * time.Minute)
-	// quit2 := make(chan struct{})
-	// go func() {
-	// 	for {
-	// 		select {
-	// 		case <-ticker2.C:
-	// 			// do stuff
-	// 			app.c.GetUseCase().GetHRPTickets()
-	// 		case <-quit2:
-	// 			ticker2.Stop()
-	// 			return
-	// 		}
-	// 	}
-	// }()
+	ticker2 := time.NewTicker(1 * time.Minute)
+	quit2 := make(chan struct{})
+
+	if app.cfg.App.Env == "prod" {
+		go getHrpTickets(app, ticker2, quit2)
+	}
 	return app, nil
+}
+
+func getHrpTickets(app *App, ticker2 *time.Ticker, quit2 chan struct{}) {
+	for {
+		select {
+		case <-ticker2.C:
+			// do stuff
+			app.c.GetUseCase().GetHRPTickets()
+		case <-quit2:
+			ticker2.Stop()
+			return
+		}
+	}
 }
