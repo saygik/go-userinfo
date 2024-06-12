@@ -34,3 +34,4 @@ adconfig.json.bak
 config.json
 config.json.bak
 go-userinfo
+__debug_bin*
