@@ -34,6 +34,11 @@ func New() (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	hydraClient, err := app.newHydraClient(cfg.Hydra.Url)
+	if err != nil {
+		return nil, err
+	}
+	_ = hydraClient
 	adClients := NewADClients(cfg.AD)
 
 	mattClient := app.newMattermostConnection(cfg.Repository.Mattermost.Server, cfg.Repository.Mattermost.Token)

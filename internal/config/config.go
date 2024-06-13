@@ -67,10 +67,14 @@ type VaultConfig struct {
 	SecretId   string `json:"secretid" binding:"required"`
 	SecretPath string `json:"secretpath" binding:"required"`
 }
+type HydraConfig struct {
+	Url string `json:"url" binding:"required"`
+}
 type Config struct {
 	App        AppConfig
 	Jwt        JWT
 	Vault      VaultConfig
+	Hydra      HydraConfig
 	AD         []ADConfig
 	Repository Repository
 }
@@ -177,6 +181,27 @@ func vaultConfig(conf Config) (*Config, error) {
 		return cfg, fmt.Errorf("ошибка Vault: %v", err)
 	}
 	cfg.Jwt = jwt
+
+	secret, err = cl.Read(context.Background(), fmt.Sprintf("%hydra", conf.Vault.SecretPath))
+	if err != nil {
+		return cfg, fmt.Errorf("ошибка Hydra client, секрет по пути %s недоступен: %v", fmt.Sprintf("%sjwt", conf.Vault.SecretPath), err)
+	}
+	value, ok = secret.Data["data"]
+	if !ok {
+		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
+	}
+
+	data, err = json.Marshal(value)
+	if err != nil {
+		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
+	}
+	hydra := HydraConfig{}
+	err = json.Unmarshal(data, &hydra)
+	if err != nil {
+		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
+	}
+	cfg.Hydra = hydra
+
 	_ = resp
 	cfg.App = conf.App
 
