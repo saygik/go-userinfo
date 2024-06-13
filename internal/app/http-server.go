@@ -9,7 +9,7 @@ func (a *App) StartHTTPServer() error {
 
 	s := http.NewServer(a.cfg.App.Env, a.log)
 
-	api.NewHandler(s.Rtr, a.c.GetUseCase(), a.log, a.c.GetAuth(a.cfg.Jwt.AccessSecret, a.cfg.Jwt.RefreshSecret, a.cfg.Jwt.AtExpires, a.cfg.Jwt.RtExpires))
+	api.NewHandler(s.Rtr, a.c.GetUseCase(), a.log, a.c.GetAuth(a.cfg.Jwt.AccessSecret, a.cfg.Jwt.RefreshSecret, a.cfg.Jwt.AtExpires, a.cfg.Jwt.RtExpires), a.c.GetHydra())
 
 	err := s.Start(a.cfg.App.Port)
 	if err != nil {

@@ -38,12 +38,12 @@ func New() (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	_ = hydraClient
+
 	adClients := NewADClients(cfg.AD)
 
 	mattClient := app.newMattermostConnection(cfg.Repository.Mattermost.Server, cfg.Repository.Mattermost.Token)
 	glpiApiClient := app.newGLPIApiConnection(cfg.Repository.GlpiApi.Server, cfg.Repository.GlpiApi.Token, cfg.Repository.GlpiApi.UserToken)
-	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, mattClient, glpiApiClient)
+	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, mattClient, glpiApiClient, hydraClient)
 	app.c = c
 	app.c.GetUseCase().ClearRedisCaсhe()
 	app.c.GetUseCase().FillRedisCaсheFromAD()

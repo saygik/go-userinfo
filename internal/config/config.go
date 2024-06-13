@@ -182,7 +182,7 @@ func vaultConfig(conf Config) (*Config, error) {
 	}
 	cfg.Jwt = jwt
 
-	secret, err = cl.Read(context.Background(), fmt.Sprintf("%hydra", conf.Vault.SecretPath))
+	secret, err = cl.Read(context.Background(), fmt.Sprintf("%shydra", conf.Vault.SecretPath))
 	if err != nil {
 		return cfg, fmt.Errorf("ошибка Hydra client, секрет по пути %s недоступен: %v", fmt.Sprintf("%sjwt", conf.Vault.SecretPath), err)
 	}

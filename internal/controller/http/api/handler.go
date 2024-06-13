@@ -10,11 +10,12 @@ import (
 )
 
 type Handler struct {
-	rtr *gin.Engine
-	rg  *gin.RouterGroup
-	uc  UseCase
-	log *logrus.Logger
-	jwt JWT
+	rtr   *gin.Engine
+	rg    *gin.RouterGroup
+	uc    UseCase
+	log   *logrus.Logger
+	jwt   JWT
+	hydra Hydra
 }
 
 type UseCase interface {
@@ -86,13 +87,17 @@ type JWT interface {
 	FetchAuth(*entity.AccessDetails) (string, error)
 	RefreshToken(string) (map[string]string, error)
 }
+type Hydra interface {
+	CheckHydra() bool
+}
 
-func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, jw JWT) {
+func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, jw JWT, hydra Hydra) {
 	h := &Handler{
-		rtr: router,
-		uc:  uc,
-		log: log,
-		jwt: jw,
+		rtr:   router,
+		uc:    uc,
+		log:   log,
+		jwt:   jw,
+		hydra: hydra,
 	}
 
 	h.rtr.LoadHTMLGlob("./public/html/*")
