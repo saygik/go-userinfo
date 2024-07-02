@@ -10,15 +10,16 @@ import (
 )
 
 type Handler struct {
-	rtr   *gin.Engine
-	rg    *gin.RouterGroup
-	uc    UseCase
-	log   *logrus.Logger
-	jwt   JWT
-	hydra Hydra
+	rtr    *gin.Engine
+	rg     *gin.RouterGroup
+	uc     UseCase
+	log    *logrus.Logger
+	hydra  Hydra
+	oAuth2 OAuth2
 }
 
 type UseCase interface {
+	ADUserLocked(string) bool
 	GetAppRoles(string) ([]entity.IdName, error)                    // Все роли пользователей приложения
 	SetUserRole(string, string, int) error                          // Установить роль пользователя
 	GetAppGroups(string) ([]entity.IdName, error)                   // Все группы пользователей приложения
@@ -31,6 +32,7 @@ type UseCase interface {
 	GetADUsersPublicInfo(string) ([]map[string]interface{}, error)                      // Пользователи домена соклащённая информация
 	GetADComputers(string) ([]map[string]interface{}, error)                            // Компьютеры домена
 	GetUser(string, string) (map[string]interface{}, error)                             // Свойства пользователя домена
+	UserExist(string) error                                                             // Существует ли пользователь в доменах
 	GetCurrentUser(string, string) (map[string]interface{}, error)                      // Свойства залогиненного пользователя домена
 	GetUserADPropertys(string, string) (map[string]interface{}, error)                  // Разрешённые сппециалисту свойства пользователя домена
 	GetCurrentUserResources(string) ([]entity.AppResource, error)                       // Разрешённые ресурсы
@@ -78,31 +80,42 @@ type UseCase interface {
 	AddTicket(entity.NewTicketForm) (int, error)                                        // GLPI. Добавление  заявки
 	AddTicketUser(entity.GLPITicketUserForm) error                                      //
 	GetTicketsInExecutionGroups(string) ([]entity.GLPI_Ticket, error)                   // Незакрытые заявки в группах слежения пользователя
+	UserInGropScopes(string, []string, []entity.IDPScope) error                         // У пользователя есть права на требуемый scope
 }
 
-type JWT interface {
-	Login(string) (entity.Token, error)
-	DeleteAuth(string) error
-	ExtractTokenMetadata(r *http.Request) (*entity.AccessDetails, error)
-	FetchAuth(*entity.AccessDetails) (string, error)
-	RefreshToken(string) (map[string]string, error)
-}
 type Hydra interface {
 	CheckHydra() bool
+	GetOAuth2LoginRequest(string) (*entity.OAuth2LoginRequest, error)
+	AcceptOAuth2LoginRequest(string, string) (string, error)
+	GetOAuth2ConsentRequest(string) (*entity.OAuth2ConsentRequest, error)
+	AcceptNewOAuth2LoginRequest(string, string, bool) (string, error)
+	AcceptOAuth2ConsentRequest(*entity.OAuth2ConsentRequest, map[string]interface{}) (string, error)
+	IntrospectOAuth2Token(string) (*entity.IntrospectedOAuth2Token, error)
+	AcceptOAuth2LogoutRequest(string) (string, error)
+	LogoutURL() string
+	GetScopes() []entity.IDPScope
 }
 
-func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, jw JWT, hydra Hydra) {
+type OAuth2 interface {
+	AuthCodeURL(string) string
+	Exchange(string) (*entity.Token, *entity.UserInfo, error)
+	GetRedirectUrl() string
+	Refresh(string) (entity.Token, error)
+}
+
+func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, hydra Hydra, oAuth2 OAuth2) {
 	h := &Handler{
-		rtr:   router,
-		uc:    uc,
-		log:   log,
-		jwt:   jw,
-		hydra: hydra,
+		rtr:    router,
+		uc:     uc,
+		log:    log,
+		hydra:  hydra,
+		oAuth2: oAuth2,
 	}
 
-	h.rtr.LoadHTMLGlob("./public/html/*")
-
 	h.rtr.Static("/public", "./public")
+	router.Static("/css", "./public/css")
+	router.Static("/js", "./public/js")
+	h.rtr.LoadHTMLGlob("./public/html/*")
 
 	h.rtr.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
@@ -110,9 +123,15 @@ func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, jw JWT, hydr
 			"goVersion":      runtime.Version(),
 		})
 	})
-
+	h.rtr.GET("/f", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "login.html", gin.H{
+			"goVersion":      runtime.Version(),
+			"LoginChallenge": "LoginChallenge",
+		})
+	})
 	h.rg = h.rtr.Group("/api")
-	h.NewAuthRouterGroup()
+	h.NewOAuth2RouterGroup()
+	h.NewHydraIDPRouterGroup()
 	h.NewADRouterGroup()
 	h.NewAppRouterGroup()
 	h.NewGlpiRouterGroup()
@@ -133,6 +152,7 @@ func (h *Handler) NoRoute(c *gin.Context) {
 // JWT Authentication middleware attached to each request that needs to be authenitcated to validate the access_token in the header
 func (h *Handler) TokenAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		h.TokenValid(c)
 		c.Next()
 	}

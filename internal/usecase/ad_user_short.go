@@ -8,7 +8,7 @@ func (u *UseCase) GetUserShort(userID string) (map[string]interface{}, error) {
 	}
 	userJSON, err := u.redis.GetKeyFieldValue("allusers", userID)
 	if err != nil {
-		return nil, u.Error("нет таккого пользователя в системе")
+		return nil, u.Error("нет такого пользователя в системе")
 	}
 	unmarshalString(userJSON, &user)
 	user["domain"] = domain

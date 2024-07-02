@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Yusuf">
+    <title>Sign In</title>
+
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css"
+        integrity="sha512-P5MgMn1jBN01asBgU0z60Qk4QxiXo86+wlFahKrsQf37c9cro517WzVSPPV1tDKzhku2iJ2FVgL67wG03SGnNA=="
+        crossorigin="anonymous" />
+    <style>
+        .bd-placeholder-img {
+            font-size: 1.125rem;
+            text-anchor: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        @media (min-width: 768px) {
+            .bd-placeholder-img-lg {
+                font-size: 3.5rem;
+            }
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            display: -ms-flexbox;
+            display: flex;
+            -ms-flex-align: center;
+            align-items: center;
+            padding-top: 40px;
+            padding-bottom: 40px;
+            background-color: #f5f5f5;
+        }
+
+        .form-signin {
+            width: 100%;
+            max-width: 330px;
+            padding: 15px;
+            margin: auto;
+        }
+
+        .form-signin .checkbox {
+            font-weight: 400;
+        }
+
+        .form-signin .form-control {
+            position: relative;
+            box-sizing: border-box;
+            height: auto;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        .form-signin .form-control:focus {
+            z-index: 2;
+        }
+
+        .form-signin input[type="email"] {
+            margin-bottom: 3px;
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .form-signin input[type="password"] {
+            margin-bottom: 10px;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+    </style>
+
+</head>
+
+<body class="text-center">
+
+    <form class="form-signin" method="post" action="/api/idp/login">
+        {{if not .LoginChallenge}}
+        <div class="text-center row">
+            <div>
+                <h5> <span class="text-danger"> {{ .ErrorTitle }}</span></h5>
+                <p class="lead">
+                    {{ .ErrorContent }}
+                </p>
+                <a class="btn btn-primary" href="javascript: history.go(-1)">Назад</a>
+            </div>
+
+        </div>
+        {{end}}
+
+        {{if .LoginChallenge}}
+        <h1 class="h3 mb-3 font-weight-normal">Войдите в систему</h1>
+        <input type="hidden" name="login_challenge" value="{{.LoginChallenge}}">
+        <label for="inputEmail" class="sr-only">Логин</label>
+        <input type="email" id="inputEmail" class="form-control" name="email" placeholder="Логин" required autofocus>
+        <label for="inputPassword" class="sr-only">Пароль</label>
+        <input type="password" id="inputPassword" class="form-control" name="password" placeholder="Пароль" required>
+        <div class="checkbox mb-3">
+            <label>
+                <input type="checkbox" name="remember_me" value="true"> Запомнить
+            </label>
+        </div>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Войти</button>
+        <p class="mt-5 mb-3 text-muted">&copy; 2024</p>
+        {{end}}
+    </form>
+
+
+
+</body>
+
+</html>

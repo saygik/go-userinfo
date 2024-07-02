@@ -116,3 +116,13 @@ func containsIDNameInIdNameTypeArray(s []entity.IdNameType, itype int, e []entit
 	}
 	return false
 }
+
+func filterStringArrayByWord(words []string, word string) []string {
+	filtered := []string{}
+	for i := range words {
+		if strings.HasPrefix(words[i], word) {
+			filtered = append(filtered, words[i])
+		}
+	}
+	return filtered
+}

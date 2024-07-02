@@ -35,6 +35,21 @@ func ReadUserIP(r *http.Request) string {
 
 }
 
+// ExtractToken ...
+func (h *Handler) ExtractToken(r *http.Request) string {
+	bearToken := r.Header.Get("Authorization")
+
+	if len(bearToken) < 1 {
+		return ""
+	}
+	//normally Authorization the_token_xxx
+	strArr := strings.Split(bearToken, " ")
+	if len(strArr) == 2 {
+		return strArr[1]
+	}
+	return ""
+}
+
 // func ReadUserName(ip string) (names []string, err error) {
 // 	return net.LookupAddr(ip)
 // }

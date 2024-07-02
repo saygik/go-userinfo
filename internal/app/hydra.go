@@ -5,9 +5,15 @@ import (
 	"fmt"
 
 	client "github.com/ory/hydra-client-go/v2"
+	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (a *App) newHydraClient(url string) (*client.APIClient, error) {
+type IDPClient struct {
+	client *client.APIClient
+	scopes []entity.IDPScope
+}
+
+func (a *App) newHydraClient(url string, scopes []entity.IDPScope) (*IDPClient, error) {
 
 	configuration := client.NewConfiguration()
 	configuration.Servers = []client.ServerConfiguration{
@@ -21,5 +27,9 @@ func (a *App) newHydraClient(url string) (*client.APIClient, error) {
 	if err != nil {
 		return nil, fmt.Errorf("oAuth2 Hydra - unable to get Wellknown API: %v\n", r)
 	}
-	return cl, nil
+	return &IDPClient{
+		client: cl,
+		scopes: scopes,
+	}, nil
+
 }

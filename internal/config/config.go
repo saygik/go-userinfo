@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
 	"github.com/ory/viper"
+	"github.com/saygik/go-userinfo/internal/entity"
 )
 
 // type DBConfig struct {
@@ -47,12 +48,7 @@ type APIConfig struct {
 	Token     string `json:"token" binding:"required"`
 	UserToken string `json:"usertoken"`
 }
-type JWT struct {
-	AccessSecret  string `json:"accesssecret" binding:"required"`
-	RefreshSecret string `json:"refreshsecret" binding:"required"`
-	AtExpires     int    `json:"atexpires" binding:"required"`
-	RtExpires     int    `json:"rtexpires" binding:"required"`
-}
+
 type Repository struct {
 	Mssql      DBConfig
 	Redis      DBConfig
@@ -67,12 +63,17 @@ type VaultConfig struct {
 	SecretId   string `json:"secretid" binding:"required"`
 	SecretPath string `json:"secretpath" binding:"required"`
 }
+
 type HydraConfig struct {
-	Url string `json:"url" binding:"required"`
+	Url          string            `json:"url" binding:"required"`
+	ClientId     string            `json:"client-id" binding:"required"`
+	ClientSecret string            `json:"client-secret" binding:"required"`
+	RedirectUrl  string            `json:"redirect-url" binding:"required"`
+	IDPScopes    []entity.IDPScope `json:"idpscopes"`
+	Scopes       []string
 }
 type Config struct {
 	App        AppConfig
-	Jwt        JWT
 	Vault      VaultConfig
 	Hydra      HydraConfig
 	AD         []ADConfig
@@ -162,25 +163,6 @@ func vaultConfig(conf Config) (*Config, error) {
 		return cfg, fmt.Errorf("ошибка Vault: %v", err)
 	}
 	cfg.Repository = repo
-	secret, err = cl.Read(context.Background(), fmt.Sprintf("%sjwt", conf.Vault.SecretPath))
-	if err != nil {
-		return cfg, fmt.Errorf("ошибка Vault, секрет по пути %s недоступен: %v", fmt.Sprintf("%sjwt", conf.Vault.SecretPath), err)
-	}
-	value, ok = secret.Data["data"]
-	if !ok {
-		return cfg, fmt.Errorf("ошибка Vault: %v", err)
-	}
-
-	data, err = json.Marshal(value)
-	if err != nil {
-		return cfg, fmt.Errorf("ошибка Vault: %v", err)
-	}
-	jwt := JWT{}
-	err = json.Unmarshal(data, &jwt)
-	if err != nil {
-		return cfg, fmt.Errorf("ошибка Vault: %v", err)
-	}
-	cfg.Jwt = jwt
 
 	secret, err = cl.Read(context.Background(), fmt.Sprintf("%shydra", conf.Vault.SecretPath))
 	if err != nil {

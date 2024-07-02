@@ -11,6 +11,8 @@ import (
 func getUserID(c *gin.Context) (userID string) {
 	//MustGet returns the value for the given key if it exists, otherwise it panics.
 	_, isExist := c.Get("user")
+	dd := c.MustGet("user")
+	_ = dd
 	if isExist {
 		return c.MustGet("user").(string)
 	}
@@ -32,13 +34,17 @@ func (h *Handler) CurrentUser(c *gin.Context) {
 }
 
 func (h *Handler) CurrentUserResources(c *gin.Context) {
+
 	if userID := getUserID(c); userID != "" {
 		resources, err := h.uc.GetCurrentUserResources(userID)
+
 		if err != nil {
 			c.JSON(http.StatusNotAcceptable, gin.H{"message": "Invalid credentials", "error": err.Error()})
 			return
 		}
+
 		c.JSON(http.StatusOK, gin.H{"data": resources})
+		return
 	} else {
 		c.JSON(http.StatusNotAcceptable, gin.H{"error": "Invalid credentials"})
 		return

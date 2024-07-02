@@ -1,8 +1,12 @@
 package entity
 
+import "time"
+
 type Token struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token,omitempty"`
+	IdToken      string    `json:"id_token,omitempty"`
+	Expiry       time.Time `json:"expiry,omitempty"`
 }
 
 type TokenDetails struct {

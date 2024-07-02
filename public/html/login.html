@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Yusuf">
+    <title>Sign In</title>
+
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css"
+        integrity="sha512-P5MgMn1jBN01asBgU0z60Qk4QxiXo86+wlFahKrsQf37c9cro517WzVSPPV1tDKzhku2iJ2FVgL67wG03SGnNA=="
+        crossorigin="anonymous" />
+    <style>
+        body {
+            margin-top: 20px;
+            background: #eee;
+        }
+
+        .container {
+            margin-right: auto;
+            margin-left: auto;
+            padding-right: 15px;
+            padding-left: 15px;
+            width: 100%;
+        }
+
+        @media (min-width: 576px) {
+            .container {
+                max-width: 540px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                max-width: 720px;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .container {
+                max-width: 960px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .container {
+                max-width: 1140px;
+            }
+        }
+
+
+
+        .card-columns .card {
+            margin-bottom: 0.75rem;
+        }
+
+        @media (min-width: 576px) {
+            .card-columns {
+                column-count: 3;
+                column-gap: 1.25rem;
+            }
+
+            .card-columns .card {
+                display: inline-block;
+                width: 100%;
+            }
+        }
+
+        .text-muted {
+            color: #9faecb !important;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        .mb-3 {
+            margin-bottom: 1rem !important;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            width: 100%;
+        }
+    </style>
+
+</head>
+
+<body>
+    <br>
+    <br>
+    <br>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                {{if not .LoginChallenge}}
+                <div class="card-group mb-0">
+                    <div class="card p-4">
+                        <div class="card-body text-center">
+                            <h5> <span class="text-danger"> {{ .ErrorTitle }}</span></h5>
+                            <p class="lead">
+                                {{ .ErrorContent }}
+                            </p>
+                            <a class="btn btn-primary" href="javascript: history.go(-1)">Назад</a>
+                        </div>
+                    </div>
+                </div>
+                {{end}}
+                {{if .LoginChallenge}}
+                <form method="post" action="/api/idp/login">
+                    <input type="hidden" name="login_challenge" value="{{.LoginChallenge}}">
+                    <div class="card-group mb-0">
+                        <div class="card p-4">
+                            <div class="card-body">
+                                <h1>Вход</h1>
+                                <p class="text-muted">Войдите в систему вашими учетными данными</p>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
+
+                                    <input type="email" id="inputEmail" class="form-control" name="email"
+                                        placeholder="Логин" required autofocus>
+                                </div>
+                                <div class="input-group mb-4">
+                                    <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                                    <input type="password" id="inputPassword" class="form-control" name="password"
+                                        placeholder="Пароль" required>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12 mb-3">
+                                        <label>
+                                            <input type="checkbox" name="remember_me" value="true"> Запомнить меня
+                                        </label>
+                                    </div>
+                                </div>
+
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <button class="btn btn-lg btn-primary btn-block" type="submit">Войти</button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card text-white bg-primary py-3 d-md-down-none" style="width:44%">
+                            <div class="card-body text-center">
+                                <div>
+                                    <h2>Войдите</h2>
+                                    <p> в систему с помощью учетной записи вашего
+                                        домена Active Directory.
+                                    </p>
+                                    <p> Регистрация пользователей, сброс пароля и и изменения параметров
+                                        учетных данных производятся установленным порядком в вашей организации.
+                                    </p>
+
+                                </div>
+                            </div>
+                        </div>
+                </form>
+                {{end}}
+            </div>
+        </div>
+    </div>
+    </div>
+
+</body>
+
+</html>

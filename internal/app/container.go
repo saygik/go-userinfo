@@ -3,7 +3,6 @@ package app
 import (
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/go-gorp/gorp"
-	hydraclient "github.com/ory/hydra-client-go/v2"
 	"github.com/redis/go-redis/v9"
 	adClient "github.com/saygik/go-ad-client"
 	"github.com/saygik/go-userinfo/internal/adapter/repository/ad"
@@ -13,7 +12,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/adapter/web/glpiapi"
 	"github.com/saygik/go-userinfo/internal/adapter/web/mattermost"
 	"github.com/saygik/go-userinfo/internal/auth/hydra"
-	"github.com/saygik/go-userinfo/internal/auth/jwt"
+	"github.com/saygik/go-userinfo/internal/auth/oauth2"
 	"github.com/saygik/go-userinfo/internal/usecase"
 )
 
@@ -24,7 +23,8 @@ type Container struct {
 	ads     map[string]*adClient.ADClient
 	matt    *MattClient
 	glpiApi *GLPIApiClient
-	hydra   *hydraclient.APIClient
+	hydra   *IDPClient
+	oAuth2  *OAuth2Client
 }
 
 func NewAppContainer(
@@ -34,7 +34,8 @@ func NewAppContainer(
 	adclients map[string]*adClient.ADClient,
 	matt *MattClient,
 	glpiApi *GLPIApiClient,
-	hydra *hydraclient.APIClient,
+	hydra *IDPClient,
+	oAuth2 *OAuth2Client,
 ) *Container {
 	c := &Container{
 		mssql:   mssqlConnect,
@@ -44,6 +45,7 @@ func NewAppContainer(
 		matt:    matt,
 		glpiApi: glpiApi,
 		hydra:   hydra,
+		oAuth2:  oAuth2,
 	}
 	return c
 }
@@ -69,11 +71,11 @@ func (c *Container) getGlpiApiRepository() *glpiapi.Repository {
 	return glpiapi.New(c.glpiApi.url, c.glpiApi.token, c.glpiApi.usertoken)
 }
 
-func (c *Container) GetAuth(accessSecret string, refreshSecret string, atExpires int, rtExpires int) *jwt.Auth {
-	return jwt.New(c.getRedisRepository(), jwt.JwtCfg{AccessSecret: accessSecret, RefreshSecret: refreshSecret, AtExpires: atExpires, RtExpires: rtExpires})
-}
 func (c *Container) GetHydra() *hydra.Hydra {
-	return hydra.New(c.hydra)
+	return hydra.New(c.hydra.client, c.hydra.scopes)
+}
+func (c *Container) GetOAuth2() *oauth2.OAuth2 {
+	return oauth2.New(c.oAuth2.oAuth2Config, c.oAuth2.oidcProvider)
 }
 
 func (c *Container) getADRepository() *ad.Repository {

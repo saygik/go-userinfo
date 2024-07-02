@@ -34,7 +34,7 @@ func newAddConnection(config config.ADConfig) *adClient.ADClient {
 		UserFilter:     config.Filter,
 		ComputerFilter: config.ComputerFilter,
 		GroupFilter:    config.GroupFilter,
-		Attributes: []string{"userPrincipalName", "dn", "cn", "company", "department", "title", "telephoneNumber",
+		Attributes: []string{"userPrincipalName", "dn", "cn", "company", "department", "title", "telephoneNumber", "sn", "givenName",
 			"otherTelephone", "mail", "pager", "msRTCSIP-PrimaryUserAddress", "url", "memberOf", "displayName",
 			"description", "userPrincipalName", "employeeNumber", "pwdLastSet", "proxyAddresses", "userAccountControl", "distinguishedName", "lastLogonTimestamp"},
 	}
