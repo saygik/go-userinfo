@@ -49,7 +49,7 @@ func (hdr Hydra) AcceptOAuth2LogoutRequest(logoutChallenge string) (string, erro
 func (hdr Hydra) GetOAuth2LoginRequest(loginChallenge string) (*entity.OAuth2LoginRequest, error) {
 	resp, _, err := hdr.client.OAuth2API.GetOAuth2LoginRequest(context.Background()).LoginChallenge(loginChallenge).Execute()
 	if err != nil {
-		return nil, errors.New("error when calling `OAuth2API.GetOAuth2LoginRequest`")
+		return nil, err
 	}
 	return &entity.OAuth2LoginRequest{
 		Challenge:                    resp.Challenge,

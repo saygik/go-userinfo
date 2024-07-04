@@ -101,11 +101,6 @@ func (h *Handler) ExchangeToken(c *gin.Context) {
 	}
 	accessToken.Expiry = time.Unix(*tt.Exp, 0)
 
-	//c.SetCookie("token_cookie", accessToken.AccessToken, 3600, "/", "w-058-258049004.brnv.rw", false, true)
-	// c.SetCookie("findusers_rtoken_cookie", accessToken.RefreshToken, 86400, "/", "w-058-258049004.brnv.rw", false, true)
-	// c.SetCookie("idtoken", accessToken.IdToken, 86400, "/", "w-058-258049004.brnv.rw", false, true)
-	// c.SetCookie("gin_cookie", "test", 3600, "/", "w-058-258049004.brnv.rw", false, true)
-	//	c.String(http.StatusOK, "login success, cookie present")
 	c.JSON(http.StatusOK, gin.H{
 		"token": accessToken,
 		"user":  userInfo,
