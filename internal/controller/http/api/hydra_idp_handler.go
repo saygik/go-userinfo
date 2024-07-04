@@ -24,15 +24,22 @@ func (h *Handler) GetLogin(c *gin.Context) {
 
 	resp, err := h.hydra.GetOAuth2LoginRequest(loginChallenge)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error when calling `OAuth2API.GetOAuth2LoginRequest``: %v\n", err)
+		//		fmt.Fprintf(os.Stderr, "Error when calling `OAuth2API.GetOAuth2LoginRequest``: %v\n", err)
+		c.HTML(http.StatusOK, "login.html", gin.H{
+			"ErrorTitle":   "сессия пользователя не существует",
+			"ErrorContent": err.Error(),
+		})
 	}
 	if resp.Skip {
 		err := h.uc.UserExist(resp.Subject)
 		if err != nil {
 			c.HTML(http.StatusOK, "login.html", gin.H{
-				"ErrorTitle":   "Ошибка входа пользователя",
-				"ErrorContent": err.Error(),
+				"LoginChallenge": loginChallenge,
 			})
+			// c.HTML(http.StatusOK, "login.html", gin.H{
+			// 	"ErrorTitle":   "Ошибка входа пользователя",
+			// 	"ErrorContent": err.Error(),
+			// })
 			return
 		}
 		redirectTo, err := h.hydra.AcceptOAuth2LoginRequest(loginChallenge, resp.Subject)
@@ -66,7 +73,7 @@ func (h *Handler) GetLogout(c *gin.Context) {
 	if logoutChallenge == "" {
 		//открыть форму с ошибкой return "", errors.New("the login_challenge parameter is present but empty")
 		c.HTML(http.StatusOK, "login.html", gin.H{
-			"ErrorTitle":   "Login Challenge Is Not Exist!",
+			"ErrorTitle":   "Ошибка входа пользователя",
 			"ErrorContent": "Login Challenge Is Not Exist!",
 		})
 		return
@@ -75,6 +82,10 @@ func (h *Handler) GetLogout(c *gin.Context) {
 	redirectTo, err := h.hydra.AcceptOAuth2LogoutRequest(logoutChallenge)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `OAuth2API.GetOAuth2LoginRequest``: %v\n", err)
+		c.HTML(http.StatusOK, "login.html", gin.H{
+			"ErrorTitle":   "Login Challenge Is Not Exist!",
+			"ErrorContent": err.Error(),
+		})
 	}
 	c.Redirect(http.StatusMovedPermanently, redirectTo)
 }

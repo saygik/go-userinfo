@@ -93,6 +93,7 @@ type Hydra interface {
 	IntrospectOAuth2Token(string) (*entity.IntrospectedOAuth2Token, error)
 	AcceptOAuth2LogoutRequest(string) (string, error)
 	LogoutURL() string
+
 	GetScopes() []entity.IDPScope
 }
 

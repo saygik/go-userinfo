@@ -145,3 +145,15 @@ func (hdr Hydra) IntrospectOAuth2Token(token string) (*entity.IntrospectedOAuth2
 
 	return &introspectedOAuth2Token, nil
 }
+
+// func (hdr Hydra) RevokeOidcSession(subject string) error {
+// 	_, err := hdr.client.OidcAPI.RevokeOidcSession(context.Background()).Execute()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	_, err = hdr.client.OAuth2API.RevokeOAuth2ConsentSessions(context.Background()).Subject(subject).Client("client103").All(true).Execute()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+//}
