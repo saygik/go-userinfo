@@ -4,6 +4,7 @@ type IDPScope struct {
 	Scope  string `json:"scope" binding:"required"`
 	Domain string `json:"domain" binding:"required"`
 	Group  string `json:"group" binding:"required"`
+	Role   string `json:"role"`
 }
 
 type OAuth2LoginRequest struct {
@@ -75,4 +76,11 @@ type UserInfo struct {
 	Title       string `json:"title"`
 	Nickname    string `json:"nickname"`
 	PhoneNumber string `json:"phone_number"`
+}
+
+type OAuth2Client struct {
+	// OAuth 2.0 Client ID  The ID is immutable. If no ID is provided, a UUID4 will be generated.
+	ClientId *string `json:"client_id,omitempty"`
+	// OAuth 2.0 Client Name  The human-readable name of the client to be presented to the end-user during authorization.
+	ClientName *string `json:"client_name,omitempty"`
 }

@@ -126,3 +126,16 @@ func filterStringArrayByWord(words []string, word string) []string {
 	}
 	return filtered
 }
+
+func addStringToArrayIfNotExist(str string, arr []string) []string {
+	if str == "" {
+		return arr
+	}
+	for _, b := range arr {
+		if b == str {
+			return arr
+		}
+	}
+	arr = append(arr, str)
+	return arr
+}

@@ -29,7 +29,9 @@ func (h *Handler) GetLogin(c *gin.Context) {
 			"ErrorTitle":   "сессия пользователя не существует",
 			"ErrorContent": err.Error(),
 		})
+		return
 	}
+
 	if resp.Skip {
 		err := h.uc.UserExist(resp.Subject)
 		if err != nil {
@@ -140,6 +142,15 @@ func (h *Handler) PostLogin(c *gin.Context) {
 func (h *Handler) GetConsent(c *gin.Context) {
 
 	consentChallenge := c.Query("consent_challenge")
+	//	clientId := c.Query("client_id")
+
+	// if clientId == "" {
+	// 	c.HTML(http.StatusOK, "consent.html", gin.H{
+	// 		"ErrorTitle":   "Ошибка подтверждения входа в систему",
+	// 		"ErrorContent": "неправильный id приложения для входа",
+	// 	})
+	// 	return
+	// }
 
 	if consentChallenge == "" {
 		c.HTML(http.StatusOK, "consent.html", gin.H{
@@ -156,8 +167,11 @@ func (h *Handler) GetConsent(c *gin.Context) {
 	}
 
 	//* проверка присутствия в необходимых scopes
+	clientId := h.clientIdFromRequestUrl(*resp.RequestUrl)
+	clientSystem, _ := h.hydra.GetOAuth2Client(clientId)
+
 	scopes := resp.RequestedScope
-	err = h.uc.UserInGropScopes(*resp.Subject, scopes, h.hydra.GetScopes())
+	roles, useRoles, err := h.uc.UserInGropScopes(*resp.Subject, scopes, h.hydra.GetScopes(), clientSystem)
 	if err != nil {
 		c.HTML(http.StatusOK, "consent.html", gin.H{
 			"ErrorTitle":   "Ошибка подтверждения входа в систему",
@@ -173,7 +187,9 @@ func (h *Handler) GetConsent(c *gin.Context) {
 			"ErrorContent": err.Error(),
 		})
 	}
-
+	if useRoles {
+		user["roles"] = roles
+	}
 	if *resp.Skip {
 		redirectTo, err := h.hydra.AcceptOAuth2ConsentRequest(resp, user)
 		if err != nil {

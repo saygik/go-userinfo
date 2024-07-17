@@ -51,6 +51,8 @@ func (hdr Hydra) GetOAuth2LoginRequest(loginChallenge string) (*entity.OAuth2Log
 	if err != nil {
 		return nil, err
 	}
+	// resp1, _, err := hdr.client.OAuth2API.ListOAuth2ConsentSessions(context.Background()).Subject(resp.Subject).PageSize(int64(789)).PageToken("pageToken_example").LoginSessionId(*resp.SessionId).Execute()
+	// _ = resp1
 	return &entity.OAuth2LoginRequest{
 		Challenge:                    resp.Challenge,
 		RequestUrl:                   resp.RequestUrl,
@@ -66,6 +68,7 @@ func (hdr Hydra) GetOAuth2LoginRequest(loginChallenge string) (*entity.OAuth2Log
 func (hdr Hydra) AcceptNewOAuth2LoginRequest(loginChallenge string, subject string, rememberMe bool) (string, error) {
 	acceptOAuth2LoginRequest := *client.NewAcceptOAuth2LoginRequest(subject) // AcceptOAuth2LoginRequest |  (optional)
 	acceptOAuth2LoginRequest.SetRemember(rememberMe)
+	acceptOAuth2LoginRequest.SetRememberFor(2678400)
 
 	resp, _, err := hdr.client.OAuth2API.AcceptOAuth2LoginRequest(context.Background()).LoginChallenge(loginChallenge).AcceptOAuth2LoginRequest(acceptOAuth2LoginRequest).Execute()
 	if err != nil {
@@ -100,6 +103,20 @@ func (hdr Hydra) GetOAuth2ConsentRequest(consentChallenge string) (*entity.OAuth
 	}, nil
 }
 
+func (hdr Hydra) GetOAuth2Client(clientId string) (*entity.OAuth2Client, error) {
+
+	client, _, err := hdr.client.OAuth2API.GetOAuth2Client(context.Background(), clientId).Execute()
+	if err != nil {
+		return nil, errors.New("не найдена система-клиент в oAuth2")
+	}
+	_ = client
+	resp := entity.OAuth2Client{
+		ClientId:   client.ClientId,
+		ClientName: client.ClientName,
+	}
+	return &resp, nil
+}
+
 func (hdr Hydra) AcceptOAuth2ConsentRequest(consentRequest *entity.OAuth2ConsentRequest, user map[string]interface{}) (string, error) {
 	acceptOAuth2ConsentRequest := *client.NewAcceptOAuth2ConsentRequest()
 	newAcceptOAuth2ConsentRequestSession := *client.NewAcceptOAuth2ConsentRequestSession()
@@ -122,10 +139,12 @@ func (hdr Hydra) AcceptOAuth2ConsentRequest(consentRequest *entity.OAuth2Consent
 			claims["nickname"] = user["userPrincipalName"]
 			claims["phone_number"] = user["telephoneNumber"]
 		}
+		if scope == "role" {
+			claims["roles"] = user["roles"]
+		}
 	}
 	newAcceptOAuth2ConsentRequestSession.IdToken = claims
 	acceptOAuth2ConsentRequest.SetSession(newAcceptOAuth2ConsentRequestSession)
-
 	resp2, _, err := hdr.client.OAuth2API.AcceptOAuth2ConsentRequest(context.Background()).ConsentChallenge(consentRequest.Challenge).AcceptOAuth2ConsentRequest(acceptOAuth2ConsentRequest).Execute()
 	if err != nil {
 		return "", errors.New("cannot Accept Consent Request")

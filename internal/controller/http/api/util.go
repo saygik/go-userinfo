@@ -50,6 +50,15 @@ func (h *Handler) ExtractToken(r *http.Request) string {
 	return ""
 }
 
+func (h *Handler) clientIdFromRequestUrl(RequestUrl string) string {
+	clientId := ""
+	if strings.Index(RequestUrl, "client_id") > 1 {
+		clientId = RequestUrl[strings.Index(RequestUrl, "client_id")+10:]
+		clientId = clientId[:strings.Index(clientId, "&")]
+	}
+	return clientId
+}
+
 // func ReadUserName(ip string) (names []string, err error) {
 // 	return net.LookupAddr(ip)
 // }
