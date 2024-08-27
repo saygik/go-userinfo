@@ -30,7 +30,21 @@ func (u *UseCase) UserInGropScopes(user string, scopes []string, idpScopes []ent
 			}
 		}
 	}
-
+	groupScopesUserinfo := filterStringArrayByWord(groupScopes, "group-userinfo")
+	for _, groupScope := range groupScopesUserinfo {
+		for _, idpScope := range idpScopes {
+			if idpScope.Scope == groupScope {
+				err := u.UserInAppGroup(user, idpScope.Group)
+				if err == nil {
+					if useRoles {
+						roles = addStringToArrayIfNotExist(idpScope.Role, roles)
+					}
+					access = true
+				}
+			}
+		}
+	}
+	_ = groupScopesUserinfo
 	if access {
 		return roles, useRoles, nil
 	}
