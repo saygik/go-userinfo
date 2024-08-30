@@ -10,6 +10,10 @@ import (
 
 func (u *UseCase) GetHRPTickets() {
 
+	//FOR TEST!!!!!!!!!!!!!!!!!!!!
+	// tickets := []entity.GLPI_Ticket{}
+	// tickets = append(tickets, entity.GLPI_Ticket{Id: 206238, Content: "Сотрудник: Казаков Юрий Геннадьевич(35407148)"})
+
 	tickets, err := u.glpi.GetHRPTickets()
 	_ = tickets
 	if err != nil || len(tickets) < 1 {
@@ -69,6 +73,19 @@ func (u *UseCase) GetHRPTickets() {
 				}
 			}
 		}
+		softs, err := u.GetUserSoftwaresByFio(sfio)
+		if err == nil && len(softs) > 0 {
+			for _, soft := range softs {
+				_ = soft
+				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
+					Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
+					          <b>%s</b> найден в списке зарегистрированных пользователей системы <b>%s</b><br>
+					          рекомендуется направить заявку группе администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
+					 `, sfio, soft.Name, soft.GroupName)})
+
+			}
+		}
+
 		sBoxes = ""
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") {
 			boxes, err := u.repo.GetOneDelegateMailBoxes(sfio)

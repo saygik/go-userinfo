@@ -20,6 +20,7 @@ type Repository interface {
 	GetUserAvatar(string) (string, error)
 	GetCurrentUserResources(string) ([]entity.AppResource, error)
 	GetUserSoftwares(string) ([]int64, error)
+	GetUserSoftwaresByFio(string) ([]int64, error)
 	GetUserActivity(string) ([]entity.UserActivity, error)
 	AddOneUserSoftware(entity.SoftwareForm) error
 	AddOneSoftwareUser(entity.SoftUser) error
