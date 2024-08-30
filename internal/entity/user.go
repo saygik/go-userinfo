@@ -4,6 +4,7 @@ type UserIPComputer struct {
 	Login    string `db:"login" json:"login"`
 	Ip       string `db:"ip" json:"ip"`
 	Computer string `db:"computer" json:"computer"`
+	IpDate   string `db:"ip_date" json:"ip_date"`
 }
 
 type IdNameAvatar struct {
