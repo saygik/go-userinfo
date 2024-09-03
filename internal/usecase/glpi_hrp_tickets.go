@@ -39,36 +39,38 @@ func (u *UseCase) GetHRPTickets() {
 			continue
 		}
 		upn := ""
-		for _, value := range redisADUsers {
-			var user map[string]interface{}
-			json.Unmarshal([]byte(value), &user)
-			if (fmt.Sprintf("%v", user["displayName"])) == sfio {
-				domain := user["domain"].(map[string]interface{})
+		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
+			for _, value := range redisADUsers {
+				var user map[string]interface{}
+				json.Unmarshal([]byte(value), &user)
+				if (fmt.Sprintf("%v", user["displayName"])) == sfio {
+					domain := user["domain"].(map[string]interface{})
 
-				upn = fmt.Sprintf("%v", user["userPrincipalName"])
-				sBoxes = ""
-				sBoxes += `<b>Поиск по ФИО:</b><br>	`
-				sBoxes += fmt.Sprintf(`%v найден в домене %v, учетная запись <b>%s</b><br>`, user["displayName"], domain["name"], upn)
-				val, ok = user["company"].(string)
-				if ok {
-					sBoxes += fmt.Sprintf(`<b>Организация:</b> %s<br>`, val)
-				}
-				val, ok = user["title"].(string)
-				if ok {
-					sBoxes += fmt.Sprintf(`<b>Должность:</b> %s<br>`, val)
-				}
-				sBoxes += `рекомендуется направить заявку группе администраторов этого домена для окончательной проверки и отключения`
-				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10, Content: sBoxes})
-				softs, err := u.GetUserSoftwares(upn)
-				if err == nil && len(softs) > 0 {
-					for _, soft := range softs {
-						_ = soft
-						u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
-							Content: fmt.Sprintf(`<b>Поиск по учетной записи найденного пользователя:</b><br>
+					upn = fmt.Sprintf("%v", user["userPrincipalName"])
+					sBoxes = ""
+					sBoxes += `<b>Поиск по ФИО:</b><br>	`
+					sBoxes += fmt.Sprintf(`%v найден в домене %v, учетная запись <b>%s</b><br>`, user["displayName"], domain["name"], upn)
+					val, ok = user["company"].(string)
+					if ok {
+						sBoxes += fmt.Sprintf(`<b>Организация:</b> %s<br>`, val)
+					}
+					val, ok = user["title"].(string)
+					if ok {
+						sBoxes += fmt.Sprintf(`<b>Должность:</b> %s<br>`, val)
+					}
+					sBoxes += `рекомендуется направить заявку группе администраторов этого домена для окончательной проверки и отключения`
+					u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10, Content: sBoxes})
+					softs, err := u.GetUserSoftwares(upn)
+					if err == nil && len(softs) > 0 {
+						for _, soft := range softs {
+							_ = soft
+							u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
+								Content: fmt.Sprintf(`<b>Поиск по учетной записи найденного пользователя:</b><br>
 					          %s найден в списке зарегистрированных пользователей системы <b>%s</b><br>
 					          рекомендуется направить заявку группе администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
 					 `, upn, soft.Name, soft.GroupName)})
 
+						}
 					}
 				}
 			}
@@ -103,10 +105,11 @@ func (u *UseCase) GetHRPTickets() {
 
 			}
 		}
-		if upn == "" {
-			u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
-				Content: `<b>Поиск по ФИО</b><br>не обнаружил пользователя в доменах, подключенных к системе<br> заявка рекомендуется к закрытию(решению)`})
-
+		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
+			if upn == "" {
+				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
+					Content: `<b>Поиск по ФИО</b><br>не обнаружил пользователя в доменах, подключенных к системе<br> заявка рекомендуется к закрытию(решению)`})
+			}
 		}
 		u.glpi.SetHRPTicket(ticket.Id)
 	}
