@@ -30,7 +30,12 @@ func (u *UseCase) GetHRPTickets() {
 	ok := false
 	for _, ticket := range tickets {
 		finded := false
-		channelId, _ := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
+		channelId, err := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
+		if err != nil {
+			u.log.Error(fmt.Sprintf("Error getting channelId for group %d: %v", ticket.GroupId, err))
+		} else {
+			u.log.Info(fmt.Sprintf("channelId for group %d: %s", ticket.GroupId, channelId))
+		}
 
 		if len(ticket.Content) < 20 || !strings.Contains(ticket.Content, "Сотрудник:") {
 			u.glpi.SetHRPTicket(ticket.Id)
@@ -146,7 +151,7 @@ func (u *UseCase) GetHRPTickets() {
 				if len(channelId) > 0 {
 					err = u.matt.SendPostHRP(channelId, entity.MattermostHrpPost{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Company: sPred1 + ", " + sPred})
 					if err != nil {
-						u.log.Error("Error sending post to Mattermost channel to HRP ticket group", err)
+						u.log.Error(fmt.Sprintf("Error sending post to Mattermost channel %s to HRP ticket group: %v", channelId, err))
 					} else {
 						u.log.Info(fmt.Sprintf(`Post to Mattermost channel %s to HRP ticket group sent`, channelId))
 					}
