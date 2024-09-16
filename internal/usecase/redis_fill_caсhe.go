@@ -10,6 +10,7 @@ import (
 func (u *UseCase) FillRedisCaсheFromAD() error {
 	adl := u.ad.DomainList()
 	//	u.redis.ClearAllDomainsUsers()
+	u.redis.Delete("allusers")
 	for _, one := range adl {
 		users, err := u.ad.GetDomainUsers(one.Name)
 		comps, _ := u.ad.GetDomainComputers(one.Name)

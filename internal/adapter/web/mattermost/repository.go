@@ -13,7 +13,7 @@ type Repository struct {
 func New(url string, token string) *Repository {
 	client := model.NewAPIv4Client("https://matt.rw")
 	//	client.Login("bot@example.com", "password")
-	client.SetToken("jmhmhqq87jr87edud897a8am3e")
+	client.SetToken(token)
 
 	return &Repository{
 		url:    url,
@@ -21,3 +21,5 @@ func New(url string, token string) *Repository {
 		client: client,
 	}
 }
+
+//czhom66383rc9ecdx669nnaaka

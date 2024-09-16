@@ -14,6 +14,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/auth/hydra"
 	"github.com/saygik/go-userinfo/internal/auth/oauth2"
 	"github.com/saygik/go-userinfo/internal/usecase"
+	"github.com/sirupsen/logrus"
 )
 
 type Container struct {
@@ -25,6 +26,7 @@ type Container struct {
 	glpiApi *GLPIApiClient
 	hydra   *IDPClient
 	oAuth2  *OAuth2Client
+	log     *logrus.Logger
 }
 
 func NewAppContainer(
@@ -36,6 +38,7 @@ func NewAppContainer(
 	glpiApi *GLPIApiClient,
 	hydra *IDPClient,
 	oAuth2 *OAuth2Client,
+	log *logrus.Logger,
 ) *Container {
 	c := &Container{
 		mssql:   mssqlConnect,
@@ -46,11 +49,12 @@ func NewAppContainer(
 		glpiApi: glpiApi,
 		hydra:   hydra,
 		oAuth2:  oAuth2,
+		log:     log,
 	}
 	return c
 }
 func (c *Container) GetUseCase() *usecase.UseCase {
-	return usecase.New(c.getMssqlRepository(), c.getRedisRepository(), c.getADRepository(), c.getGlpiRepository(), c.getMattermostRepository(), c.getGlpiApiRepository())
+	return usecase.New(c.getMssqlRepository(), c.getRedisRepository(), c.getADRepository(), c.getGlpiRepository(), c.getMattermostRepository(), c.getGlpiApiRepository(), c.log)
 }
 
 func (c *Container) getMssqlRepository() *mssql.Repository {

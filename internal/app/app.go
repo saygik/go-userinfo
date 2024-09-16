@@ -21,7 +21,7 @@ func New() (*App, error) {
 	}
 	app.cfg = cfg
 	app.initLogger(cfg.App.Env)
-	//app.log.Info("------------------Starting programm-------------")
+	app.log.Info("------------------Starting programm-------------")
 	msSQLConnect, err := app.newMsSQLConnect(cfg.Repository.Mssql)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func New() (*App, error) {
 
 	mattClient := app.newMattermostConnection(cfg.Repository.Mattermost.Server, cfg.Repository.Mattermost.Token)
 	glpiApiClient := app.newGLPIApiConnection(cfg.Repository.GlpiApi.Server, cfg.Repository.GlpiApi.Token, cfg.Repository.GlpiApi.UserToken)
-	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, mattClient, glpiApiClient, hydraClient, oAuth2Client)
+	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, mattClient, glpiApiClient, hydraClient, oAuth2Client, app.log)
 	app.c = c
 	app.c.GetUseCase().ClearRedisCaсhe()
 	app.c.GetUseCase().FillRedisCaсheFromAD()
@@ -69,6 +69,7 @@ func New() (*App, error) {
 	quit2 := make(chan struct{})
 
 	//FOR TEST!!!!!!!!!!!!!!!!!!!!
+
 	//app.c.GetUseCase().GetHRPTickets()
 
 	if app.cfg.App.Env == "prod" {

@@ -144,7 +144,12 @@ func (u *UseCase) GetHRPTickets() {
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
 			if !finded {
 				if len(channelId) > 0 {
-					u.matt.SendPostHRP(channelId, entity.MattermostHrpPost{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Company: sPred1 + ", " + sPred})
+					err = u.matt.SendPostHRP(channelId, entity.MattermostHrpPost{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Company: sPred1 + ", " + sPred})
+					if err != nil {
+						u.log.Error("Error sending post to Mattermost channel to HRP ticket group", err)
+					} else {
+						u.log.Info(fmt.Sprintf(`Post to Mattermost channel %s to HRP ticket group sent`, channelId))
+					}
 				}
 				u.AddTicketSolution(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
 					Content: `<b>Поиск не обнаружил пользователя в доменах и системах<br> Заявка закрыта автоматически`})

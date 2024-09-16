@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"github.com/saygik/go-userinfo/internal/entity"
+	"github.com/sirupsen/logrus"
 )
 
 type Repository interface {
@@ -43,6 +44,7 @@ type Redis interface {
 	GetKeyFieldAll(string) (map[string]string, error)
 	GetKeyFieldValue(string, string) (string, error)
 	DelKeyField(string, string) error
+	Delete(string) error
 }
 type AD interface {
 	DomainList() []entity.DomainList
@@ -117,9 +119,10 @@ type UseCase struct {
 	glpi    GLPI
 	matt    Mattermost
 	glpiApi GlpiApi
+	log     *logrus.Logger
 }
 
-func New(r Repository, redis Redis, adRepo AD, glpiRepo GLPI, matt Mattermost, glpiApi GlpiApi) *UseCase {
+func New(r Repository, redis Redis, adRepo AD, glpiRepo GLPI, matt Mattermost, glpiApi GlpiApi, log *logrus.Logger) *UseCase {
 	return &UseCase{
 		repo:    r,
 		redis:   redis,
@@ -127,5 +130,6 @@ func New(r Repository, redis Redis, adRepo AD, glpiRepo GLPI, matt Mattermost, g
 		glpi:    glpiRepo,
 		matt:    matt,
 		glpiApi: glpiApi,
+		log:     log,
 	}
 }
