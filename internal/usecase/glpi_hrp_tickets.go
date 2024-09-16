@@ -30,12 +30,10 @@ func (u *UseCase) GetHRPTickets() {
 	ok := false
 	for _, ticket := range tickets {
 		finded := false
-		channelId, err := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
-		if err != nil {
-			u.log.Error(fmt.Sprintf("Error getting channelId for group %d: %v", ticket.GroupId, err))
-		} else {
-			u.log.Info(fmt.Sprintf("channelId for group %d: %s", ticket.GroupId, channelId))
-		}
+		channelId, _ := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
+		// if err != nil {
+		// 	u.log.Error(fmt.Sprintf("Error getting channelId for group %d: %v", ticket.GroupId, err))
+		// }
 
 		if len(ticket.Content) < 20 || !strings.Contains(ticket.Content, "Сотрудник:") {
 			u.glpi.SetHRPTicket(ticket.Id)
@@ -151,9 +149,9 @@ func (u *UseCase) GetHRPTickets() {
 				if len(channelId) > 0 {
 					err = u.matt.SendPostHRP(channelId, entity.MattermostHrpPost{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Company: sPred1 + ", " + sPred})
 					if err != nil {
-						u.log.Error(fmt.Sprintf("Error sending post to Mattermost channel %s to HRP ticket group: %v", channelId, err))
+						u.log.Error(fmt.Sprintf("Error sending post for autoresolved ticket %d to Mattermost channel %s to HRP ticket group %d. Error: %v", ticket.Id, channelId, ticket.GroupId, err))
 					} else {
-						u.log.Info(fmt.Sprintf(`Post to Mattermost channel %s to HRP ticket group sent`, channelId))
+						u.log.Info(fmt.Sprintf(`Post for autoresolved ticket %d to Mattermost channel %s to HRP ticket group %d sended`, ticket.Id, channelId, ticket.GroupId))
 					}
 				}
 				u.AddTicketSolution(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,

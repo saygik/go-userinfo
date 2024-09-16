@@ -6,7 +6,9 @@ import (
 
 func (r *Repository) GetHRPTickets() (tickets []entity.GLPI_Ticket, err error) {
 
-	sql := `SELECT glpi_tickets.id AS 'id', glpi_tickets.name AS 'name', content  AS 'content', glpi_entities.completename as 'company' FROM glpi_tickets
+	sql := `SELECT glpi_tickets.id AS 'id', glpi_tickets.name AS 'name', content  AS 'content', glpi_entities.completename as 'company',
+	(SELECT groups_id FROM  glpi_groups_tickets WHERE glpi_groups_tickets.tickets_id=glpi_tickets.id AND TYPE=2) AS 'group_id'
+	FROM glpi_tickets
 	        INNER JOIN glpi_entities ON glpi_tickets.entities_id=glpi_entities.id
             WHERE requesttypes_id=8 AND status<5  AND glpi_tickets.id not IN (select tickets_id AS id FROM glpi_tickets_hrp)`
 	_, err = r.db.Select(&tickets, sql)
