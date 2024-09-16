@@ -91,14 +91,17 @@ type GLPI interface {
 	GetStatRegions(string, string) ([]entity.GLPIRegionsStats, error)
 	GetStatPeriodOrgTreemap(string, string) ([]entity.TreemapData, error)
 	GetHRPTickets() ([]entity.GLPI_Ticket, error)
+	GetHRPTicketsTest() ([]entity.GLPI_Ticket, error)
 	SetHRPTicket(int) error
 	GetUserApiTokenByName(string) (entity.IdName, error)
 	GetTicketsInExecutionGroups(string) ([]entity.GLPI_Ticket, error)
 	GetUserTrackingGroups(string) ([]entity.IdName, error)
+	GetGroupMattermostChannel(int) (string, error)
 }
 
 type Mattermost interface {
 	GetUsers() ([]entity.MattermostUser, error)
+	SendPostHRP(string, entity.MattermostHrpPost) (err error)
 }
 type GlpiApi interface {
 	CreateTicket(entity.NewTicketInputForm) (int, error)

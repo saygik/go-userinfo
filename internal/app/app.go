@@ -69,7 +69,7 @@ func New() (*App, error) {
 	quit2 := make(chan struct{})
 
 	//FOR TEST!!!!!!!!!!!!!!!!!!!!
-	//	app.c.GetUseCase().GetHRPTickets()
+	//app.c.GetUseCase().GetHRPTickets()
 
 	if app.cfg.App.Env == "prod" {
 		go getHrpTickets(app, ticker2, quit2)

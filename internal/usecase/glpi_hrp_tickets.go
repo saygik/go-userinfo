@@ -10,7 +10,8 @@ import (
 
 func (u *UseCase) GetHRPTickets() {
 
-	//FOR TEST!!!!!!!!!!!!!!!!!!!!
+	//	FOR TEST!!!!!!!!!!!!!!!!!!!!
+	//	u.matt.SendPostHRP(entity.MattermostHrpPost{})
 	// tickets := []entity.GLPI_Ticket{}
 	// tickets = append(tickets, entity.GLPI_Ticket{Id: 206238, Content: "Сотрудник: Казаков Юрий Геннадьевич(35407148)"})
 
@@ -28,22 +29,54 @@ func (u *UseCase) GetHRPTickets() {
 	val := ""
 	ok := false
 	for _, ticket := range tickets {
+		finded := false
+		channelId, _ := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
+
 		if len(ticket.Content) < 20 || !strings.Contains(ticket.Content, "Сотрудник:") {
 			u.glpi.SetHRPTicket(ticket.Id)
 			continue
 		}
 		sfio := ticket.Content[strings.Index(ticket.Content, "Сотрудник:")+20:]
-		sfio = sfio[:strings.Index(sfio, "(")]
+		endOfFio := strings.Index(sfio, "(")
+		if endOfFio > 0 {
+			sfio = sfio[:endOfFio]
+		} else {
+			sfio = "no"
+		}
 		if len(sfio) < 5 {
 			u.glpi.SetHRPTicket(ticket.Id)
 			continue
 		}
+
+		sDolg := ticket.Content[strings.Index(ticket.Content, "Штатная должность:")+35:]
+		endOfDolg := strings.Index(sDolg, "&lt;")
+		if endOfDolg > 0 {
+			sDolg = sDolg[:endOfDolg]
+		} else {
+			sDolg = ""
+		}
+		sPred := ticket.Content[strings.Index(ticket.Content, "ОЕ:")+6:]
+		endOfPred := strings.Index(sPred, "&lt;")
+		if endOfPred > 0 {
+			sPred = sPred[:endOfPred]
+		} else {
+			sPred = ""
+		}
+		sPred1 := ticket.Content[strings.Index(ticket.Content, "БЕ:")+6:]
+		endOfPred = strings.Index(sPred1, "&lt;")
+		if endOfPred > 0 {
+			sPred1 = sPred1[:endOfPred]
+		} else {
+			sPred1 = ""
+		}
+
 		upn := ""
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
 			for _, value := range redisADUsers {
 				var user map[string]interface{}
 				json.Unmarshal([]byte(value), &user)
 				if (fmt.Sprintf("%v", user["displayName"])) == sfio {
+					finded = true
 					domain := user["domain"].(map[string]interface{})
 
 					upn = fmt.Sprintf("%v", user["userPrincipalName"])
@@ -79,6 +112,7 @@ func (u *UseCase) GetHRPTickets() {
 		if err == nil && len(softs) > 0 {
 			for _, soft := range softs {
 				_ = soft
+				finded = true
 				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
 					Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
 					          <b>%s</b> найден в списке зарегистрированных пользователей системы <b>%s</b><br>
@@ -96,6 +130,7 @@ func (u *UseCase) GetHRPTickets() {
 			}
 
 			if len(boxes) > 0 {
+				finded = true
 				sBoxes += fmt.Sprintf(`<b>Поиск в почтовой системе делегированных прав для %s:</b><br>`, sfio)
 				for _, box := range boxes {
 					sBoxes += fmt.Sprintf(`пользователю делегированы права на почтовый ящик <b>%s</b><br>`, box.Mail)
@@ -105,10 +140,14 @@ func (u *UseCase) GetHRPTickets() {
 
 			}
 		}
+
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
-			if upn == "" {
-				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
-					Content: `<b>Поиск по ФИО</b><br>не обнаружил пользователя в доменах, подключенных к системе<br> заявка рекомендуется к закрытию(решению)`})
+			if !finded {
+				if len(channelId) > 0 {
+					u.matt.SendPostHRP(channelId, entity.MattermostHrpPost{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Company: sPred1 + ", " + sPred})
+				}
+				u.AddTicketSolution(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
+					Content: `<b>Поиск не обнаружил пользователя в доменах и системах<br> Заявка закрыта автоматически`})
 			}
 		}
 		u.glpi.SetHRPTicket(ticket.Id)

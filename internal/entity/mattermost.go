@@ -11,3 +11,10 @@ type MattermostUser struct {
 	IsBot       bool   `json:"is_bot,omitempty"`
 	Registred   bool   `json:"registred"`
 }
+
+type MattermostHrpPost struct {
+	Id      int
+	FIO     string
+	Dolg    string
+	Company string
+}
