@@ -19,8 +19,8 @@ func (r *Repository) SendPostHRP(channelId string, hrppost entity.MattermostHrpP
 		"attachments": []*model.SlackAttachment{
 			{
 
-				AuthorName: "отключена автоматически роботом",
-				Text:       "**ФИО: **" + hrppost.FIO + ", **Должность: **" + hrppost.Dolg,
+				AuthorName: "Решена автоматически роботом",
+				Text:       "**ФИО: **" + hrppost.FIO + ", **Должность: **" + hrppost.Dolg + ", **Мероприятие: **" + hrppost.Mero,
 				Color:      "#FFA500",
 				Title:      "Заявка на отключение учетных данных сотрудника №" + strconv.Itoa(hrppost.Id),
 				TitleLink:  "https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(hrppost.Id),

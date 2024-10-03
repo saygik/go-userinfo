@@ -51,7 +51,7 @@ type UseCase interface {
 	GetUserADActivity(string, string) ([]entity.UserActivity, error)                                    // Активность доменов
 	SetUserAvatar(string, string, string) error                                                         // Установить пользователю аватар
 	GetOrgCodes() ([]entity.OrgWithCodes, error)                                                        // Коды организаций
-	GetMattermostUsers() ([]entity.MattermostUser, error)                                               // Все пользователи Mattermost
+	GetMattermostUsers() ([]entity.MattermostUserWithSessions, error)                                   // Все пользователи Mattermost
 	GetGLPITicketsNonClosed(string) ([]entity.GLPI_Ticket, error)                                       // Все нерешённые заявки GLPI
 	GetGLPIUsers() ([]entity.GLPIUserShort, error)                                                      // Все пользователи GLPI
 	GetGLPITicket(string, string) (entity.GLPI_Ticket, error)                                           // Одна заявка GLPI

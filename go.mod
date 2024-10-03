@@ -10,10 +10,10 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-gorp/gorp v2.2.0+incompatible
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/google/uuid v1.5.0
+	github.com/google/uuid v1.6.0
 	github.com/mattermost/mattermost-server/v6 v6.7.2
 	github.com/redis/go-redis/v9 v9.4.0
-	github.com/saygik/go-ad-client v0.0.0-20240214102837-546b18de5e33
+	github.com/saygik/go-ad-client v0.0.0-20241001054741-81a9f0f2539f
 	github.com/sirupsen/logrus v1.9.3
 	github.com/toorop/gin-logrus v0.0.0-20210225092905-2c785434f26f
 )
@@ -60,8 +60,8 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/go-asn1-ber/asn1-ber v1.5.5 // indirect
-	github.com/go-ldap/ldap/v3 v3.4.6 // indirect
+	github.com/go-asn1-ber/asn1-ber v1.5.7 // indirect
+	github.com/go-ldap/ldap/v3 v3.4.8 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.16.0 // indirect
@@ -98,11 +98,11 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	golang.org/x/arch v0.7.0 // indirect
-	golang.org/x/crypto v0.19.0 // indirect
-	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/crypto v0.27.0 // indirect
+	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/oauth2 v0.17.0
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/text v0.18.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect

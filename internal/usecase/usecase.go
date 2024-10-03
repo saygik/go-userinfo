@@ -102,7 +102,8 @@ type GLPI interface {
 }
 
 type Mattermost interface {
-	GetUsers() ([]entity.MattermostUser, error)
+	GetUsers() ([]entity.MattermostUserWithSessions, error)
+	GetUsersWithSessions() (err error)
 	SendPostHRP(string, entity.MattermostHrpPost) (err error)
 }
 type GlpiApi interface {

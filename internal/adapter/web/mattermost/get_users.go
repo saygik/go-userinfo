@@ -1,39 +1,91 @@
 package mattermost
 
 import (
-	"bytes"
-	"encoding/json"
-	"io"
-	"net/http"
-
+	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (r *Repository) GetUsers() ([]entity.MattermostUser, error) {
-	users := []entity.MattermostUser{}
-	url_api := r.url
-	urlUsers := url_api + "/users/search"
+// func (r *Repository) GetUsers1() ([]entity.MattermostUser, error) {
 
-	var jsonStr = []byte(`{ "term": "*", "allow_inactive": false, "limit": 1000 }`)
-	req, err := http.NewRequest("POST", urlUsers, bytes.NewBuffer(jsonStr))
+// 	users := []entity.MattermostUser{}
+// 	url_api := r.url
+// 	urlUsers := url_api + "/users/search"
+
+// 	var jsonStr = []byte(`{ "term": "*", "allow_inactive": false, "limit": 1000 }`)
+// 	req, err := http.NewRequest("POST", urlUsers, bytes.NewBuffer(jsonStr))
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	req.Header.Set("Content-Type", "application/json")
+// 	req.Header.Set("Authorization", "Bearer "+r.token)
+
+// 	client := &http.Client{}
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		return users, err
+// 	}
+
+// 	defer resp.Body.Close()
+// 	body, _ := io.ReadAll(resp.Body)
+// 	err = json.Unmarshal(body, &users)
+// 	if err != nil {
+// 		return users, err
+// 	}
+
+// 	return users, err
+// }
+
+func (r *Repository) GetUsers() ([]entity.MattermostUserWithSessions, error) {
+	usersWithSessions := []entity.MattermostUserWithSessions{}
+
+	users, _, err := r.client.SearchUsers(&model.UserSearch{
+		Term:  "*",
+		Limit: 1000,
+	})
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+r.token)
+	for _, user := range users {
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return users, err
+		sessions, _, _ := r.client.GetSessions(user.Id, "")
+		entitySessions := []entity.MattermostSession{}
+
+		if len(sessions) > 0 {
+			for _, session := range sessions {
+				sessionsn := entity.MattermostSession{
+					Id:             session.Id,
+					CreateAt:       session.CreateAt,
+					ExpiresAt:      session.ExpiresAt,
+					LastActivityAt: session.LastActivityAt,
+					UserId:         session.UserId,
+					DeviceId:       session.DeviceId,
+					Roles:          session.Roles,
+					IsOAuth:        session.IsOAuth,
+					ExpiredNotify:  session.ExpiredNotify,
+					Props:          entity.StringMap(session.Props),
+					Local:          session.Local,
+				}
+				entitySessions = append(entitySessions, sessionsn)
+			}
+		}
+
+		userws := entity.MattermostUserWithSessions{
+			Id:            user.Id,
+			Username:      user.Username,
+			Email:         user.Email,
+			EmailVerified: user.EmailVerified,
+			FirstName:     user.FirstName,
+			LastName:      user.LastName,
+			Nickname:      user.Nickname,
+			Position:      user.Position,
+			CreateAt:      user.CreateAt,
+			UpdateAt:      user.UpdateAt,
+			DeleteAt:      user.DeleteAt,
+			Roles:         user.Roles,
+			AuthService:   user.AuthService,
+		}
+		userws.Sessions = entitySessions
+		usersWithSessions = append(usersWithSessions, userws)
 	}
-
-	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
-	err = json.Unmarshal(body, &users)
-	if err != nil {
-		return users, err
-	}
-
-	return users, err
+	return usersWithSessions, err
 }

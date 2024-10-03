@@ -58,6 +58,14 @@ func (u *UseCase) GetHRPTickets() {
 		} else {
 			sDolg = ""
 		}
+		sMero := ticket.Content[strings.Index(ticket.Content, "Проведено мероприятие:")+44:]
+		endOfMero := strings.Index(sMero, "&lt;")
+		if endOfDolg > 0 {
+			sMero = sMero[:endOfMero]
+		} else {
+			sMero = ""
+		}
+
 		sPred := ticket.Content[strings.Index(ticket.Content, "ОЕ:")+6:]
 		endOfPred := strings.Index(sPred, "&lt;")
 		if endOfPred > 0 {
@@ -143,11 +151,10 @@ func (u *UseCase) GetHRPTickets() {
 
 			}
 		}
-
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
 			if !finded {
 				if len(channelId) > 0 {
-					err = u.matt.SendPostHRP(channelId, entity.MattermostHrpPost{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Company: sPred1 + ", " + sPred})
+					err = u.matt.SendPostHRP(channelId, entity.MattermostHrpPost{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Mero: sMero, Company: sPred1 + ", " + sPred})
 					if err != nil {
 						u.log.Error(fmt.Sprintf("Error sending post for autoresolved ticket %d to Mattermost channel %s to HRP ticket group %d. Error: %v", ticket.Id, channelId, ticket.GroupId, err))
 					} else {

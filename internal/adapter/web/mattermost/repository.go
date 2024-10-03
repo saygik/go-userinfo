@@ -4,6 +4,9 @@ import (
 	"github.com/mattermost/mattermost-server/v6/model"
 )
 
+type User *model.User
+type Session *model.Session
+
 type Repository struct {
 	url    string
 	token  string
