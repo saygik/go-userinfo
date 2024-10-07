@@ -46,7 +46,10 @@ func (r *Repository) GetUsers() ([]entity.MattermostUserWithSessions, error) {
 		return nil, err
 	}
 	for _, user := range users {
-
+		status, err := r.GetUserStatus(user.Id)
+		if err != nil {
+			_ = status
+		}
 		sessions, _, _ := r.client.GetSessions(user.Id, "")
 		entitySessions := []entity.MattermostSession{}
 
@@ -70,21 +73,24 @@ func (r *Repository) GetUsers() ([]entity.MattermostUserWithSessions, error) {
 		}
 
 		userws := entity.MattermostUserWithSessions{
-			Id:            user.Id,
-			Username:      user.Username,
-			Email:         user.Email,
-			EmailVerified: user.EmailVerified,
-			FirstName:     user.FirstName,
-			LastName:      user.LastName,
-			Nickname:      user.Nickname,
-			Position:      user.Position,
-			CreateAt:      user.CreateAt,
-			UpdateAt:      user.UpdateAt,
-			DeleteAt:      user.DeleteAt,
-			Roles:         user.Roles,
-			AuthService:   user.AuthService,
+			Id:             user.Id,
+			Username:       user.Username,
+			Email:          user.Email,
+			EmailVerified:  user.EmailVerified,
+			FirstName:      user.FirstName,
+			LastName:       user.LastName,
+			Nickname:       user.Nickname,
+			Position:       user.Position,
+			CreateAt:       user.CreateAt,
+			UpdateAt:       user.UpdateAt,
+			DeleteAt:       user.DeleteAt,
+			Roles:          user.Roles,
+			AuthService:    user.AuthService,
+			LastActivityAt: user.LastActivityAt,
 		}
 		userws.Sessions = entitySessions
+		userws.Status = status.Status
+		userws.LastActivityAt = status.LastActivityAt
 		usersWithSessions = append(usersWithSessions, userws)
 	}
 	return usersWithSessions, err

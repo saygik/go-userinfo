@@ -57,6 +57,7 @@ type MattermostUserWithSessions struct {
 	LastActivityAt     int64               `json:"last_activity_at,omitempty"`
 	IsBot              bool                `json:"is_bot,omitempty"`
 	Sessions           []MattermostSession `json:"sessions,omitempty"`
+	Status             string              `json:"status,omitempty"`
 }
 
 type MattermostHrpPost struct {
