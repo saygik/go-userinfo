@@ -93,9 +93,22 @@ func (h *Handler) User(c *gin.Context) {
 func (h *Handler) GetUserADActivity(c *gin.Context) {
 	userName := c.Param("username")
 	userTechName := getUserID(c)
+
 	activity, err := h.uc.GetUserADActivity(userName, userTechName)
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка предоставления активности пользователя", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": activity})
+}
+
+func (h *Handler) GetUserMailboxPermissions(c *gin.Context) {
+	userName := c.Param("username")
+	userTechName := getUserID(c)
+
+	activity, err := h.uc.GetUserMailboxPermissions(userName, userTechName)
+	if err != nil {
+		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка предоставления делегированных почтовых ящиков для пользователя", "error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": activity})
