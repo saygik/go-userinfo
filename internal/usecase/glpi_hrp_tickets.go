@@ -80,7 +80,7 @@ func (u *UseCase) GetHRPTickets() {
 		} else {
 			sPred1 = ""
 		}
-
+		hrpUser := entity.HRPUser{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Mero: sMero, Company: sPred1 + ", " + sPred}
 		upn := ""
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
 			for _, value := range redisADUsers {
@@ -124,6 +124,13 @@ func (u *UseCase) GetHRPTickets() {
 			for _, soft := range softs {
 				_ = soft
 				finded = true
+				adminsChannelId, _ := u.glpi.GetGroupMattermostChannel(int(soft.Groups_id_tech))
+				if len(adminsChannelId) > 0 {
+					err = u.matt.SendPostHRPSoft(adminsChannelId, hrpUser, soft)
+					if err != nil {
+						u.log.Error(fmt.Sprintf("Error sending post for  ticket %d to Mattermost channel %s to  ticket soft group %d. Error: %v", ticket.Id, adminsChannelId, soft.Groups_id_tech, err))
+					}
+				}
 				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
 					Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
 					          <b>%s</b> найден в списке зарегистрированных пользователей системы <b>%s</b><br>
@@ -154,7 +161,7 @@ func (u *UseCase) GetHRPTickets() {
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
 			if !finded {
 				if len(channelId) > 0 {
-					err = u.matt.SendPostHRP(channelId, entity.MattermostHrpPost{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Mero: sMero, Company: sPred1 + ", " + sPred})
+					err = u.matt.SendPostHRP(channelId, hrpUser)
 					if err != nil {
 						u.log.Error(fmt.Sprintf("Error sending post for autoresolved ticket %d to Mattermost channel %s to HRP ticket group %d. Error: %v", ticket.Id, channelId, ticket.GroupId, err))
 					} else {

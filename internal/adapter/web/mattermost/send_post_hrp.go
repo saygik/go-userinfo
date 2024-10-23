@@ -1,21 +1,25 @@
 package mattermost
 
 import (
+	"context"
 	"strconv"
 
-	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (r *Repository) SendPostHRP(channelId string, hrppost entity.MattermostHrpPost) (err error) {
-	post := &model.Post{}
-
-	post.ChannelId = channelId
+func (r *Repository) SendPostHRP(channelId string, hrppost entity.HRPUser) (err error) {
+	post := &model.Post{
+		ChannelId: channelId,
+		Metadata: &model.PostMetadata{
+			Priority: &model.PostPriority{
+				Priority:     model.NewPointer("standard"), // Options: "standard", "important", "urgent"
+				RequestedAck: model.NewPointer(true),
+			},
+		}}
 
 	post.SetProps(map[string]interface{}{
-		// "priority": map[string]interface{}{
-		// 	"priority": "important", // Options: "standard", "important", "urgent"
-		// },
+
 		"attachments": []*model.SlackAttachment{
 			{
 
@@ -39,7 +43,7 @@ func (r *Repository) SendPostHRP(channelId string, hrppost entity.MattermostHrpP
 		},
 	})
 
-	if _, _, err := r.client.CreatePost(post); err != nil {
+	if _, _, err := r.client.CreatePost(context.Background(), post); err != nil {
 		return err
 	}
 	return nil

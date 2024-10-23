@@ -104,7 +104,8 @@ type GLPI interface {
 type Mattermost interface {
 	GetUsers() ([]entity.MattermostUserWithSessions, error)
 	GetUsersWithSessions() (err error)
-	SendPostHRP(string, entity.MattermostHrpPost) (err error)
+	SendPostHRP(string, entity.HRPUser) (err error)
+	SendPostHRPSoft(string, entity.HRPUser, entity.Software) (err error)
 }
 type GlpiApi interface {
 	CreateTicket(entity.NewTicketInputForm) (int, error)

@@ -1,7 +1,9 @@
 package mattermost
 
 import (
-	"github.com/mattermost/mattermost-server/v6/model"
+	"context"
+
+	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
@@ -38,7 +40,7 @@ import (
 func (r *Repository) GetUsers() ([]entity.MattermostUserWithSessions, error) {
 	usersWithSessions := []entity.MattermostUserWithSessions{}
 
-	users, _, err := r.client.SearchUsers(&model.UserSearch{
+	users, _, err := r.client.SearchUsers(context.Background(), &model.UserSearch{
 		Term:  "*",
 		Limit: 1000,
 	})
@@ -50,7 +52,7 @@ func (r *Repository) GetUsers() ([]entity.MattermostUserWithSessions, error) {
 		if err != nil {
 			_ = status
 		}
-		sessions, _, _ := r.client.GetSessions(user.Id, "")
+		sessions, _, _ := r.client.GetSessions(context.Background(), user.Id, "")
 		entitySessions := []entity.MattermostSession{}
 
 		if len(sessions) > 0 {

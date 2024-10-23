@@ -21,7 +21,7 @@ func (r *Repository) GetHRPTicketsTest() (tickets []entity.GLPI_Ticket, err erro
 	(SELECT groups_id FROM  glpi_groups_tickets WHERE glpi_groups_tickets.tickets_id=glpi_tickets.id AND TYPE=2) AS 'group_id'
 	FROM glpi_tickets
 	        INNER JOIN glpi_entities ON glpi_tickets.entities_id=glpi_entities.id
-            WHERE requesttypes_id=8 AND status<5  AND glpi_tickets.id=212827`
+            WHERE glpi_tickets.id=217238`
 	_, err = r.db.Select(&tickets, sql)
 	return tickets, err
 }

@@ -59,11 +59,3 @@ type MattermostUserWithSessions struct {
 	Sessions           []MattermostSession `json:"sessions,omitempty"`
 	Status             string              `json:"status,omitempty"`
 }
-
-type MattermostHrpPost struct {
-	Id      int
-	FIO     string
-	Dolg    string
-	Company string
-	Mero    string
-}
