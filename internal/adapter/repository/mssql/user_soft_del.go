@@ -2,12 +2,10 @@ package mssql
 
 import (
 	"errors"
-
-	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (r *Repository) DelOneUserSoftware(form entity.SoftwareForm) (err error) {
-	res, err := r.db.Exec("DelOneUserSoftware $1,$2", form.User, form.Id)
+func (r *Repository) DelOneUserSoftware(id string) (err error) {
+	res, err := r.db.Exec("DelOneUserSoftware $1", id)
 	if err != nil {
 		return err
 	}

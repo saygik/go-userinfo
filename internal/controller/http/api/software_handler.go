@@ -48,17 +48,9 @@ func (h *Handler) AddSoftwareUser(c *gin.Context) {
 }
 
 func (h *Handler) DelSoftwareUser(c *gin.Context) {
-	userName := c.Param("username")
+	id := c.Param("id")
 
-	var softwareForm entity.SoftwareForm
-
-	err := c.ShouldBindJSON(&softwareForm)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить удаляемую систему: " + err.Error()})
-		return
-	}
-	softwareForm.User = userName
-	err = h.uc.DelUserSoftware(softwareForm)
+	err := h.uc.DelUserSoftware(id)
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка удаления системы пользователя", "error": err.Error()})
 		return

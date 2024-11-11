@@ -19,6 +19,7 @@ func (u *UseCase) GetSoftwareUsers(ids string) ([]map[string]interface{}, error)
 	softUsers := []map[string]interface{}{}
 	for _, user := range users {
 		adUser := u.GetUserADPropertysShort(user.Name)
+		adUser["id"] = user.Id
 		adUser["login"] = user.Login
 		adUser["comment"] = user.Comment
 		adUser["fio"] = user.Fio

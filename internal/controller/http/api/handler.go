@@ -47,7 +47,7 @@ type UseCase interface {
 	GetSoftwareUsers(string) ([]map[string]interface{}, error)                                          // Список пользователей одной системы
 	AddUserSoftware(entity.SoftwareForm) error                                                          // Добавление системы пользователя
 	AddOneSoftwareUser(string, entity.SoftUser) (map[string]interface{}, error)                         // Добавление пользователя в систему
-	DelUserSoftware(entity.SoftwareForm) error                                                          // Удаление системы пользователя
+	DelUserSoftware(string) error                                                                       // Удаление системы пользователя
 	GetUserADActivity(string, string) ([]entity.UserActivity, error)                                    // Активность доменов
 	GetUserMailboxPermissions(string, string) ([]entity.MailBoxDelegates, error)                        // Получение делегированных почтовых ящиков пользователя
 	SetUserAvatar(string, string, string) error                                                         // Установить пользователю аватар

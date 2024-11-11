@@ -25,7 +25,7 @@ type Repository interface {
 	GetUserActivity(string) ([]entity.UserActivity, error)
 	AddOneUserSoftware(entity.SoftwareForm) error
 	AddOneSoftwareUser(entity.SoftUser) error
-	DelOneUserSoftware(entity.SoftwareForm) error
+	DelOneUserSoftware(string) error
 	GetOrgCodes() ([]entity.OrgWithCodes, error)
 	GetSoftwareUsers(int) ([]entity.SoftUser, error)
 	SetUserAvatar(string, string) error
