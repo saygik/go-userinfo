@@ -4,6 +4,7 @@ type Software struct {
 	Id             int64                    `db:"id" json:"id"`
 	Name           string                   `db:"name" json:"name"`
 	Ename          string                   `db:"ename" json:"company"`
+	Login          string                   `db:"login" json:"login,omitempty"`
 	Comment        string                   `db:"comment" json:"comment"`
 	Locations      string                   `db:"locations" json:"locations,omitempty"`
 	Manufacture    string                   `db:"manufacture" json:"manufacture"`

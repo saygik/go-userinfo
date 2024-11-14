@@ -20,7 +20,7 @@ type Repository interface {
 	DelUserGroup(string, int) error
 	GetUserAvatar(string) (string, error)
 	GetCurrentUserResources(string) ([]entity.AppResource, error)
-	GetUserSoftwares(string) ([]int64, error)
+	GetUserSoftwares(string) ([]entity.IdName, error)
 	GetUserSoftwaresByFio(string) ([]int64, error)
 	GetUserActivity(string) ([]entity.UserActivity, error)
 	AddOneUserSoftware(entity.SoftwareForm) error

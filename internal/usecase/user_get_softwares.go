@@ -48,7 +48,8 @@ func (u *UseCase) GetUserSoftwares(userName string) ([]entity.Software, error) {
 	filteredSoft := []entity.Software{}
 	for _, soft := range softwares {
 		for _, idsoft := range userSoftwares {
-			if soft.Id == idsoft {
+			if soft.Id == int64(idsoft.Id) {
+				soft.Login = idsoft.Name
 				filteredSoft = append(filteredSoft, soft)
 			}
 		}
