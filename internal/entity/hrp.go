@@ -6,4 +6,5 @@ type HRPUser struct {
 	Dolg    string `json:"dolg"`
 	Company string `json:"company"`
 	Mero    string `json:"mero"`
+	Date    string `json:"date"`
 }

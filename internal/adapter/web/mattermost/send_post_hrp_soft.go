@@ -23,11 +23,12 @@ func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, s
 		"attachments": []*model.SlackAttachment{
 			{
 				AuthorName: "Пользователь найден в системе",
-				Text:       "##### " + soft.Name + "\n" + "**ФИО: **" + hrpUser.FIO + ", **Должность: **" + hrpUser.Dolg + ", **Мероприятие: **" + hrpUser.Mero,
-				Color:      "#FF2200",
-				Title:      "Заявка на отключение учетных данных сотрудника №" + strconv.Itoa(hrpUser.Id),
-				TitleLink:  "https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(hrpUser.Id),
-				Footer:     hrpUser.Company,
+				Text: "##### " + soft.Name + "\n" + "*Дата мероприятия: " + hrpUser.Date + "*\n" +
+					"**ФИО: **" + hrpUser.FIO + ", **Должность: **" + hrpUser.Dolg + ", **Мероприятие: **" + hrpUser.Mero,
+				Color:     "#FF2200",
+				Title:     "Заявка на отключение учетных данных сотрудника №" + strconv.Itoa(hrpUser.Id),
+				TitleLink: "https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(hrpUser.Id),
+				Footer:    hrpUser.Company,
 				// Fields: []*model.SlackAttachmentField{
 				// 	{
 				// 		Title: "ФИО",

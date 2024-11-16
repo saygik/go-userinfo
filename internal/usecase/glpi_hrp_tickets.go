@@ -80,7 +80,14 @@ func (u *UseCase) GetHRPTickets() {
 		} else {
 			sPred1 = ""
 		}
-		hrpUser := entity.HRPUser{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Mero: sMero, Company: sPred1 + ", " + sPred}
+		sDate := ticket.Content[strings.Index(ticket.Content, "Дата ограничения действия учетной записи:")+78:]
+		endOfPred = strings.Index(sDate, "&lt;")
+		if endOfPred > 0 {
+			sDate = sDate[:endOfPred]
+		} else {
+			sDate = ""
+		}
+		hrpUser := entity.HRPUser{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Mero: sMero, Company: sPred1 + ", " + sPred, Date: sDate}
 		upn := ""
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
 			for _, value := range redisADUsers {
