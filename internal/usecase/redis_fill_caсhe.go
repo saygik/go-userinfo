@@ -32,6 +32,7 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 							user["ip"] = ip.Ip
 							user["computer"] = ip.Computer
 							user["ip_date"] = ip.IpDate
+							user["rms_installed"] = ip.Rms
 						}
 					}
 				}
