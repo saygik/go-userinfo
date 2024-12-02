@@ -71,10 +71,10 @@ type UseCase interface {
 	GetStatPeriodRequestTypes(string, string) ([]entity.GLPIStatsTop10, error)                          //
 	GetStatRegions(string, string) ([]entity.GLPIRegionsStats, error)                                   //
 	GetStatPeriodOrgTreemap(string, string) ([]entity.TreemapData, error)                               //
-	GetSchedule(string) (entity.Schedule, error)                                                        // Один календарь
+	GetSchedule(string, string) (entity.Schedule, error)                                                // Один календарь
 	GetScheduleTasks(string) ([]entity.ScheduleTask, error)                                             //
 	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTask, error)                                   //
-	DelScheduleTask(string) error                                                                       //
+	DelScheduleTask(int) error                                                                          //
 	UpdateScheduleTask(entity.ScheduleTask) error                                                       //
 	AddTicketSolution(entity.NewCommentForm) error                                                      // GLPI. Добавление  решения
 	AddTicketComment(entity.NewCommentForm) error                                                       // GLPI. Добавление  комментария
@@ -157,6 +157,13 @@ func (h *Handler) TokenAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		h.TokenValid(c)
+		c.Next()
+	}
+}
+
+func (h *Handler) UserFromTokenTokenMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		h.UserFromToken(c)
 		c.Next()
 	}
 }

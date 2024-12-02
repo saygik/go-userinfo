@@ -130,3 +130,25 @@ func (h *Handler) TokenValid(c *gin.Context) {
 	//To be called from GetUserID()
 	c.Set("user", *resp.Sub)
 }
+
+// UserFromToken ...
+func (h *Handler) UserFromToken(c *gin.Context) {
+
+	token := h.ExtractToken(c.Request)
+
+	if len(token) < 1 {
+		//Token either expired or not valid
+		return
+	}
+
+	resp, err := h.hydra.IntrospectOAuth2Token(token)
+	if err != nil { //if any goes wrong
+		return
+	}
+	_ = resp
+	if !resp.Active {
+		return
+	}
+	//To be called from GetUserID()
+	c.Set("user", *resp.Sub)
+}

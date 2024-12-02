@@ -31,10 +31,11 @@ type Repository interface {
 	SetUserAvatar(string, string) error
 	SetUserIp(entity.UserActivityForm) (string, error)
 	GetSchedule(string) (entity.Schedule, error)
+	GetScheduleUsers(string, int) ([]entity.IdName, error)
 	GetScheduleTasks(string) ([]entity.ScheduleTask, error)
 	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTask, error)
 	UpdateScheduleTask(entity.ScheduleTask) error
-	DelScheduleTask(string) error
+	DelScheduleTask(int) error
 	GetOneDelegateMailBoxes(string) ([]entity.MailBoxDelegates, error)
 	GetUserGlpiTrackingGroups(string) ([]entity.Id, error)
 }
