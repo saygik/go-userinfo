@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -138,4 +139,43 @@ func addStringToArrayIfNotExist(str string, arr []string) []string {
 	}
 	arr = append(arr, str)
 	return arr
+}
+
+func (u *UseCase) scheduleTaskToScheduleTaskCalendar(task entity.ScheduleTask) entity.ScheduleTaskCalendar {
+
+	oneTask := entity.ScheduleTaskCalendar{
+		Id:     task.Id,
+		Title:  task.Title,
+		Start:  task.Start,
+		End:    task.End,
+		AllDay: task.AllDay}
+	oneTask.ExtendedProps.Id = task.Upn
+	oneTask.ExtendedProps.Comment = task.Comment
+	oneTask.ExtendedProps.NotificationSended = task.NotificationSended
+	oneTask.ExtendedProps.SendMattermost = task.SendMattermost
+	oneTask.ExtendedProps.Status = task.Status
+	oneTask.ExtendedProps.Tip = task.Tip
+	oneTask.ExtendedProps.Title = task.Title
+	if task.Tip == 1 {
+		user, err := u.GetUserShort(task.Upn)
+		if err != nil {
+			oneTask.ExtendedProps.Notfound = true
+		} else {
+			oneTask.ExtendedProps.Notfound = false
+			oneTask.ExtendedProps.Company = convertInterfaceToString(user["company"])
+			oneTask.ExtendedProps.Department = convertInterfaceToString(user["department"])
+			oneTask.ExtendedProps.Mail = convertInterfaceToString(user["mail"])
+			oneTask.ExtendedProps.Mobile = convertInterfaceToString(user["mobile"])
+			oneTask.ExtendedProps.TelephoneNumber = convertInterfaceToString(user["telephoneNumber"])
+		}
+	}
+
+	return oneTask
+}
+
+func convertInterfaceToString(val interface{}) string {
+	if val == nil {
+		return ""
+	}
+	return fmt.Sprintf("%v", val)
 }

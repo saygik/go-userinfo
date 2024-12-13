@@ -71,9 +71,9 @@ type UseCase interface {
 	GetStatPeriodRequestTypes(string, string) ([]entity.GLPIStatsTop10, error)                          //
 	GetStatRegions(string, string) ([]entity.GLPIRegionsStats, error)                                   //
 	GetStatPeriodOrgTreemap(string, string) ([]entity.TreemapData, error)                               //
-	GetSchedule(string, string) (entity.Schedule, error)                                                // Один календарь
-	GetScheduleTasks(string) ([]entity.ScheduleTask, error)                                             //
-	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTask, error)                                   //
+	GetSchedule(int, string) (entity.Schedule, error)                                                   // Один календарь
+	GetScheduleTasks(int) ([]entity.ScheduleTaskCalendar, error)                                        //
+	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTaskCalendar, error)                           //
 	DelScheduleTask(int) error                                                                          //
 	UpdateScheduleTask(entity.ScheduleTask) error                                                       //
 	AddTicketSolution(entity.NewCommentForm) error                                                      // GLPI. Добавление  решения

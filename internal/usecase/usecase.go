@@ -30,11 +30,15 @@ type Repository interface {
 	GetSoftwareUsers(int) ([]entity.SoftUser, error)
 	SetUserAvatar(string, string) error
 	SetUserIp(entity.UserActivityForm) (string, error)
-	GetSchedule(string) (entity.Schedule, error)
-	GetScheduleUsers(string, int) ([]entity.IdName, error)
-	GetScheduleTasks(string) ([]entity.ScheduleTask, error)
+	GetSchedule(int) (entity.Schedule, error)
+	GetScheduleUsers(int, int) ([]entity.IdName, error)
+	GetScheduleUserGroups(int, string) ([]entity.IdNameType, error)
+
+	GetScheduleTasks(int) ([]entity.ScheduleTask, error)
+	GetScheduleTasksNotifications(string) ([]entity.ScheduleTask, error)
 	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTask, error)
 	UpdateScheduleTask(entity.ScheduleTask) error
+	UpdateScheduleTaskNotification(int) error
 	DelScheduleTask(int) error
 	GetOneDelegateMailBoxes(string) ([]entity.MailBoxDelegates, error)
 	GetUserGlpiTrackingGroups(string) ([]entity.Id, error)
@@ -68,6 +72,7 @@ type GLPI interface {
 	GetTicketsNonClosedFromIniciator(int) ([]entity.GLPI_Ticket, error)
 	GetSoftwaresAdmins() ([]entity.SoftwareAdmins, error)
 	GetUsers() ([]entity.GLPIUserShort, error)
+	GetGroupUsers(int) ([]entity.IdName, error)
 	GetTicket(string) (entity.GLPI_Ticket, error)
 	GetGLPITicketSolutionTemplates(string) ([]entity.GLPI_Ticket_Profile, error)
 	GetTicketUsers(string) (users []entity.GLPIUser, err error)
@@ -106,6 +111,7 @@ type Mattermost interface {
 	GetUsers() ([]entity.MattermostUserWithSessions, error)
 	GetUsersWithSessions() (err error)
 	SendPostHRP(string, entity.HRPUser) (err error)
+	SendPost(string, string, string, string, string, string, bool) (err error)
 	SendPostHRPSoft(string, entity.HRPUser, entity.Software) (err error)
 }
 type GlpiApi interface {

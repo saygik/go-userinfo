@@ -69,12 +69,17 @@ func New() (*App, error) {
 	quit2 := make(chan struct{})
 
 	//FOR TEST!!!!!!!!!!!!!!!!!!!!
-
+	//app.c.GetUseCase().GetScheduleTasksNotifications()
 	//app.c.GetUseCase().GetHRPTickets()
-
 	if app.cfg.App.Env == "prod" {
 		go getHrpTickets(app, ticker2, quit2)
 	}
+
+	ticker3 := time.NewTicker(1 * time.Minute)
+	quit3 := make(chan struct{})
+
+	go getCalendarTaskNotifikations(app, ticker3, quit3)
+
 	return app, nil
 }
 
@@ -86,6 +91,19 @@ func getHrpTickets(app *App, ticker2 *time.Ticker, quit2 chan struct{}) {
 			app.c.GetUseCase().GetHRPTickets()
 		case <-quit2:
 			ticker2.Stop()
+			return
+		}
+	}
+}
+
+func getCalendarTaskNotifikations(app *App, ticker3 *time.Ticker, quit3 chan struct{}) {
+	for {
+		select {
+		case <-ticker3.C:
+			// do stuff
+			app.c.GetUseCase().GetScheduleTasksNotifications()
+		case <-quit3:
+			ticker3.Stop()
 			return
 		}
 	}

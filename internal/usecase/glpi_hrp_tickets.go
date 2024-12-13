@@ -40,7 +40,7 @@ func (u *UseCase) GetHRPTickets() {
 			continue
 		}
 		sfio := ticket.Content[strings.Index(ticket.Content, "Сотрудник:")+20:]
-		endOfFio := strings.Index(sfio, "(")
+		endOfFio := strings.Index(sfio, "&lt;")
 		if endOfFio > 0 {
 			sfio = sfio[:endOfFio]
 		} else {

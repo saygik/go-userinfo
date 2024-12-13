@@ -15,9 +15,14 @@ func (h *Handler) GetSchedule(c *gin.Context) {
 		user = userI.(string)
 	}
 	_ = user
-	id := c.Param("id")
-	if id == "" {
+	i := c.Param("id")
+	if i == "" {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указан ID расписания"})
+		return
+	}
+	id, err := strconv.Atoi(i)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Неправильный ID расписания"})
 		return
 	}
 	results, err := h.uc.GetSchedule(id, user)
@@ -25,15 +30,23 @@ func (h *Handler) GetSchedule(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить календарь", "error": err.Error()})
 		return
 	}
-
+	if !results.Available {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"Message": "Доступ к календарю отклонен"})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"data": results})
 
 }
 
 func (h *Handler) GetScheduleTasks(c *gin.Context) {
-	id := c.Param("id")
-	if id == "" {
+	i := c.Param("id")
+	if i == "" {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Не указан ID расписания"})
+		return
+	}
+	id, err := strconv.Atoi(i)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Неправильный ID расписания"})
 		return
 	}
 	results, err := h.uc.GetScheduleTasks(id)
