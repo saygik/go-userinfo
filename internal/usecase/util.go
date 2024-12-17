@@ -179,3 +179,12 @@ func convertInterfaceToString(val interface{}) string {
 	}
 	return fmt.Sprintf("%v", val)
 }
+
+func parseHTML(s string) string {
+	res := s
+	res = strings.Replace(res, "&lt;br /&gt;", "\r\n", -1)
+	res = strings.Replace(res, "&lt;p&gt;", "", -1)
+	res = strings.Replace(res, "&lt;/p&gt;", "", -1)
+
+	return res
+}

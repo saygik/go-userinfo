@@ -71,6 +71,7 @@ func New() (*App, error) {
 	//FOR TEST!!!!!!!!!!!!!!!!!!!!
 	//app.c.GetUseCase().GetScheduleTasksNotifications()
 	//app.c.GetUseCase().GetHRPTickets()
+
 	if app.cfg.App.Env == "prod" {
 		go getHrpTickets(app, ticker2, quit2)
 	}

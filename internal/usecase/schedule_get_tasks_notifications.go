@@ -65,7 +65,7 @@ func (u *UseCase) GetScheduleTasksNotifications() error {
 					title,
 					task.Comment,
 					schedule.Name,
-					fmt.Sprintf("http://w-058-258049004.brnv.rw:3000/schedules/schedule/%d", schedule.Id),
+					fmt.Sprintf("https://userinfo.brnv.rw/schedules/schedule/%d", schedule.Id),
 					"Дата события: "+taskTimeFormatted,
 					false)
 

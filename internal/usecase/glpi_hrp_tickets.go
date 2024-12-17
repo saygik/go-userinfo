@@ -3,6 +3,7 @@ package usecase
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/saygik/go-userinfo/internal/entity"
@@ -30,7 +31,7 @@ func (u *UseCase) GetHRPTickets() {
 	ok := false
 	for _, ticket := range tickets {
 		finded := false
-		channelId, _ := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
+		channelId, _, _ := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
 		// if err != nil {
 		// 	u.log.Error(fmt.Sprintf("Error getting channelId for group %d: %v", ticket.GroupId, err))
 		// }
@@ -40,7 +41,7 @@ func (u *UseCase) GetHRPTickets() {
 			continue
 		}
 		sfio := ticket.Content[strings.Index(ticket.Content, "Сотрудник:")+20:]
-		endOfFio := strings.Index(sfio, "&lt;")
+		endOfFio := strings.Index(sfio, "(")
 		if endOfFio > 0 {
 			sfio = sfio[:endOfFio]
 		} else {
@@ -49,6 +50,13 @@ func (u *UseCase) GetHRPTickets() {
 		if len(sfio) < 5 {
 			u.glpi.SetHRPTicket(ticket.Id)
 			continue
+		}
+		sfios := ticket.Content[strings.Index(ticket.Content, "Сотрудник:")+20:]
+		endOfFios := strings.Index(sfio, "&lt;")
+		if endOfFios > 0 {
+			sfios = sfios[:endOfFio]
+		} else {
+			sfios = "no"
 		}
 
 		sDolg := ticket.Content[strings.Index(ticket.Content, "Штатная должность:")+35:]
@@ -87,7 +95,11 @@ func (u *UseCase) GetHRPTickets() {
 		} else {
 			sDate = ""
 		}
-		hrpUser := entity.HRPUser{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Mero: sMero, Company: sPred1 + ", " + sPred, Date: sDate}
+		dateToNotificate := parseTicketDate(sDate)
+
+		// formDate := dat.Format(time.RFC3339)
+
+		hrpUser := entity.HRPUser{Id: ticket.Id, FIO: sfios, Dolg: sDolg, Mero: sMero, Company: sPred1 + ", " + sPred, Date: sDate}
 		upn := ""
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
 			for _, value := range redisADUsers {
@@ -131,9 +143,31 @@ func (u *UseCase) GetHRPTickets() {
 			for _, soft := range softs {
 				_ = soft
 				finded = true
-				adminsChannelId, _ := u.glpi.GetGroupMattermostChannel(int(soft.Groups_id_tech))
+				adminsChannelId, calId, _ := u.glpi.GetGroupMattermostChannel(int(soft.Groups_id_tech))
+				_ = calId
+				addNotifikation := false
+				if dateToNotificate != "" && calId > 0 {
+					testtask := entity.ScheduleTask{
+						Id:             0,
+						Idc:            6,
+						Tip:            3,
+						Status:         2,
+						Title:          "Отключение пользователя " + sfio,
+						Start:          dateToNotificate,
+						End:            "",
+						Upn:            "",
+						AllDay:         true,
+						SendMattermost: true,
+						Comment:        "Произвести отключение пользователя по заявке https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(ticket.Id) + "\r\n" + parseHTML(ticket.Content),
+					}
+					_, err = u.AddScheduleTask(testtask)
+					if err == nil {
+						addNotifikation = true
+					}
+				}
+
 				if len(adminsChannelId) > 0 {
-					err = u.matt.SendPostHRPSoft(adminsChannelId, hrpUser, soft)
+					err = u.matt.SendPostHRPSoft(adminsChannelId, hrpUser, soft, addNotifikation)
 					if err != nil {
 						u.log.Error(fmt.Sprintf("Error sending post for  ticket %d to Mattermost channel %s to  ticket soft group %d. Error: %v", ticket.Id, adminsChannelId, soft.Groups_id_tech, err))
 					}
