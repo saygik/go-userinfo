@@ -52,9 +52,9 @@ func (u *UseCase) GetHRPTickets() {
 			continue
 		}
 		sfios := ticket.Content[strings.Index(ticket.Content, "Сотрудник:")+20:]
-		endOfFios := strings.Index(sfio, "&lt;")
+		endOfFios := strings.Index(sfios, "&lt;")
 		if endOfFios > 0 {
-			sfios = sfios[:endOfFio]
+			sfios = sfios[:endOfFios]
 		} else {
 			sfios = "no"
 		}
