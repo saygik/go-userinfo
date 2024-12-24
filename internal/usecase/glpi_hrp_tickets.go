@@ -40,66 +40,26 @@ func (u *UseCase) GetHRPTickets() {
 			u.glpi.SetHRPTicket(ticket.Id)
 			continue
 		}
-		sfio := ticket.Content[strings.Index(ticket.Content, "Сотрудник:")+20:]
-		endOfFio := strings.Index(sfio, "(")
-		if endOfFio > 0 {
-			sfio = sfio[:endOfFio]
-		} else {
-			sfio = "no"
-		}
+		sfio := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Сотрудник:")+20:], "(")
 		if len(sfio) < 5 {
 			u.glpi.SetHRPTicket(ticket.Id)
 			continue
 		}
-		sfios := ticket.Content[strings.Index(ticket.Content, "Сотрудник:")+20:]
-		endOfFios := strings.Index(sfios, "&lt;")
-		if endOfFios > 0 {
-			sfios = sfios[:endOfFios]
-		} else {
-			sfios = "no"
+		sfios := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Сотрудник:")+20:], "&lt;")
+		sDolg := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Штатная должность:")+35:], "&lt;")
+		sMero := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Проведено мероприятие:")+44:], "&lt;")
+		sPred := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "ОЕ:")+6:], "&lt;")
+
+		sPred1 := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "БЕ:")+6:], "&lt;")
+		sCompany := sPred1
+		if len(sPred) > 0 && sPred != "lt;br&gt;" {
+			sCompany = sPred1 + ", " + sPred
 		}
 
-		sDolg := ticket.Content[strings.Index(ticket.Content, "Штатная должность:")+35:]
-		endOfDolg := strings.Index(sDolg, "&lt;")
-		if endOfDolg > 0 {
-			sDolg = sDolg[:endOfDolg]
-		} else {
-			sDolg = ""
-		}
-		sMero := ticket.Content[strings.Index(ticket.Content, "Проведено мероприятие:")+44:]
-		endOfMero := strings.Index(sMero, "&lt;")
-		if endOfDolg > 0 {
-			sMero = sMero[:endOfMero]
-		} else {
-			sMero = ""
-		}
-
-		sPred := ticket.Content[strings.Index(ticket.Content, "ОЕ:")+6:]
-		endOfPred := strings.Index(sPred, "&lt;")
-		if endOfPred > 0 {
-			sPred = sPred[:endOfPred]
-		} else {
-			sPred = ""
-		}
-		sPred1 := ticket.Content[strings.Index(ticket.Content, "БЕ:")+6:]
-		endOfPred = strings.Index(sPred1, "&lt;")
-		if endOfPred > 0 {
-			sPred1 = sPred1[:endOfPred]
-		} else {
-			sPred1 = ""
-		}
-		sDate := ticket.Content[strings.Index(ticket.Content, "Дата ограничения действия учетной записи:")+78:]
-		endOfPred = strings.Index(sDate, "&lt;")
-		if endOfPred > 0 {
-			sDate = sDate[:endOfPred]
-		} else {
-			sDate = ""
-		}
+		sDate := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Дата ограничения действия учетной записи:")+78:], "&lt;")
 		dateToNotificate := parseTicketDate(sDate)
 
-		// formDate := dat.Format(time.RFC3339)
-
-		hrpUser := entity.HRPUser{Id: ticket.Id, FIO: sfios, Dolg: sDolg, Mero: sMero, Company: sPred1 + ", " + sPred, Date: sDate}
+		hrpUser := entity.HRPUser{Id: ticket.Id, FIO: sfios, Dolg: sDolg, Mero: sMero, Company: sCompany, Date: sDate}
 		upn := ""
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
 			for _, value := range redisADUsers {
@@ -215,4 +175,15 @@ func (u *UseCase) GetHRPTickets() {
 		}
 		u.glpi.SetHRPTicket(ticket.Id)
 	}
+}
+
+func getHRPAttributeFromText(str string, endString string) string {
+	sfio := str
+	endOfFio := strings.Index(sfio, endString)
+	if endOfFio > 0 {
+		sfio = sfio[:endOfFio]
+	} else {
+		sfio = "no"
+	}
+	return sfio
 }
