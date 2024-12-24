@@ -109,7 +109,7 @@ func (u *UseCase) GetHRPTickets() {
 				if dateToNotificate != "" && calId > 0 {
 					testtask := entity.ScheduleTask{
 						Id:             0,
-						Idc:            6,
+						Idc:            calId,
 						Tip:            3,
 						Status:         2,
 						Title:          "Отключение пользователя " + sfio,
