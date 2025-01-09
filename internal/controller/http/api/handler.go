@@ -142,6 +142,7 @@ func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, hydra Hydra,
 	h.NewManualRouterGroup()
 	h.NewMattermostRouterGroup()
 	h.NewScheduleRouterGroup()
+	h.NewMattermostCommandsRouterGroup()
 	h.rtr.NoRoute(h.NoRoute)
 }
 
