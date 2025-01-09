@@ -29,6 +29,7 @@ type ADConfig struct {
 	ComputerFilter string        `json:"computerFilter"`
 	BindDN         string        `json:"bindDN"`
 	BindPassword   string        `json:"bindpassword"`
+	AdminGLPIGroup int           `json:"adminGLPIGroup"`
 	Time           time.Duration `json:"time"`
 }
 
