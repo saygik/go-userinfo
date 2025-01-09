@@ -104,9 +104,12 @@ func (u *UseCase) GetHRPTickets() {
 				_ = soft
 				finded = true
 				adminsChannelId, calId, _ := u.glpi.GetGroupMattermostChannel(int(soft.Groups_id_tech))
+				//adminsChannelId, calId := "dhsjngrtztfpm8777ud6gnxbph", 6
+
 				_ = calId
 				addNotifikation := false
 				if dateToNotificate != "" && calId > 0 {
+					content := parseHTML(ticket.Content)
 					testtask := entity.ScheduleTask{
 						Id:             0,
 						Idc:            calId,
@@ -118,7 +121,7 @@ func (u *UseCase) GetHRPTickets() {
 						Upn:            "",
 						AllDay:         true,
 						SendMattermost: true,
-						Comment:        "Произвести отключение пользователя по заявке https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(ticket.Id) + "\r\n" + parseHTML(ticket.Content),
+						Comment:        "Произвести отключение пользователя по заявке https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(ticket.Id) + "\r\n" + content,
 					}
 					_, err = u.AddScheduleTask(testtask)
 					if err == nil {
