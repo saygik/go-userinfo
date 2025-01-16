@@ -16,7 +16,7 @@ func (u *UseCase) GetHRPTickets() {
 	// tickets := []entity.GLPI_Ticket{}
 	// tickets = append(tickets, entity.GLPI_Ticket{Id: 206238, Content: "Сотрудник: Казаков Юрий Геннадьевич(35407148)"})
 
-	tickets, err := u.glpi.GetHRPTickets()
+	tickets, err := u.glpi.GetHRPTicketsTest()
 	_ = tickets
 	if err != nil || len(tickets) < 1 {
 		return
@@ -61,6 +61,7 @@ func (u *UseCase) GetHRPTickets() {
 
 		hrpUser := entity.HRPUser{Id: ticket.Id, FIO: sfios, Dolg: sDolg, Mero: sMero, Company: sCompany, Date: sDate}
 		upn := ""
+
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
 			for _, value := range redisADUsers {
 				var user map[string]interface{}
@@ -103,11 +104,11 @@ func (u *UseCase) GetHRPTickets() {
 			for _, soft := range softs {
 				_ = soft
 				finded = true
-				adminsChannelId, calId, _ := u.glpi.GetGroupMattermostChannel(int(soft.Groups_id_tech))
-				//adminsChannelId, calId := "dhsjngrtztfpm8777ud6gnxbph", 6
+				//adminsChannelId, calId, _ := u.glpi.GetGroupMattermostChannel(int(soft.Groups_id_tech))
+				adminsChannelId, calId := "dhsjngrtztfpm8777ud6gnxbph", 6
 
 				_ = calId
-				addNotifikation := false
+				sheduleTaskId := 0
 				if dateToNotificate != "" && calId > 0 {
 					content := parseHTML(ticket.Content)
 					testtask := entity.ScheduleTask{
@@ -123,14 +124,14 @@ func (u *UseCase) GetHRPTickets() {
 						SendMattermost: true,
 						Comment:        "Произвести отключение пользователя по заявке https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(ticket.Id) + "\r\n" + content,
 					}
-					_, err = u.AddScheduleTask(testtask)
+					sheduleTask, err := u.AddScheduleTask(testtask)
 					if err == nil {
-						addNotifikation = true
+						sheduleTaskId = sheduleTask.Id
 					}
 				}
 
 				if len(adminsChannelId) > 0 {
-					err = u.matt.SendPostHRPSoft(adminsChannelId, hrpUser, soft, addNotifikation)
+					err = u.matt.SendPostHRPSoft(adminsChannelId, hrpUser, soft, sheduleTaskId)
 					if err != nil {
 						u.log.Error(fmt.Sprintf("Error sending post for  ticket %d to Mattermost channel %s to  ticket soft group %d. Error: %v", ticket.Id, adminsChannelId, soft.Groups_id_tech, err))
 					}

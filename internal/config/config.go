@@ -58,6 +58,12 @@ type Repository struct {
 	GlpiApi    APIConfig
 }
 
+type Integrations struct {
+	AddCommentFromApi                  string   `json:"add-comment-from-api,omitempty"`
+	DisableCalendarTaskNotificationApi string   `json:"disable-calendar-task-notification-api,omitempty"`
+	AllowedHosts                       []string `json:"allowed-hosts,omitempty"`
+}
+
 type VaultConfig struct {
 	Server     string `json:"server" binding:"required"`
 	RoleId     string `json:"roleid" binding:"required"`
@@ -74,11 +80,12 @@ type HydraConfig struct {
 	Scopes       []string
 }
 type Config struct {
-	App        AppConfig
-	Vault      VaultConfig
-	Hydra      HydraConfig
-	AD         []ADConfig
-	Repository Repository
+	App             AppConfig
+	Vault           VaultConfig
+	Hydra           HydraConfig
+	AD              []ADConfig
+	Repository      Repository
+	ApiIntegrations Integrations
 }
 
 func NewConfig(filePath string) (Config, error) {
@@ -184,6 +191,26 @@ func vaultConfig(conf Config) (*Config, error) {
 		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
 	}
 	cfg.Hydra = hydra
+
+	secret, err = cl.Read(context.Background(), fmt.Sprintf("%sintegrations", conf.Vault.SecretPath))
+	if err != nil {
+		return cfg, fmt.Errorf("ошибка Hydra client, секрет по пути %s недоступен: %v", fmt.Sprintf("%sjwt", conf.Vault.SecretPath), err)
+	}
+	value, ok = secret.Data["data"]
+	if !ok {
+		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
+	}
+
+	data, err = json.Marshal(value)
+	if err != nil {
+		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
+	}
+	integrations := Integrations{}
+	err = json.Unmarshal(data, &integrations)
+	if err != nil {
+		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
+	}
+	cfg.ApiIntegrations = integrations
 
 	_ = resp
 	cfg.App = conf.App

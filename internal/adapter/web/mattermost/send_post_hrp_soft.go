@@ -8,8 +8,49 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, soft entity.Software, addCalNotification bool) (err error) {
-	//post := &model.Post{}
+func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, soft entity.Software, idTaskCalNotification int) (err error) {
+
+	var actions []*model.PostAction
+
+	if idTaskCalNotification > 0 {
+		calAction := model.PostAction{
+			Id:    "calendarCompleteTask",
+			Name:  "Отменить задачу календаря",
+			Style: "primary",
+		}
+		calActionMap := map[string]any{
+			"action": "disable",
+			"id":     idTaskCalNotification,
+		}
+
+		calIntegration := model.PostActionIntegration{
+			URL:     r.integrations.DisableCalendarTaskNotificationApi,
+			Context: calActionMap,
+		}
+		calAction.Integration = &calIntegration
+		actions = append(actions, &calAction)
+
+	}
+	//******** GLPI Comment add action
+	glpiCommentAction := model.PostAction{
+		Id:    "glpiCommentAdd",
+		Name:  "Комментарий заявки об отключении",
+		Style: "success",
+	}
+	glpiCommentMap := map[string]any{
+		"action":  "add",
+		"comment": "Комментарий",
+		"id":      hrpUser.Id,
+		"soft":    soft.Name,
+	}
+	glpiCommentIntegration := model.PostActionIntegration{
+		URL:     r.integrations.AddCommentFromApi,
+		Context: glpiCommentMap,
+	}
+	glpiCommentAction.Integration = &glpiCommentIntegration
+	actions = append(actions, &glpiCommentAction)
+
+	//*************************************
 	post := &model.Post{
 		ChannelId: channelId,
 		Metadata: &model.PostMetadata{
@@ -19,7 +60,7 @@ func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, s
 			},
 		}}
 	calNotification := ""
-	if addCalNotification {
+	if idTaskCalNotification > 0 {
 		calNotification = "\n Срок отключения ещё не наступил, задача напоминания добавлена в календарь вашей группы"
 	} else {
 		calNotification = ""
@@ -34,6 +75,7 @@ func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, s
 				Title:     "Заявка на отключение учетных данных сотрудника №" + strconv.Itoa(hrpUser.Id),
 				TitleLink: "https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(hrpUser.Id),
 				Footer:    hrpUser.Company,
+				Actions:   actions,
 				// Fields: []*model.SlackAttachmentField{
 				// 	{
 				// 		Title: "ФИО",

@@ -39,6 +39,10 @@ func (u *UseCase) GetScheduleTasksNotifications() error {
 		if task.AllDay {
 			taskTimeChek = taskTime.Add(8 * time.Hour)
 		}
+		tb := taskTimeChek.Before(currentTime)
+		te := taskTimeChek.Equal(currentTime)
+		_ = tb
+		_ = te
 		if taskTimeChek.Before(currentTime) || taskTimeChek.Equal(currentTime) {
 			schedule, err := u.repo.GetSchedule(task.Idc)
 			if err != nil {

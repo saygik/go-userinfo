@@ -10,15 +10,17 @@ import (
 // 	Title string `json:"title"`
 // }
 
-func NewADClients(adConfigs []config.ADConfig) map[string]*adClient.ADClient {
+func NewADClients(adConfigs []config.ADConfig) (map[string]*adClient.ADClient, map[string]*config.ADConfig) {
 	var adClients = map[string]*adClient.ADClient{}
+	var adConfig = map[string]*config.ADConfig{}
 	for _, oneADConfig := range adConfigs {
 		oneADClient := newAddConnection(oneADConfig)
 		oneADClient.SkipTLS = true
 		defer oneADClient.Close()
 		adClients[oneADConfig.Key] = oneADClient
+		adConfig[oneADConfig.Key] = &oneADConfig
 	}
-	return adClients
+	return adClients, adConfig
 }
 
 func newAddConnection(config config.ADConfig) *adClient.ADClient {

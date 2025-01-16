@@ -43,15 +43,16 @@ func New() (*App, error) {
 		return nil, err
 	}
 
-	adClients := NewADClients(cfg.AD)
+	adClients, adConfigs := NewADClients(cfg.AD)
 
-	mattClient := app.newMattermostConnection(cfg.Repository.Mattermost.Server, cfg.Repository.Mattermost.Token)
+	mattClient := app.newMattermostConnection(cfg.Repository.Mattermost.Server, cfg.Repository.Mattermost.Token, cfg.ApiIntegrations.AddCommentFromApi, cfg.ApiIntegrations.DisableCalendarTaskNotificationApi, cfg.ApiIntegrations.AllowedHosts)
 	glpiApiClient := app.newGLPIApiConnection(cfg.Repository.GlpiApi.Server, cfg.Repository.GlpiApi.Token, cfg.Repository.GlpiApi.UserToken)
-	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, mattClient, glpiApiClient, hydraClient, oAuth2Client, app.log)
+	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, adConfigs, mattClient, glpiApiClient, hydraClient, oAuth2Client, app.log)
 	app.c = c
 	app.c.GetUseCase().ClearRedisCaсhe()
 	app.c.GetUseCase().FillRedisCaсheFromAD()
 	ticker := time.NewTicker(30 * time.Minute)
+
 	quit := make(chan struct{})
 	go func() {
 		for {
@@ -69,8 +70,8 @@ func New() (*App, error) {
 	quit2 := make(chan struct{})
 
 	//FOR TEST!!!!!!!!!!!!!!!!!!!!
-	//app.c.GetUseCase().GetScheduleTasksNotifications()
-	//app.c.GetUseCase().GetHRPTickets()
+	//	app.c.GetUseCase().GetScheduleTasksNotifications()
+	app.c.GetUseCase().GetHRPTickets()
 
 	if app.cfg.App.Env == "prod" {
 		go getHrpTickets(app, ticker2, quit2)

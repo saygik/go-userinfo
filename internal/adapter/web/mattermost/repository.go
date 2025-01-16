@@ -7,21 +7,29 @@ import (
 type User *model.User
 type Session *model.Session
 
-type Repository struct {
-	url    string
-	token  string
-	client *model.Client4
+type Integrations struct {
+	AddCommentFromApi                  string   `json:"add-comment-from-api,omitempty"`
+	DisableCalendarTaskNotificationApi string   `json:"disable-calendar-task-notification-api,omitempty"`
+	AllowedHosts                       []string `json:"allowed-hosts,omitempty"`
 }
 
-func New(url string, token string) *Repository {
+type Repository struct {
+	url          string
+	token        string
+	integrations Integrations
+	client       *model.Client4
+}
+
+func New(url string, token string, apiIntegrations Integrations) *Repository {
 	client := model.NewAPIv4Client("https://matt.rw")
 	//	client.Login("bot@example.com", "password")
 	client.SetToken(token)
 
 	return &Repository{
-		url:    url,
-		token:  token,
-		client: client,
+		url:          url,
+		token:        token,
+		client:       client,
+		integrations: apiIntegrations,
 	}
 }
 

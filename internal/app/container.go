@@ -13,20 +13,22 @@ import (
 	"github.com/saygik/go-userinfo/internal/adapter/web/mattermost"
 	"github.com/saygik/go-userinfo/internal/auth/hydra"
 	"github.com/saygik/go-userinfo/internal/auth/oauth2"
+	"github.com/saygik/go-userinfo/internal/config"
 	"github.com/saygik/go-userinfo/internal/usecase"
 	"github.com/sirupsen/logrus"
 )
 
 type Container struct {
-	mssql   *gorp.DbMap
-	glpi    *gorp.DbMap
-	rc      *redis.Client
-	ads     map[string]*adClient.ADClient
-	matt    *MattClient
-	glpiApi *GLPIApiClient
-	hydra   *IDPClient
-	oAuth2  *OAuth2Client
-	log     *logrus.Logger
+	mssql     *gorp.DbMap
+	glpi      *gorp.DbMap
+	rc        *redis.Client
+	ads       map[string]*adClient.ADClient
+	adconfigs map[string]*config.ADConfig
+	matt      *MattClient
+	glpiApi   *GLPIApiClient
+	hydra     *IDPClient
+	oAuth2    *OAuth2Client
+	log       *logrus.Logger
 }
 
 func NewAppContainer(
@@ -34,6 +36,7 @@ func NewAppContainer(
 	glpiConnect *gorp.DbMap,
 	r *redis.Client,
 	adclients map[string]*adClient.ADClient,
+	adconfigs map[string]*config.ADConfig,
 	matt *MattClient,
 	glpiApi *GLPIApiClient,
 	hydra *IDPClient,
@@ -41,15 +44,16 @@ func NewAppContainer(
 	log *logrus.Logger,
 ) *Container {
 	c := &Container{
-		mssql:   mssqlConnect,
-		glpi:    glpiConnect,
-		rc:      r,
-		ads:     adclients,
-		matt:    matt,
-		glpiApi: glpiApi,
-		hydra:   hydra,
-		oAuth2:  oAuth2,
-		log:     log,
+		mssql:     mssqlConnect,
+		glpi:      glpiConnect,
+		rc:        r,
+		ads:       adclients,
+		adconfigs: adconfigs,
+		matt:      matt,
+		glpiApi:   glpiApi,
+		hydra:     hydra,
+		oAuth2:    oAuth2,
+		log:       log,
 	}
 	return c
 }
@@ -69,7 +73,7 @@ func (c *Container) getRedisRepository() *redisclient.Repository {
 }
 
 func (c *Container) getMattermostRepository() *mattermost.Repository {
-	return mattermost.New(c.matt.url, c.matt.token)
+	return mattermost.New(c.matt.url, c.matt.token, mattermost.Integrations{AddCommentFromApi: c.matt.integrations.AddCommentFromApi, DisableCalendarTaskNotificationApi: c.matt.integrations.DisableCalendarTaskNotificationApi, AllowedHosts: c.matt.integrations.AllowedHosts})
 }
 func (c *Container) getGlpiApiRepository() *glpiapi.Repository {
 	return glpiapi.New(c.glpiApi.url, c.glpiApi.token, c.glpiApi.usertoken)
@@ -83,5 +87,5 @@ func (c *Container) GetOAuth2() *oauth2.OAuth2 {
 }
 
 func (c *Container) getADRepository() *ad.Repository {
-	return ad.New(c.ads)
+	return ad.New(c.ads, c.adconfigs)
 }

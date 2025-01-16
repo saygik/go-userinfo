@@ -28,60 +28,63 @@ type UseCase interface {
 	GetAppResources(string) ([]entity.IdName, error)                // Все ресурсы приложения
 	Authenticate(entity.LoginForm) (bool, map[string]string, error) // Аутентификация
 	SetUserIp(entity.UserActivityForm) (string, error)
-	GetADUsers(string) ([]map[string]interface{}, error)                                                // Пользователи домена
-	GetADUsersPublicInfo(string) ([]map[string]interface{}, error)                                      // Пользователи домена соклащённая информация
-	GetADComputers(string) ([]map[string]interface{}, error)                                            // Компьютеры домена
-	GetUser(string, string) (map[string]interface{}, error)                                             // Свойства пользователя домена
-	UserExist(string) error                                                                             // Существует ли пользователь в доменах
-	GetCurrentUser(string, string) (map[string]interface{}, error)                                      // Свойства залогиненного пользователя домена
-	GetUserADPropertys(string, string) (map[string]interface{}, error)                                  // Разрешённые сппециалисту свойства пользователя домена
-	GetCurrentUserResources(string) ([]entity.AppResource, error)                                       // Разрешённые ресурсы
-	GetGlpiUser(string) (entity.GLPIUser, error)                                                        // Пользователь GLPI
-	GetGlpiUserForTechnical(string, string) (*entity.GLPIUser, error)                                   // Пользователь GLPI для технического специалиста
-	GetAdCounts() (int, int, error)                                                                     // Основная статистика доменов
-	GetDomainList(string) []entity.DomainList                                                           // Список доменов
-	GetADGroupUsers(string, string) ([]map[string]interface{}, error)                                   //
-	GetUserSoftwares(string) ([]entity.Software, error)                                                 // Список систем пользователя
-	GetSoftwares() ([]entity.Software, error)                                                           // Список всех систем
-	GetSoftware(string) (entity.Software, error)                                                        // Одна система
-	GetSoftwareUsers(string) ([]map[string]interface{}, error)                                          // Список пользователей одной системы
-	AddUserSoftware(entity.SoftwareForm) error                                                          // Добавление системы пользователя
-	AddOneSoftwareUser(string, entity.SoftUser) (map[string]interface{}, error)                         // Добавление пользователя в систему
-	DelUserSoftware(string) error                                                                       // Удаление системы пользователя
-	GetUserADActivity(string, string) ([]entity.UserActivity, error)                                    // Активность доменов
-	GetUserMailboxPermissions(string, string) ([]entity.MailBoxDelegates, error)                        // Получение делегированных почтовых ящиков пользователя
-	SetUserAvatar(string, string, string) error                                                         // Установить пользователю аватар
-	GetOrgCodes() ([]entity.OrgWithCodes, error)                                                        // Коды организаций
-	GetMattermostUsers() ([]entity.MattermostUserWithSessions, error)                                   // Все пользователи Mattermost
-	GetGLPITicketsNonClosed(string) ([]entity.GLPI_Ticket, error)                                       // Все нерешённые заявки GLPI
-	GetGLPIUsers() ([]entity.GLPIUserShort, error)                                                      // Все пользователи GLPI
-	GetGLPITicket(string, string) (entity.GLPI_Ticket, error)                                           // Одна заявка GLPI
-	GetGLPITicketSolutionTemplates(string) ([]entity.GLPI_Ticket_Profile, error)                        // Шаблоны решений заявки
-	GetGLPIProblem(string, string) (entity.GLPI_Problem, error)                                         // Одна проблема GLPI
-	GetGLPIOtkazes(string, string) ([]entity.GLPI_Otkaz, error)                                         // Отказы GLPI за период
-	GetGLPIProblems(string, string) ([]entity.GLPI_Problem, error)                                      // Проблемы GLPI за период
-	GetStatTickets() ([]entity.GLPITicketsStats, error)                                                 //
-	GetStatFailures() ([]entity.GLPITicketsStats, error)                                                //
-	GetStatPeriodRegionDayCounts(string, string, int) ([]entity.RegionsDayStats, error)                 //
-	GetStatTicketsDays(string, string) ([]entity.GLPITicketsStats, error)                               //
-	GetStatTop10Performers(string, string) ([]entity.GLPIStatsTop10, error)                             //
-	GetStatTop10Iniciators(string, string) ([]entity.GLPIStatsTop10, error)                             //
-	GetStatTop10Groups(string, string) ([]entity.GLPIStatsTop10, error)                                 //
-	GetStatPeriodTicketsCounts(string, string) ([]entity.GLPIStatsCounts, error)                        //
-	GetStatPeriodRequestTypes(string, string) ([]entity.GLPIStatsTop10, error)                          //
-	GetStatRegions(string, string) ([]entity.GLPIRegionsStats, error)                                   //
-	GetStatPeriodOrgTreemap(string, string) ([]entity.TreemapData, error)                               //
-	GetSchedule(int, string) (entity.Schedule, error)                                                   // Один календарь
-	GetScheduleTasks(int) ([]entity.ScheduleTaskCalendar, error)                                        //
-	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTaskCalendar, error)                           //
-	DelScheduleTask(int) error                                                                          //
-	UpdateScheduleTask(entity.ScheduleTask) error                                                       //
-	AddTicketSolution(entity.NewCommentForm) error                                                      // GLPI. Добавление  решения
-	AddTicketComment(entity.NewCommentForm) error                                                       // GLPI. Добавление  комментария
-	AddTicket(entity.NewTicketForm) (int, error)                                                        // GLPI. Добавление  заявки
-	AddTicketUser(entity.GLPITicketUserForm) error                                                      //
-	GetTicketsInExecutionGroups(string) ([]entity.GLPI_Ticket, error)                                   // Незакрытые заявки в группах слежения пользователя
-	UserInGropScopes(string, []string, []entity.IDPScope, *entity.OAuth2Client) ([]string, bool, error) // У пользователя есть права на требуемый scope
+	GetADUsers(string) ([]map[string]interface{}, error)                                                         // Пользователи домена
+	GetADUsersPublicInfo(string) ([]map[string]interface{}, error)                                               // Пользователи домена соклащённая информация
+	GetADComputers(string) ([]map[string]interface{}, error)                                                     // Компьютеры домена
+	GetUser(string, string) (map[string]interface{}, error)                                                      // Свойства пользователя домена
+	UserExist(string) error                                                                                      // Существует ли пользователь в доменах
+	GetCurrentUser(string, string) (map[string]interface{}, error)                                               // Свойства залогиненного пользователя домена
+	GetUserADPropertys(string, string) (map[string]interface{}, error)                                           // Разрешённые сппециалисту свойства пользователя домена
+	GetCurrentUserResources(string) ([]entity.AppResource, error)                                                // Разрешённые ресурсы
+	GetGlpiUser(string) (entity.GLPIUser, error)                                                                 // Пользователь GLPI
+	GetGlpiUserForTechnical(string, string) (*entity.GLPIUser, error)                                            // Пользователь GLPI для технического специалиста
+	GetAdCounts() (int, int, error)                                                                              // Основная статистика доменов
+	GetDomainList(string) []entity.DomainList                                                                    // Список доменов
+	GetADGroupUsers(string, string) ([]map[string]interface{}, error)                                            //
+	GetUserSoftwares(string) ([]entity.Software, error)                                                          // Список систем пользователя
+	GetSoftwares() ([]entity.Software, error)                                                                    // Список всех систем
+	GetSoftware(string) (entity.Software, error)                                                                 // Одна система
+	GetSoftwareUsers(string) ([]map[string]interface{}, error)                                                   // Список пользователей одной системы
+	AddUserSoftware(entity.SoftwareForm) error                                                                   // Добавление системы пользователя
+	AddOneSoftwareUser(string, entity.SoftUser) (map[string]interface{}, error)                                  // Добавление пользователя в систему
+	DelUserSoftware(string) error                                                                                // Удаление системы пользователя
+	GetUserADActivity(string, string) ([]entity.UserActivity, error)                                             // Активность доменов
+	GetUserMailboxPermissions(string, string) ([]entity.MailBoxDelegates, error)                                 // Получение делегированных почтовых ящиков пользователя
+	SetUserAvatar(string, string, string) error                                                                  // Установить пользователю аватар
+	GetOrgCodes() ([]entity.OrgWithCodes, error)                                                                 // Коды организаций
+	GetMattermostUsers() ([]entity.MattermostUserWithSessions, error)                                            // Все пользователи Mattermost
+	AddGLPI_HRPTicketCommentFromMattermost(entity.MattermostInteractiveMessageRequestForm) (string, error)       // Добавить комментарий из Mattermost в GLPI заявку кадровичка
+	DisableSheduleTaskNotificationFromMattermost(entity.MattermostInteractiveMessageRequestForm) (string, error) // Выключить оповещение задачи календаря из Mattermost
+	MattermostIntegrationAllowed(string) bool                                                                    // Запрос с этого ip разрешен для интеграции
+	GetGLPITicketsNonClosed(string) ([]entity.GLPI_Ticket, error)                                                // Все нерешённые заявки GLPI
+	GetGLPIUsers() ([]entity.GLPIUserShort, error)                                                               // Все пользователи GLPI
+	GetGLPITicket(string, string) (entity.GLPI_Ticket, error)                                                    // Одна заявка GLPI
+	GetGLPITicketSolutionTemplates(string) ([]entity.GLPI_Ticket_Profile, error)                                 // Шаблоны решений заявки
+	GetGLPIProblem(string, string) (entity.GLPI_Problem, error)                                                  // Одна проблема GLPI
+	GetGLPIOtkazes(string, string) ([]entity.GLPI_Otkaz, error)                                                  // Отказы GLPI за период
+	GetGLPIProblems(string, string) ([]entity.GLPI_Problem, error)                                               // Проблемы GLPI за период
+	GetStatTickets() ([]entity.GLPITicketsStats, error)                                                          //
+	GetStatFailures() ([]entity.GLPITicketsStats, error)                                                         //
+	GetStatPeriodRegionDayCounts(string, string, int) ([]entity.RegionsDayStats, error)                          //
+	GetStatTicketsDays(string, string) ([]entity.GLPITicketsStats, error)                                        //
+	GetStatTop10Performers(string, string) ([]entity.GLPIStatsTop10, error)                                      //
+	GetStatTop10Iniciators(string, string) ([]entity.GLPIStatsTop10, error)                                      //
+	GetStatTop10Groups(string, string) ([]entity.GLPIStatsTop10, error)                                          //
+	GetStatPeriodTicketsCounts(string, string) ([]entity.GLPIStatsCounts, error)                                 //
+	GetStatPeriodRequestTypes(string, string) ([]entity.GLPIStatsTop10, error)                                   //
+	GetStatRegions(string, string) ([]entity.GLPIRegionsStats, error)                                            //
+	GetStatPeriodOrgTreemap(string, string) ([]entity.TreemapData, error)                                        //
+	GetSchedule(int, string) (entity.Schedule, error)                                                            // Один календарь
+	GetScheduleTasks(int) ([]entity.ScheduleTaskCalendar, error)                                                 //
+	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTaskCalendar, error)                                    //
+	DelScheduleTask(int) error                                                                                   //
+	UpdateScheduleTask(entity.ScheduleTask) error                                                                //
+	AddTicketSolution(entity.NewCommentForm) error                                                               // GLPI. Добавление  решения
+	AddTicketComment(entity.NewCommentForm) error                                                                // GLPI. Добавление  комментария
+	AddTicket(entity.NewTicketForm) (int, error)                                                                 // GLPI. Добавление  заявки
+	AddTicketUser(entity.GLPITicketUserForm) error                                                               //
+	GetTicketsInExecutionGroups(string) ([]entity.GLPI_Ticket, error)                                            // Незакрытые заявки в группах слежения пользователя
+	UserInGropScopes(string, []string, []entity.IDPScope, *entity.OAuth2Client) ([]string, bool, error)          // У пользователя есть права на требуемый scope
 }
 
 type Hydra interface {

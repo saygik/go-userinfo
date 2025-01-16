@@ -39,6 +39,7 @@ type Repository interface {
 	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTask, error)
 	UpdateScheduleTask(entity.ScheduleTask) error
 	UpdateScheduleTaskNotification(int) error
+	UpdateScheduleTaskDisableMattermost(int) error
 	DelScheduleTask(int) error
 	GetOneDelegateMailBoxes(string) ([]entity.MailBoxDelegates, error)
 	GetUserGlpiTrackingGroups(string) ([]entity.Id, error)
@@ -53,6 +54,7 @@ type Redis interface {
 }
 type AD interface {
 	DomainList() []entity.DomainList
+	GetDomainAdminsGLPI(string) int
 	GetDomainUsers(string) ([]map[string]interface{}, error)
 	GetDomainComputers(string) ([]map[string]interface{}, error)
 	IsDomainExist(string) bool
@@ -109,10 +111,12 @@ type GLPI interface {
 
 type Mattermost interface {
 	GetUsers() ([]entity.MattermostUserWithSessions, error)
+	GetUserById(string) (*entity.MattermostUser, error)
 	GetUsersWithSessions() (err error)
+	IntegrationAllowedHosts() []string
 	SendPostHRP(string, entity.HRPUser) (err error)
 	SendPost(string, string, string, string, string, string, bool) (err error)
-	SendPostHRPSoft(string, entity.HRPUser, entity.Software, bool) (err error)
+	SendPostHRPSoft(string, entity.HRPUser, entity.Software, int) (err error)
 }
 type GlpiApi interface {
 	CreateTicket(entity.NewTicketInputForm) (int, error)
