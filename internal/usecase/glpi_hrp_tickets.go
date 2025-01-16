@@ -15,8 +15,8 @@ func (u *UseCase) GetHRPTickets() {
 	//	u.matt.SendPostHRP(entity.MattermostHrpPost{})
 	// tickets := []entity.GLPI_Ticket{}
 	// tickets = append(tickets, entity.GLPI_Ticket{Id: 206238, Content: "Сотрудник: Казаков Юрий Геннадьевич(35407148)"})
-
-	tickets, err := u.glpi.GetHRPTicketsTest()
+	//* TEST ***************************************
+	tickets, err := u.glpi.GetHRPTickets()
 	_ = tickets
 	if err != nil || len(tickets) < 1 {
 		return
@@ -31,7 +31,7 @@ func (u *UseCase) GetHRPTickets() {
 	ok := false
 	for _, ticket := range tickets {
 		finded := false
-		channelId, _, _ := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
+		_, channelId, _, _ := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
 		// if err != nil {
 		// 	u.log.Error(fmt.Sprintf("Error getting channelId for group %d: %v", ticket.GroupId, err))
 		// }
@@ -69,6 +69,9 @@ func (u *UseCase) GetHRPTickets() {
 				if (fmt.Sprintf("%v", user["displayName"])) == sfio {
 					finded = true
 					domain := user["domain"].(map[string]interface{})
+					domainAdminsGLPIId := u.ad.GetDomainAdminsGLPI(domain["name"].(string))
+					domainAdminsGLPIName, _, _, _ := u.glpi.GetGroupMattermostChannel(domainAdminsGLPIId)
+					u.sendHRPToCalendarAndMattermostChannel(hrpUser, "домен "+domain["name"].(string), ticket, sfio, dateToNotificate, domainAdminsGLPIId)
 
 					upn = fmt.Sprintf("%v", user["userPrincipalName"])
 					sBoxes = ""
@@ -82,20 +85,22 @@ func (u *UseCase) GetHRPTickets() {
 					if ok {
 						sBoxes += fmt.Sprintf(`<b>Должность:</b> %s<br>`, val)
 					}
-					sBoxes += `рекомендуется направить заявку группе администраторов этого домена для окончательной проверки и отключения`
-					u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10, Content: sBoxes})
-					softs, err := u.GetUserSoftwares(upn)
-					if err == nil && len(softs) > 0 {
-						for _, soft := range softs {
-							_ = soft
-							u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
-								Content: fmt.Sprintf(`<b>Поиск по учетной записи найденного пользователя:</b><br>
-					          %s найден в списке зарегистрированных пользователей системы <b>%s</b><br>
-					          рекомендуется направить заявку группе администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
-					 `, upn, soft.Name, soft.GroupName)})
+					sBoxes += fmt.Sprintf(`рекомендуется направить заявку группе администраторов этого домена(%s) для окончательной проверки и отключения`, domainAdminsGLPIName)
 
-						}
-					}
+					u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10, Content: sBoxes})
+
+					// softs, err := u.GetUserSoftwares(upn)
+					// if err == nil && len(softs) > 0 {
+					// 	for _, soft := range softs {
+					// 		_ = soft
+					// 		u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
+					// 			Content: fmt.Sprintf(`<b>Поиск по учетной записи найденного пользователя:</b><br>
+					//           %s найден в списке зарегистрированных пользователей системы <b>%s</b><br>
+					//           рекомендуется направить заявку группе администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
+					//  `, upn, soft.Name, soft.GroupName)})
+
+					// 	}
+					// }
 				}
 			}
 		}
@@ -104,38 +109,11 @@ func (u *UseCase) GetHRPTickets() {
 			for _, soft := range softs {
 				_ = soft
 				finded = true
-				//adminsChannelId, calId, _ := u.glpi.GetGroupMattermostChannel(int(soft.Groups_id_tech))
-				adminsChannelId, calId := "dhsjngrtztfpm8777ud6gnxbph", 6
 
-				_ = calId
-				sheduleTaskId := 0
-				if dateToNotificate != "" && calId > 0 {
-					content := parseHTML(ticket.Content)
-					testtask := entity.ScheduleTask{
-						Id:             0,
-						Idc:            calId,
-						Tip:            3,
-						Status:         2,
-						Title:          "Отключение пользователя " + sfio,
-						Start:          dateToNotificate,
-						End:            "",
-						Upn:            "",
-						AllDay:         true,
-						SendMattermost: true,
-						Comment:        "Произвести отключение пользователя по заявке https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(ticket.Id) + "\r\n" + content,
-					}
-					sheduleTask, err := u.AddScheduleTask(testtask)
-					if err == nil {
-						sheduleTaskId = sheduleTask.Id
-					}
-				}
+				//_, adminsChannelId, calId, _ := u.glpi.GetGroupMattermostChannel(int(soft.Groups_id_tech))
 
-				if len(adminsChannelId) > 0 {
-					err = u.matt.SendPostHRPSoft(adminsChannelId, hrpUser, soft, sheduleTaskId)
-					if err != nil {
-						u.log.Error(fmt.Sprintf("Error sending post for  ticket %d to Mattermost channel %s to  ticket soft group %d. Error: %v", ticket.Id, adminsChannelId, soft.Groups_id_tech, err))
-					}
-				}
+				u.sendHRPToCalendarAndMattermostChannel(hrpUser, soft.Name, ticket, sfio, dateToNotificate, int(soft.Groups_id_tech))
+
 				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
 					Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
 					          <b>%s</b> найден в списке зарегистрированных пользователей системы <b>%s</b><br>
@@ -190,4 +168,44 @@ func getHRPAttributeFromText(str string, endString string) string {
 		sfio = "no"
 	}
 	return sfio
+}
+
+func (u *UseCase) sendHRPToCalendarAndMattermostChannel(
+	hrpUser entity.HRPUser,
+	softName string,
+	ticket entity.GLPI_Ticket,
+	sfio string,
+	dateToNotificate string,
+	groupId int,
+) {
+	adminsName, channelId, calId, _ := u.glpi.GetGroupMattermostChannel(groupId)
+	//* TEST ***************************************
+	//	channelId, calId = "dhsjngrtztfpm8777ud6gnxbph", 6
+	sheduleTaskId := 0
+	if dateToNotificate != "" && calId > 0 {
+		content := parseHTML(ticket.Content)
+		testtask := entity.ScheduleTask{
+			Id:             0,
+			Idc:            calId,
+			Tip:            3,
+			Status:         2,
+			Title:          fmt.Sprintf(`Отключение в системе %s пользователя %s`, softName, sfio),
+			Start:          dateToNotificate,
+			End:            "",
+			Upn:            "",
+			AllDay:         true,
+			SendMattermost: true,
+			Comment:        "Произвести отключение пользователя по заявке https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(ticket.Id) + "\r\n" + content,
+		}
+		sheduleTask, err := u.AddScheduleTask(testtask)
+		if err == nil {
+			sheduleTaskId = sheduleTask.Id
+		}
+	}
+	if len(channelId) > 0 {
+		err := u.matt.SendPostHRPSoft(channelId, hrpUser, softName, sheduleTaskId)
+		if err != nil {
+			u.log.Error(fmt.Sprintf("Error sending post for  ticket %d to Mattermost channel %s to  glpi group %s. Error: %v", ticket.Id, channelId, adminsName, err))
+		}
+	}
 }

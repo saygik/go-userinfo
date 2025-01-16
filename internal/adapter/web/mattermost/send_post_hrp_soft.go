@@ -8,7 +8,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, soft entity.Software, idTaskCalNotification int) (err error) {
+func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, softName string, idTaskCalNotification int) (err error) {
 
 	var actions []*model.PostAction
 
@@ -41,7 +41,7 @@ func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, s
 		"action":  "add",
 		"comment": "Комментарий",
 		"id":      hrpUser.Id,
-		"soft":    soft.Name,
+		"soft":    softName,
 	}
 	glpiCommentIntegration := model.PostActionIntegration{
 		URL:     r.integrations.AddCommentFromApi,
@@ -69,7 +69,7 @@ func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, s
 		"attachments": []*model.SlackAttachment{
 			{
 				AuthorName: "Пользователь найден в системе",
-				Text: "##### " + soft.Name + "\n" + "*Дата мероприятия: " + hrpUser.Date + "*\n" +
+				Text: "##### " + softName + "\n" + "*Дата мероприятия: " + hrpUser.Date + "*\n" +
 					"**ФИО: **" + hrpUser.FIO + ", **Должность: **" + hrpUser.Dolg + ", **Мероприятие: **" + hrpUser.Mero + calNotification,
 				Color:     "#FF2200",
 				Title:     "Заявка на отключение учетных данных сотрудника №" + strconv.Itoa(hrpUser.Id),

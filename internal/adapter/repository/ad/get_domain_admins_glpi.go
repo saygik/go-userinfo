@@ -1,5 +1,9 @@
 package ad
 
 func (r *Repository) GetDomainAdminsGLPI(domain string) int {
-	return r.adconfigs[domain].AdminGLPIGroup
+	if val, ok := r.adconfigs[domain]; ok {
+		return val.AdminGLPIGroup
+	} else {
+		return 0
+	}
 }

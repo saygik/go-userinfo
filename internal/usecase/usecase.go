@@ -106,7 +106,7 @@ type GLPI interface {
 	GetUserApiTokenByName(string) (entity.IdName, error)
 	GetTicketsInExecutionGroups(string) ([]entity.GLPI_Ticket, error)
 	GetUserTrackingGroups(string) ([]entity.IdName, error)
-	GetGroupMattermostChannel(int) (string, int, error)
+	GetGroupMattermostChannel(int) (string, string, int, error)
 }
 
 type Mattermost interface {
@@ -116,7 +116,7 @@ type Mattermost interface {
 	IntegrationAllowedHosts() []string
 	SendPostHRP(string, entity.HRPUser) (err error)
 	SendPost(string, string, string, string, string, string, bool) (err error)
-	SendPostHRPSoft(string, entity.HRPUser, entity.Software, int) (err error)
+	SendPostHRPSoft(string, entity.HRPUser, string, int) (err error)
 }
 type GlpiApi interface {
 	CreateTicket(entity.NewTicketInputForm) (int, error)
