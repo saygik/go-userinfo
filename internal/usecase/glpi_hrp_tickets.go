@@ -141,7 +141,8 @@ func (u *UseCase) GetHRPTickets() {
 
 			}
 		}
-		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
+		//|| strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3")
+		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") {
 			if !finded {
 				if len(channelId) > 0 {
 					err = u.matt.SendPostHRP(channelId, hrpUser)
