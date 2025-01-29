@@ -191,3 +191,15 @@ func parseHTML(s string) string {
 
 	return res
 }
+
+func isStringObjsEqual(obj1 interface{}, obj2 interface{}) bool {
+	str1, ok := obj1.(string)
+	if !ok {
+		return false
+	}
+	str2, ok := obj2.(string)
+	if !ok {
+		return false
+	}
+	return strings.ToUpper(str1) == strings.ToUpper(str2)
+}

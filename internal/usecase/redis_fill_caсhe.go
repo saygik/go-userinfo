@@ -28,7 +28,7 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 				}
 				if len(ips) > 0 {
 					for _, ip := range ips {
-						if user["userPrincipalName"] == ip.Login {
+						if isStringObjsEqual(user["userPrincipalName"], ip.Login) {
 							user["ip"] = ip.Ip
 							user["computer"] = ip.Computer
 							user["ip_date"] = ip.IpDate
