@@ -11,5 +11,6 @@ func (h *Handler) NewAppRouterGroup() *gin.RouterGroup {
 	rg.GET("/groups", h.TokenAuthMiddleware(), h.AppGroups)
 	rg.GET("/domains", h.TokenAuthMiddleware(), h.DomainList)
 	rg.GET("/setip", h.SetIp)
+	rg.GET("/ip", h.Ip)
 	return rg
 }

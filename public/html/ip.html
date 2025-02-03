@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Yusuf">
+    <title>Sign In</title>
+
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css"
+        integrity="sha512-P5MgMn1jBN01asBgU0z60Qk4QxiXo86+wlFahKrsQf37c9cro517WzVSPPV1tDKzhku2iJ2FVgL67wG03SGnNA=="
+        crossorigin="anonymous" />
+    <style>
+        html {
+            height: 100vh;
+        }
+
+        body {
+            background: #eee;
+            min-height: 100%;
+        }
+
+        .parent {
+            display: flex;
+        }
+
+        .child {
+            margin: auto;
+            padding-bottom: 150px;
+        }
+    </style>
+
+</head>
+
+<body class="parent">
+    <div class="container text-center child">
+        {{if .Ip}}
+        <div class="alert alert-success" role="alert">
+            <span style="color:#6d6c6c">Ваш IP адрес</span>
+            <h4>{{.Ip}}</h3>
+        </div>
+        {{end}}
+    </div>
+</body>
+
+</html>

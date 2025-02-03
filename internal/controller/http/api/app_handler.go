@@ -78,6 +78,15 @@ func (h *Handler) SetIp(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": msgResponce})
 
 }
+func (h *Handler) Ip(c *gin.Context) {
+
+	ip := ReadUserIP(c.Request)
+
+	c.HTML(http.StatusOK, "ip.html", gin.H{
+		"Ip": ip,
+	})
+
+}
 
 func (h *Handler) AppResources(c *gin.Context) {
 	userID := ""
