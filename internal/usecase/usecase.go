@@ -55,6 +55,7 @@ type Redis interface {
 type AD interface {
 	DomainList() []entity.DomainList
 	GetDomainAdminsGLPI(string) int
+	GetDomainRMSPort(string) int
 	GetDomainUsers(string) ([]map[string]interface{}, error)
 	GetDomainComputers(string) ([]map[string]interface{}, error)
 	IsDomainExist(string) bool

@@ -30,6 +30,7 @@ type ADConfig struct {
 	BindDN         string        `json:"bindDN"`
 	BindPassword   string        `json:"bindpassword"`
 	AdminGLPIGroup int           `json:"adminGLPIGroup"`
+	RmsPort        int           `json:"rmsPort"`
 	Time           time.Duration `json:"time"`
 }
 
