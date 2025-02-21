@@ -72,15 +72,19 @@ func New() (*App, error) {
 	//FOR TEST!!!!!!!!!!!!!!!!!!!!
 	//	app.c.GetUseCase().GetScheduleTasksNotifications()
 	//app.c.GetUseCase().GetHRPTickets()
-
+	//app.c.GetUseCase().GetSoftwareUsersEOL()
 	if app.cfg.App.Env == "prod" {
 		go getHrpTickets(app, ticker2, quit2)
 	}
 
 	ticker3 := time.NewTicker(1 * time.Minute)
 	quit3 := make(chan struct{})
-
 	go getCalendarTaskNotifikations(app, ticker3, quit3)
+
+	//	ticker4 := time.NewTicker(24 * time.Hour)
+	ticker4 := time.NewTicker(1440 * time.Minute)
+	quit4 := make(chan struct{})
+	go getSoftwareUsersEOL(app, ticker4, quit4)
 
 	return app, nil
 }
@@ -106,6 +110,20 @@ func getCalendarTaskNotifikations(app *App, ticker3 *time.Ticker, quit3 chan str
 			app.c.GetUseCase().GetScheduleTasksNotifications()
 		case <-quit3:
 			ticker3.Stop()
+			return
+		}
+	}
+}
+
+// ** Проверка срока окончания действия учетных записей в системах, оповещение пользователя по emnail, создание задачи календаря администраторам системы на отключение
+func getSoftwareUsersEOL(app *App, ticker4 *time.Ticker, quit4 chan struct{}) {
+	for {
+		select {
+		case <-ticker4.C:
+			// do stuff
+			app.c.GetUseCase().GetSoftwareUsersEOL()
+		case <-quit4:
+			ticker4.Stop()
 			return
 		}
 	}

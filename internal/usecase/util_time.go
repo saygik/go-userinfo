@@ -19,3 +19,11 @@ func parseTicketDate(sDate string) string {
 		return dat.Format(time.RFC3339)
 	}
 }
+
+func parseDate(sDate string) string {
+	parsedTime, err := time.Parse(time.RFC3339, sDate)
+	if err != nil {
+		return ""
+	}
+	return parsedTime.Format("02.01.2006")
+}

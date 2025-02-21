@@ -24,10 +24,12 @@ type Repository interface {
 	GetUserSoftwaresByFio(string) ([]int64, error)
 	GetUserActivity(string) ([]entity.UserActivity, error)
 	AddOneUserSoftware(entity.SoftwareForm) error
-	AddOneSoftwareUser(entity.SoftUser) error
+	AddOneSoftwareUser(entity.SoftUser) (entity.SoftUser, error)
 	DelOneUserSoftware(string) error
+	SetOneUserSoftwareSendedToCalendar(int64) error
 	GetOrgCodes() ([]entity.OrgWithCodes, error)
 	GetSoftwareUsers(int) ([]entity.SoftUser, error)
+	GetSoftwareUsersEOL() ([]entity.SoftUser, error)
 	SetUserAvatar(string, string) error
 	SetUserIp(entity.UserActivityForm) (string, error)
 	GetSchedule(int) (entity.Schedule, error)

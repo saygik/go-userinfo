@@ -12,15 +12,22 @@ func (u *UseCase) AddOneSoftwareUser(id string, softwareForm entity.SoftUser) (m
 	} else {
 		softwareForm.Id = idd
 	}
-	err := u.repo.AddOneSoftwareUser(softwareForm)
+	user, err := u.repo.AddOneSoftwareUser(softwareForm)
 	if err != nil {
 		return nil, u.Error("ошибка SQL добавления пользователя в систему")
 	}
-	userProperties := u.GetUserADPropertysShort(softwareForm.Name)
-	userProperties["name"] = softwareForm.Name
-	userProperties["login"] = softwareForm.Login
-	userProperties["comment"] = softwareForm.Comment
-	userProperties["fio"] = softwareForm.Fio
-	userProperties["external"] = softwareForm.External
-	return userProperties, nil
+
+	adUser := u.GetUserADPropertysShort(user.Name)
+	adUser["id"] = user.Id
+	adUser["login"] = user.Login
+	adUser["comment"] = user.Comment
+	adUser["fio"] = user.Fio
+	adUser["external"] = user.External
+	if len(user.Mail) > 0 {
+		adUser["mail"] = user.Mail
+	}
+	adUser["sended"] = user.Sended
+	adUser["enddate"] = user.EndDate
+
+	return adUser, nil
 }
