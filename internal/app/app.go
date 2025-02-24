@@ -82,7 +82,11 @@ func New() (*App, error) {
 	go getCalendarTaskNotifikations(app, ticker3, quit3)
 
 	//	ticker4 := time.NewTicker(24 * time.Hour)
-	ticker4 := time.NewTicker(1440 * time.Minute)
+	softwarebottime := app.cfg.App.Softwarebottime
+	if softwarebottime == 0 {
+		softwarebottime = 10
+	}
+	ticker4 := time.NewTicker(time.Duration(softwarebottime) * time.Minute)
 	quit4 := make(chan struct{})
 	go getSoftwareUsersEOL(app, ticker4, quit4)
 

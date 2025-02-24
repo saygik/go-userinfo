@@ -35,8 +35,9 @@ type ADConfig struct {
 }
 
 type AppConfig struct {
-	Env  string `json:"env"`
-	Port string `json:"port"`
+	Env             string `json:"env"`
+	Port            string `json:"port"`
+	Softwarebottime int    `json:"softwarebottime"`
 }
 type DBConfig struct {
 	Server   string `json:"server" binding:"required"`
