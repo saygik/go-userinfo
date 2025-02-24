@@ -39,7 +39,7 @@ func (u *UseCase) GetSoftwareUsersEOL() ([]map[string]interface{}, error) {
 				Upn:            "",
 				AllDay:         true,
 				SendMattermost: true,
-				Comment:        fmt.Sprintf(`Срок действия учетной записи % s пользователя %s для системы %s истёк.<BR> Произведите отключение.`, user.Login, user.Fio, soft.Name),
+				Comment:        fmt.Sprintf(`Срок действия учетной записи % s пользователя %s для системы %s истёк. Произведите отключение.`, user.Login, user.Fio, soft.Name),
 			}
 			_, err := u.AddScheduleTask(testtask)
 			if err == nil {
