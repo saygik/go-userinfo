@@ -119,9 +119,13 @@ func (h *Handler) PostLogin(c *gin.Context) {
 	}
 	_, _, err = h.uc.Authenticate(loginForm)
 	if err != nil {
+		errString := err.Error()
+		if errString == "Invalid password" {
+			errString = "Неправильный пароль"
+		}
 		c.HTML(http.StatusOK, "login.html", gin.H{
 			"ErrorTitle":   "Неправильный логин или пароль",
-			"ErrorContent": err.Error(),
+			"ErrorContent": errString,
 		})
 		return
 	}

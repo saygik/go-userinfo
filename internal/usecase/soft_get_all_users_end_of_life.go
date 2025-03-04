@@ -24,7 +24,7 @@ func (u *UseCase) GetSoftwareUsersEOL() ([]map[string]interface{}, error) {
 			err = u.SendMail(user.Mail,
 				fmt.Sprintf(`
 Срок действия учетной записи % s пользователя %s для системы %s истекает %s.
-Примите меры для перерегистрации в системе или пропустите это письмо, если данная система вас далее не интересует.`,
+Примите меры для перерегистрации в системе или пропустите это письмо, если данная система вас не интересует.`,
 					user.Login, user.Fio, soft.Name, parseDate(user.EndDate)))
 		}
 		if soft.GroupCalendar > 0 {
