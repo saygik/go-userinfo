@@ -4,7 +4,6 @@ import (
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/go-gorp/gorp"
 	"github.com/redis/go-redis/v9"
-	adClient "github.com/saygik/go-ad-client"
 	"github.com/saygik/go-userinfo/internal/adapter/repository/ad"
 	"github.com/saygik/go-userinfo/internal/adapter/repository/glpi"
 	"github.com/saygik/go-userinfo/internal/adapter/repository/mssql"
@@ -15,6 +14,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/auth/oauth2"
 	"github.com/saygik/go-userinfo/internal/config"
 	"github.com/saygik/go-userinfo/internal/usecase"
+	adClient "github.com/saygik/go-userinfo/pkg/ad-client"
 	"github.com/sirupsen/logrus"
 )
 

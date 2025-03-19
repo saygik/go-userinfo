@@ -1,8 +1,8 @@
 package app
 
 import (
-	adClient "github.com/saygik/go-ad-client"
 	"github.com/saygik/go-userinfo/internal/config"
+	adClient "github.com/saygik/go-userinfo/pkg/ad-client"
 )
 
 // type adArray struct {
