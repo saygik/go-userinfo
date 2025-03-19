@@ -54,12 +54,15 @@ func New() (*App, error) {
 	ticker := time.NewTicker(30 * time.Minute)
 
 	quit := make(chan struct{})
+	fillingRedis := false
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
 				// do stuff
+				fillingRedis = true
 				app.c.GetUseCase().FillRedisCaсheFromAD()
+				fillingRedis = false
 			case <-quit:
 				ticker.Stop()
 				return
@@ -74,7 +77,7 @@ func New() (*App, error) {
 	//app.c.GetUseCase().GetHRPTickets()
 	//app.c.GetUseCase().GetSoftwareUsersEOL()
 	if app.cfg.App.Env == "prod" {
-		go getHrpTickets(app, ticker2, quit2)
+		go getHrpTickets(app, ticker2, quit2, &fillingRedis)
 	}
 
 	ticker3 := time.NewTicker(1 * time.Minute)
@@ -93,12 +96,14 @@ func New() (*App, error) {
 	return app, nil
 }
 
-func getHrpTickets(app *App, ticker2 *time.Ticker, quit2 chan struct{}) {
+func getHrpTickets(app *App, ticker2 *time.Ticker, quit2 chan struct{}, fillingRedis *bool) {
 	for {
 		select {
 		case <-ticker2.C:
 			// do stuff
-			app.c.GetUseCase().GetHRPTickets()
+			if !*fillingRedis {
+				app.c.GetUseCase().GetHRPTickets()
+			}
 		case <-quit2:
 			ticker2.Stop()
 			return
