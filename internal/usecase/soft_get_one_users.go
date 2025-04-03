@@ -24,8 +24,13 @@ func (u *UseCase) GetSoftwareUsers(ids string) ([]map[string]interface{}, error)
 		adUser["comment"] = user.Comment
 		adUser["fio"] = user.Fio
 		adUser["external"] = user.External
+		adUser["editor"] = user.Editor
+		adUser["last_changes"] = user.LastChanges
 		if len(user.Mail) > 0 {
 			adUser["mail"] = user.Mail
+		} else {
+			adUser["admail"] = adUser["mail"]
+			adUser["mail"] = ""
 		}
 		adUser["sended"] = user.Sended
 		if user.EndDate[0:4] == "1900" {

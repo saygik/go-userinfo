@@ -90,7 +90,7 @@ func (h *Handler) GetSoftwareUsers(c *gin.Context) {
 }
 
 func (h *Handler) AddUserToSoftware(c *gin.Context) {
-
+	userID := getUserID(c)
 	id := c.Param("id")
 	if id == "" {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить id сиситемы в запросе"})
@@ -103,11 +103,35 @@ func (h *Handler) AddUserToSoftware(c *gin.Context) {
 		return
 	}
 
-	userProperties, err := h.uc.AddOneSoftwareUser(id, softwareForm)
+	userProperties, err := h.uc.AddOneSoftwareUser(id, softwareForm, userID)
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка добавления пользователя к системе", "error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": userProperties})
+}
+
+func (h *Handler) UpdateUserInSoftware(c *gin.Context) {
+	userID := getUserID(c)
+
+	id := c.Param("id")
+	if id == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить id сиситемы в запросе"})
+		return
+	}
+	var userForm entity.SoftUser
+	err := c.ShouldBindJSON(&userForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить пользователя системы: " + err.Error()})
+		return
+	}
+
+	err = h.uc.UpdateOneSoftwareUser(userForm, userID)
+	if err != nil {
+		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка добавления пользователя к системе", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": "пользователь изменен"})
 }

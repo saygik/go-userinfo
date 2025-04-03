@@ -34,15 +34,17 @@ type SoftwareForm struct {
 }
 
 type SoftUser struct {
-	Id        int64                  `db:"id" json:"id"`
-	IdSoft    int                    `db:"id_soft" json:"id_soft"`
-	Name      string                 `db:"user_name" json:"name"`
-	Login     string                 `db:"user_login" json:"login,omitempty"`
-	Comment   string                 `db:"user_comment" json:"comment,omitempty"`
-	Fio       string                 `db:"fio" json:"fio,omitempty"`
-	External  bool                   `db:"external" json:"external"`
-	EndDate   string                 `db:"enddate" json:"enddate,omitempty"`
-	Mail      string                 `db:"mail" json:"mail,omitempty"`
-	Sended    bool                   `db:"sended" json:"sended"`
-	Propertys map[string]interface{} `json:"props"`
+	Id          int64                  `db:"id" json:"id"`
+	IdSoft      int                    `db:"id_soft" json:"id_soft"`
+	Name        string                 `db:"user_name" json:"name"`
+	Login       string                 `db:"user_login" json:"login,omitempty"`
+	Comment     string                 `db:"user_comment" json:"comment,omitempty"`
+	Fio         string                 `db:"fio" json:"fio,omitempty"`
+	External    bool                   `db:"external" json:"external"`
+	EndDate     string                 `db:"enddate" json:"enddate,omitempty"`
+	Mail        string                 `db:"mail" json:"mail,omitempty"`
+	Sended      bool                   `db:"sended" json:"sended"`
+	Editor      string                 `db:"editor" json:"editor"`
+	LastChanges string                 `db:"last_changes" json:"last_changes"`
+	Propertys   map[string]interface{} `json:"props"`
 }

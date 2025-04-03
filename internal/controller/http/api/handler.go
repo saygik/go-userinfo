@@ -46,7 +46,8 @@ type UseCase interface {
 	GetSoftware(string) (entity.Software, error)                                                                 // Одна система
 	GetSoftwareUsers(string) ([]map[string]interface{}, error)                                                   // Список пользователей одной системы
 	AddUserSoftware(entity.SoftwareForm) error                                                                   // Добавление системы пользователя
-	AddOneSoftwareUser(string, entity.SoftUser) (map[string]interface{}, error)                                  // Добавление пользователя в систему
+	AddOneSoftwareUser(string, entity.SoftUser, string) (map[string]interface{}, error)                          // Добавление пользователя в систему
+	UpdateOneSoftwareUser(entity.SoftUser, string) error                                                         // Изменение пользователя в систему
 	DelUserSoftware(string) error                                                                                // Удаление системы пользователя
 	GetUserADActivity(string, string) ([]entity.UserActivity, error)                                             // Активность доменов
 	GetUserMailboxPermissions(string, string) ([]entity.MailBoxDelegates, error)                                 // Получение делегированных почтовых ящиков пользователя
