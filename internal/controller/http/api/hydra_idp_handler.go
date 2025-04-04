@@ -109,15 +109,15 @@ func (h *Handler) PostLogin(c *gin.Context) {
 		Email:    formData.Email,
 		Password: formData.Password,
 	}
-	err := h.uc.UserExist(loginForm.Email)
-	if err != nil {
-		c.HTML(http.StatusOK, "login.html", gin.H{
-			"ErrorTitle":   "Ошибка входа пользователя",
-			"ErrorContent": err.Error(),
-		})
-		return
-	}
-	_, _, err = h.uc.Authenticate(loginForm)
+	// err := h.uc.UserExist(loginForm.Email)
+	// if err != nil {
+	// 	c.HTML(http.StatusOK, "login.html", gin.H{
+	// 		"ErrorTitle":   "Ошибка входа пользователя",
+	// 		"ErrorContent": err.Error(),
+	// 	})
+	// 	return
+	// }
+	_, _, err := h.uc.Authenticate(loginForm)
 	if err != nil {
 		errString := err.Error()
 		if errString == "Invalid password" {
