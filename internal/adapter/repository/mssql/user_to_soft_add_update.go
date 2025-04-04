@@ -10,7 +10,8 @@ func (r *Repository) AddOneSoftwareUser(form entity.SoftUser, editor string, cur
 	return formRes, err
 }
 
-func (r *Repository) UpdateOneSoftwareUser(form entity.SoftUser, editor string, currentTime string) error {
-	res, err := r.db.Exec("UpdateOneSoftwareUser $1,$2,$3,$4,$5,$6,$7,$8,$9", form.Id, form.Login, form.Fio, form.Comment, form.EndDate, form.Mail, form.Sended, editor, currentTime)
-	return sqlRowAffectedErrorWrapper(res, err)
+func (r *Repository) UpdateOneSoftwareUser(form entity.SoftUser, editor string, currentTime string) (formRes entity.SoftUser, err error) {
+	err = r.db.QueryRow("UpdateOneSoftwareUser $1,$2,$3,$4,$5,$6,$7,$8,$9", form.Id, form.Login, form.Fio, form.Comment, form.EndDate, form.Mail, form.Sended, editor, currentTime).Scan(&formRes.Id,
+		&formRes.Login, &formRes.Fio, &formRes.Comment, &formRes.EndDate, &formRes.Mail, &formRes.Sended, &formRes.Editor, &formRes.LastChanges)
+	return formRes, err
 }

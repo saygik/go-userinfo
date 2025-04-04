@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"strconv"
-	"time"
 
 	"github.com/saygik/go-userinfo/internal/entity"
 )
@@ -13,7 +12,10 @@ func (u *UseCase) AddOneSoftwareUser(id string, softwareForm entity.SoftUser, ed
 	} else {
 		softwareForm.Id = idd
 	}
-	currentTime := time.Now().Format("2006-01-02T15:04:05.000Z")
+	currentTime, err := CurrentTimeFormattedRFC3339()
+	if err != nil {
+		return nil, u.Error("ошибка получения текущей даты и времени в формате RFC3339")
+	}
 	user, err := u.repo.AddOneSoftwareUser(softwareForm, editor, currentTime)
 	if err != nil {
 		return nil, u.Error("ошибка SQL добавления пользователя в систему")
@@ -36,12 +38,16 @@ func (u *UseCase) AddOneSoftwareUser(id string, softwareForm entity.SoftUser, ed
 	return adUser, nil
 }
 
-func (u *UseCase) UpdateOneSoftwareUser(softwareForm entity.SoftUser, editor string) error {
-	currentTime := time.Now().Format("2006-01-02T15:04:05.000Z")
-	//.Format("2006-01-02 15:04:05.000000 07:00")
-	err := u.repo.UpdateOneSoftwareUser(softwareForm, editor, currentTime)
+func (u *UseCase) UpdateOneSoftwareUser(softwareForm entity.SoftUser, editor string) (entity.SoftUser, error) {
+	// Load the Europe/Minsk time zone
+	formatted, err := CurrentTimeFormattedRFC3339()
 	if err != nil {
-		return u.Error("ошибка SQL изменения пользователя в системе")
+		return entity.SoftUser{}, u.Error("ошибка получения текущей даты и времени в формате RFC3339")
 	}
-	return nil
+
+	user, err := u.repo.UpdateOneSoftwareUser(softwareForm, editor, formatted)
+	if err != nil {
+		return entity.SoftUser{}, u.Error("ошибка SQL изменения пользователя в системе")
+	}
+	return user, nil
 }

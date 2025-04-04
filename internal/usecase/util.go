@@ -2,9 +2,11 @@ package usecase
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/saygik/go-userinfo/internal/entity"
 )
@@ -16,6 +18,19 @@ func isEmailValid(e string) bool {
 		return false
 	}
 	return emailRegex.MatchString(e)
+}
+
+func CurrentTimeFormattedRFC3339() (string, error) {
+	// Load the Europe/Minsk time zone
+	loc, err := time.LoadLocation("Europe/Minsk")
+	if err != nil {
+		return "", errors.New("ошибка загрузки временной зоны Europe/Minsk")
+	}
+	tInMinsk := time.Now().In(loc)
+
+	formatted := tInMinsk.Format(time.RFC3339)
+
+	return formatted, nil
 }
 
 func IsStringInArray(str string, arr interface{}) bool {
