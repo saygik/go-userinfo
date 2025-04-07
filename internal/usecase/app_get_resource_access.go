@@ -16,7 +16,11 @@ func (u *UseCase) GetAccessToResource(resource string, user string) (res int) {
 	if IsStringInArrayIdName("Технический специалист", userRoles) && domain == resource {
 		return 1
 	}
+
 	accessRole, _ := u.repo.GetUserResourceAccess(resource, user)
 
+	if accessRole != 1 && IsStringInArrayIdName("Группа компетенции БЖД", userRoles) {
+		return 2
+	}
 	return accessRole
 }

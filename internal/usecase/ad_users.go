@@ -25,9 +25,10 @@ func (u *UseCase) GetADUsers(user string) ([]map[string]interface{}, error) {
 		var r []map[string]interface{}
 		json.Unmarshal([]byte(oneDomain), &r)
 		accessToTechnicalInfo := access == 1
+		accessToShortTechnicalInfo := access == 2
 		for _, user := range r {
 			delete(user, "employeeNumber")
-			if !accessToTechnicalInfo {
+			if !accessToTechnicalInfo && !accessToShortTechnicalInfo {
 				delete(user, "ip")
 				delete(user, "pwdLastSet")
 				delete(user, "proxyAddresses")
@@ -38,6 +39,17 @@ func (u *UseCase) GetADUsers(user string) ([]map[string]interface{}, error) {
 				delete(user, "memberOf")
 
 				user["restricted"] = true
+			}
+			if !accessToTechnicalInfo && accessToShortTechnicalInfo {
+				delete(user, "pwdLastSet")
+				delete(user, "proxyAddresses")
+				delete(user, "passwordDontExpire")
+				delete(user, "passwordCantChange")
+				delete(user, "distinguishedName")
+				delete(user, "userAccountControl")
+				delete(user, "memberOf")
+
+				user["partial_restricted"] = true
 			}
 		}
 		res = append(res, r...)

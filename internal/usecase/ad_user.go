@@ -36,8 +36,8 @@ func (u *UseCase) GetUser(userID string, techUser string) (map[string]interface{
 	if isSysAdmin := u.IsSysAdmin(techUser); !(isSysAdmin || userID == techUser) {
 		return user, nil
 	}
-	userRole := u.repo.GetUserRole(userID)
-	user["app_role"] = userRole
+	userRoles := u.repo.GetUserRole(userID)
+	user["app_role"] = userRoles
 
 	groups, err := u.repo.GetUserGroups(userID)
 	if err == nil && len(groups) > 0 {

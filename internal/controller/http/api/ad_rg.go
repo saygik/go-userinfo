@@ -17,6 +17,8 @@ func (h *Handler) NewADRouterGroup() *gin.RouterGroup {
 	rg.PUT("/user/role/:username", h.TokenAuthMiddleware(), h.UpdateUserRole)
 	rg.POST("/user/group/:username", h.TokenAuthMiddleware(), h.AddUserGroup)
 	rg.DELETE("/user/group/:username", h.TokenAuthMiddleware(), h.DelUserGroup)
+	rg.POST("/user/role/:username", h.TokenAuthMiddleware(), h.AddUserRole)
+	rg.DELETE("/user/role/:username", h.TokenAuthMiddleware(), h.DelUserRole)
 	rg.GET("/groupusers/:domain/:group", h.TokenAuthMiddleware(), h.GroupUsers)
 	return rg
 }

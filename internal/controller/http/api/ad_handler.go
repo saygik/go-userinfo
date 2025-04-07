@@ -166,6 +166,24 @@ func (h *Handler) AddUserGroup(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": "OK"})
 }
+func (h *Handler) AddUserRole(c *gin.Context) {
+	userID := getUserID(c)
+	user := c.Param("username")
+	var idForm entity.IdName
+
+	err := c.ShouldBindJSON(&idForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить роль системы: " + err.Error()})
+		return
+	}
+	err = h.uc.AddUserRole(userID, user, idForm.Id)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно обновить роль пользователя", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": "OK"})
+}
+
 func (h *Handler) DelUserGroup(c *gin.Context) {
 	userID := getUserID(c)
 	user := c.Param("username")
@@ -179,6 +197,24 @@ func (h *Handler) DelUserGroup(c *gin.Context) {
 	err = h.uc.DelUserGroup(userID, user, idForm.Id)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно обновить группу пользователя", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": "OK"})
+}
+
+func (h *Handler) DelUserRole(c *gin.Context) {
+	userID := getUserID(c)
+	user := c.Param("username")
+	var idForm entity.IdName
+
+	err := c.ShouldBindJSON(&idForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить роль системы: " + err.Error()})
+		return
+	}
+	err = h.uc.DelUserRole(userID, user, idForm.Id)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно обновить роль пользователя", "error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": "OK"})

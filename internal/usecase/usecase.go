@@ -13,11 +13,13 @@ type Repository interface {
 	GetDomainUsersAvatars(string) ([]entity.IdNameAvatar, error)
 	GetUserResourceAccess(string, string) (int, error)
 	GetUserRoles(string) ([]entity.IdName, error)
-	GetUserRole(string) entity.IdName
+	GetUserRole(string) []entity.IdName
 	SetUserRole(string, int) error
 	GetUserGroups(string) ([]entity.IdName, error)
 	AddUserGroup(string, int) error
 	DelUserGroup(string, int) error
+	AddUserRole(string, int) error
+	DelUserRole(string, int) error
 	GetUserAvatar(string) (string, error)
 	GetCurrentUserResources(string) ([]entity.AppResource, error)
 	GetUserSoftwares(string) ([]entity.IdName, error)

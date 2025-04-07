@@ -25,6 +25,8 @@ type UseCase interface {
 	GetAppGroups(string) ([]entity.IdName, error)                   // Все группы пользователей приложения
 	DelUserGroup(string, string, int) error                         // Удалить группу приложения пользователя
 	AddUserGroup(string, string, int) error                         // Добавить группу приложения пользователя
+	DelUserRole(string, string, int) error                          // Удалить роль приложения пользователя
+	AddUserRole(string, string, int) error                          // Добавить роль приложения пользователя
 	GetAppResources(string) ([]entity.IdName, error)                // Все ресурсы приложения
 	Authenticate(entity.LoginForm) (bool, map[string]string, error) // Аутентификация
 	SetUserIp(entity.UserActivityForm) (string, error)
