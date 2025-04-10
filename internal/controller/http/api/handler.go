@@ -10,12 +10,13 @@ import (
 )
 
 type Handler struct {
-	rtr    *gin.Engine
-	rg     *gin.RouterGroup
-	uc     UseCase
-	log    *logrus.Logger
-	hydra  Hydra
-	oAuth2 OAuth2
+	rtr             *gin.Engine
+	rg              *gin.RouterGroup
+	uc              UseCase
+	log             *logrus.Logger
+	hydra           Hydra
+	oAuth2          OAuth2
+	oAuth2Authentik OAuth2
 }
 
 type UseCase interface {
@@ -107,18 +108,21 @@ type Hydra interface {
 
 type OAuth2 interface {
 	AuthCodeURL(string) string
+	LogOutURL() string
 	Exchange(string) (*entity.Token, *entity.UserInfo, error)
+	IntrospectOAuth2Token(string) (*entity.UserInfo, error)
 	GetRedirectUrl() string
 	Refresh(string) (entity.Token, error)
 }
 
-func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, hydra Hydra, oAuth2 OAuth2) {
+func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, hydra Hydra, oAuth2 OAuth2, oAuth2Authentik OAuth2) {
 	h := &Handler{
-		rtr:    router,
-		uc:     uc,
-		log:    log,
-		hydra:  hydra,
-		oAuth2: oAuth2,
+		rtr:             router,
+		uc:              uc,
+		log:             log,
+		hydra:           hydra,
+		oAuth2:          oAuth2,
+		oAuth2Authentik: oAuth2Authentik,
 	}
 
 	h.rtr.Static("/public", "./public")
@@ -139,6 +143,7 @@ func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, hydra Hydra,
 		})
 	})
 	h.rg = h.rtr.Group("/api")
+	h.NewOAuthRouterGroup()
 	h.NewOAuth2RouterGroup()
 	h.NewHydraIDPRouterGroup()
 	h.NewADRouterGroup()

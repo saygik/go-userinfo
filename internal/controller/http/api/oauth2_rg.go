@@ -6,10 +6,10 @@ import (
 
 func (h *Handler) NewOAuth2RouterGroup() *gin.RouterGroup {
 
-	rg := h.rg.Group("/oauth")
-	rg.GET("/login", h.LoginOauth2)
-	rg.POST("/logout", h.TokenAuthMiddleware(), h.LogoutOauth2)
-	rg.GET("/token", h.ExchangeToken)
-	rg.POST("/refresh", h.RefreshOauth2)
+	rg := h.rg.Group("/oauth-authentik")
+	rg.GET("/login", h.LoginOauth2Authentik)
+	rg.POST("/logout", h.LogoutOauth2Authentik)
+	rg.GET("/token", h.ExchangeTokenAuthentik)
+	rg.POST("/refresh", h.RefreshOauth2Authentik)
 	return rg
 }

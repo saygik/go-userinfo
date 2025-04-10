@@ -66,16 +66,17 @@ type IntrospectedOAuth2Token struct {
 }
 
 type UserInfo struct {
-	Sub         string `json:"sub"`
-	Email       string `json:"email"`
-	Family      string `json:"family_name"`
-	GivenName   string `json:"given_name"`
-	Name        string `json:"name"`
-	Company     string `json:"company"`
-	Department  string `json:"department"`
-	Title       string `json:"title"`
-	Nickname    string `json:"nickname"`
-	PhoneNumber string `json:"phone_number"`
+	Sub         string   `json:"sub"`
+	Email       string   `json:"email"`
+	Family      string   `json:"family_name"`
+	GivenName   string   `json:"given_name"`
+	Name        string   `json:"name"`
+	Company     string   `json:"company"`
+	Department  string   `json:"department"`
+	Title       string   `json:"title"`
+	Nickname    string   `json:"nickname"`
+	PhoneNumber string   `json:"phone_number"`
+	Groups      []string `json:"groups"`
 }
 
 type OAuth2Client struct {

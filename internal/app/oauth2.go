@@ -11,9 +11,14 @@ import (
 type OAuth2Client struct {
 	oAuth2Config oauth2.Config
 	oidcProvider *oidc.Provider
+	logoutUrl    string
 }
 
-func (a *App) newOAuth2Client(url string, clientID string, clientSecret string, redirectUrl string, scopes []string) (*OAuth2Client, error) {
+// type OAuth2ClientAuthentik struct {
+// 	oAuth2Config oauth2.Config
+// }
+
+func (a *App) newOAuth2Client(url string, clientID string, clientSecret string, redirectUrl string, scopes []string, logoutUrl string) (*OAuth2Client, error) {
 
 	ctx := context.Background()
 
@@ -32,5 +37,6 @@ func (a *App) newOAuth2Client(url string, clientID string, clientSecret string, 
 	return &OAuth2Client{
 		oAuth2Config: oAuthConf2,
 		oidcProvider: provider,
+		logoutUrl:    logoutUrl,
 	}, nil
 }

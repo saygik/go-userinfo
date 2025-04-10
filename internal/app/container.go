@@ -12,6 +12,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/adapter/web/mattermost"
 	"github.com/saygik/go-userinfo/internal/auth/hydra"
 	"github.com/saygik/go-userinfo/internal/auth/oauth2"
+	"github.com/saygik/go-userinfo/internal/auth/oauth2authentik"
 	"github.com/saygik/go-userinfo/internal/config"
 	"github.com/saygik/go-userinfo/internal/usecase"
 	adClient "github.com/saygik/go-userinfo/pkg/ad-client"
@@ -19,16 +20,17 @@ import (
 )
 
 type Container struct {
-	mssql     *gorp.DbMap
-	glpi      *gorp.DbMap
-	rc        *redis.Client
-	ads       map[string]*adClient.ADClient
-	adconfigs map[string]*config.ADConfig
-	matt      *MattClient
-	glpiApi   *GLPIApiClient
-	hydra     *IDPClient
-	oAuth2    *OAuth2Client
-	log       *logrus.Logger
+	mssql           *gorp.DbMap
+	glpi            *gorp.DbMap
+	rc              *redis.Client
+	ads             map[string]*adClient.ADClient
+	adconfigs       map[string]*config.ADConfig
+	matt            *MattClient
+	glpiApi         *GLPIApiClient
+	hydra           *IDPClient
+	oAuth2          *OAuth2Client
+	oAuth2Authentik *OAuth2Client
+	log             *logrus.Logger
 }
 
 func NewAppContainer(
@@ -41,19 +43,21 @@ func NewAppContainer(
 	glpiApi *GLPIApiClient,
 	hydra *IDPClient,
 	oAuth2 *OAuth2Client,
+	oAuth2Authentik *OAuth2Client,
 	log *logrus.Logger,
 ) *Container {
 	c := &Container{
-		mssql:     mssqlConnect,
-		glpi:      glpiConnect,
-		rc:        r,
-		ads:       adclients,
-		adconfigs: adconfigs,
-		matt:      matt,
-		glpiApi:   glpiApi,
-		hydra:     hydra,
-		oAuth2:    oAuth2,
-		log:       log,
+		mssql:           mssqlConnect,
+		glpi:            glpiConnect,
+		rc:              r,
+		ads:             adclients,
+		adconfigs:       adconfigs,
+		matt:            matt,
+		glpiApi:         glpiApi,
+		hydra:           hydra,
+		oAuth2:          oAuth2,
+		oAuth2Authentik: oAuth2Authentik,
+		log:             log,
 	}
 	return c
 }
@@ -84,6 +88,10 @@ func (c *Container) GetHydra() *hydra.Hydra {
 }
 func (c *Container) GetOAuth2() *oauth2.OAuth2 {
 	return oauth2.New(c.oAuth2.oAuth2Config, c.oAuth2.oidcProvider)
+}
+
+func (c *Container) GetOAuth2Authentik() *oauth2authentik.OAuth2 {
+	return oauth2authentik.New(c.oAuth2Authentik.oAuth2Config, c.oAuth2Authentik.oidcProvider, c.oAuth2Authentik.logoutUrl)
 }
 
 func (c *Container) getADRepository() *ad.Repository {

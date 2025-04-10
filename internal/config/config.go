@@ -80,6 +80,15 @@ type HydraConfig struct {
 	RedirectUrl  string            `json:"redirect-url" binding:"required"`
 	IDPScopes    []entity.IDPScope `json:"idpscopes"`
 	Scopes       []string
+	LogOutUrl    string `json:"log-out-url" binding:"required"`
+}
+type AuthentikConfig struct {
+	Url          string `json:"url" binding:"required"`
+	ClientId     string `json:"client-id" binding:"required"`
+	ClientSecret string `json:"client-secret" binding:"required"`
+	RedirectUrl  string `json:"redirect-url" binding:"required"`
+	Scopes       []string
+	LogOutUrl    string `json:"log-out-url" binding:"required"`
 }
 type Config struct {
 	App             AppConfig
@@ -88,6 +97,7 @@ type Config struct {
 	AD              []ADConfig
 	Repository      Repository
 	ApiIntegrations Integrations
+	Authentik       AuthentikConfig
 }
 
 func NewConfig(filePath string) (Config, error) {
@@ -173,7 +183,7 @@ func vaultConfig(conf Config) (*Config, error) {
 		return cfg, fmt.Errorf("ошибка Vault: %v", err)
 	}
 	cfg.Repository = repo
-
+	//* hydra
 	secret, err = cl.Read(context.Background(), fmt.Sprintf("%shydra", conf.Vault.SecretPath))
 	if err != nil {
 		return cfg, fmt.Errorf("ошибка Hydra client, секрет по пути %s недоступен: %v", fmt.Sprintf("%sjwt", conf.Vault.SecretPath), err)
@@ -194,13 +204,34 @@ func vaultConfig(conf Config) (*Config, error) {
 	}
 	cfg.Hydra = hydra
 
-	secret, err = cl.Read(context.Background(), fmt.Sprintf("%sintegrations", conf.Vault.SecretPath))
+	//* authentik
+	secret, err = cl.Read(context.Background(), fmt.Sprintf("%sauthentik", conf.Vault.SecretPath))
 	if err != nil {
-		return cfg, fmt.Errorf("ошибка Hydra client, секрет по пути %s недоступен: %v", fmt.Sprintf("%sjwt", conf.Vault.SecretPath), err)
+		return cfg, fmt.Errorf("ошибка Authentik client, секрет по пути %s недоступен: %v", fmt.Sprintf("%sjwt", conf.Vault.SecretPath), err)
 	}
 	value, ok = secret.Data["data"]
 	if !ok {
-		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
+		return cfg, fmt.Errorf("ошибка Authentik: %v", err)
+	}
+
+	data, err = json.Marshal(value)
+	if err != nil {
+		return cfg, fmt.Errorf("ошибка Authentik: %v", err)
+	}
+	authentik := AuthentikConfig{}
+	err = json.Unmarshal(data, &authentik)
+	if err != nil {
+		return cfg, fmt.Errorf("ошибка Authentik: %v", err)
+	}
+	cfg.Authentik = authentik
+	//* integrations
+	secret, err = cl.Read(context.Background(), fmt.Sprintf("%sintegrations", conf.Vault.SecretPath))
+	if err != nil {
+		return cfg, fmt.Errorf("ошибка integrations , секрет по пути %s недоступен: %v", fmt.Sprintf("%sjwt", conf.Vault.SecretPath), err)
+	}
+	value, ok = secret.Data["data"]
+	if !ok {
+		return cfg, fmt.Errorf("ошибка integrations: %v", err)
 	}
 
 	data, err = json.Marshal(value)
@@ -210,7 +241,7 @@ func vaultConfig(conf Config) (*Config, error) {
 	integrations := Integrations{}
 	err = json.Unmarshal(data, &integrations)
 	if err != nil {
-		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
+		return cfg, fmt.Errorf("ошибка integrations: %v", err)
 	}
 	cfg.ApiIntegrations = integrations
 

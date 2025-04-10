@@ -99,3 +99,12 @@ func (o OAuth2) Exchange(code string) (*entity.Token, *entity.UserInfo, error) {
 	return &token, &user, nil
 
 }
+
+func (o OAuth2) IntrospectOAuth2Token(querytoken string) (*entity.UserInfo, error) {
+
+	return nil, nil
+
+}
+func (o OAuth2) LogOutURL() string {
+	return ""
+}

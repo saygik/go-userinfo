@@ -11,7 +11,7 @@ import (
 // 	c.JSON(http.StatusOK, gin.H{"message": "Вход произведен"})
 // }
 
-func (h *Handler) RefreshOauth2(c *gin.Context) {
+func (h *Handler) RefreshOauth2Authentik(c *gin.Context) {
 
 	var tokenForm struct {
 		RefreshToken string `json:"refresh_token,omitempty"`
@@ -59,27 +59,25 @@ func (h *Handler) RefreshOauth2(c *gin.Context) {
 
 }
 
-func (h *Handler) LoginOauth2(c *gin.Context) {
+func (h *Handler) LoginOauth2Authentik(c *gin.Context) {
 
 	state := c.Query("state")
 
-	loginURL := h.oAuth2.AuthCodeURL(state)
+	loginURL := h.oAuth2Authentik.AuthCodeURL(state)
 
 	c.JSON(http.StatusOK, gin.H{"data": loginURL})
 }
 
-func (h *Handler) LogoutOauth2(c *gin.Context) {
+func (h *Handler) LogoutOauth2Authentik(c *gin.Context) {
 	var ticketForm struct {
-		IdToken string `json:"id_token,omitempty"`
-		Url     string `json:"url,omitempty"`
+		Url string `json:"url,omitempty"`
 	}
 	c.ShouldBindJSON(&ticketForm)
-	url := h.hydra.LogoutURL() + "?post_logout_redirect_uri=" + ticketForm.Url + "&id_token_hint=" + ticketForm.IdToken
-
+	url := h.oAuth2Authentik.LogOutURL()
 	c.JSON(http.StatusOK, gin.H{"data": url})
 }
 
-func (h *Handler) ExchangeToken(c *gin.Context) {
+func (h *Handler) ExchangeTokenAuthentik(c *gin.Context) {
 	code := c.Query("code")
 
 	if code == "" {
@@ -87,68 +85,15 @@ func (h *Handler) ExchangeToken(c *gin.Context) {
 		return
 	}
 
-	accessToken, userInfo, err := h.oAuth2.Exchange(code)
-	_ = userInfo
+	accessToken, userInfo, err := h.oAuth2Authentik.Exchange(code)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{"error": err.Error()})
 		return
 	}
-	tt, err := h.hydra.IntrospectOAuth2Token(accessToken.RefreshToken)
-	_ = tt
-	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"error": err.Error()})
-		return
-	}
-	accessToken.Expiry = time.Unix(*tt.Exp, 0)
 
 	c.JSON(http.StatusOK, gin.H{
 		"token": accessToken,
 		"user":  userInfo,
 	})
-}
 
-func (h *Handler) TokenValid(c *gin.Context) {
-
-	token := h.ExtractToken(c.Request)
-
-	if len(token) < 1 {
-		//Token either expired or not valid
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Cначала войдите в систему"})
-		return
-	}
-
-	resp, err := h.hydra.IntrospectOAuth2Token(token)
-	if err != nil { //if any goes wrong
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
-		return
-	}
-	_ = resp
-	if !resp.Active {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "token is not active"})
-		return
-	}
-	//To be called from GetUserID()
-	c.Set("user", *resp.Sub)
-}
-
-// UserFromToken ...
-func (h *Handler) UserFromToken(c *gin.Context) {
-
-	token := h.ExtractToken(c.Request)
-
-	if len(token) < 1 {
-		//Token either expired or not valid
-		return
-	}
-
-	resp, err := h.hydra.IntrospectOAuth2Token(token)
-	if err != nil { //if any goes wrong
-		return
-	}
-	_ = resp
-	if !resp.Active {
-		return
-	}
-	//To be called from GetUserID()
-	c.Set("user", *resp.Sub)
 }
