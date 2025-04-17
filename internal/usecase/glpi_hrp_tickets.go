@@ -30,6 +30,7 @@ func (u *UseCase) GetHRPTickets() {
 	val := ""
 	ok := false
 	for _, ticket := range tickets {
+
 		finded := false
 		_, channelId, _, _ := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
 		// if err != nil {
@@ -60,8 +61,9 @@ func (u *UseCase) GetHRPTickets() {
 		dateToNotificate := parseTicketDate(sDate)
 
 		hrpUser := entity.HRPUser{Id: ticket.Id, FIO: sfios, Dolg: sDolg, Mero: sMero, Company: sCompany, Date: sDate}
+		hrpUserforHook := entity.HRPUser{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Mero: sMero, Company: sCompany, Date: sDate}
 		upn := ""
-
+		u.webClient.AddWebhook(entity.WebhookPayload{Data: hrpUserforHook, WebhookId: strconv.Itoa(ticket.Id)})
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
 			for _, value := range redisADUsers {
 				var user map[string]interface{}

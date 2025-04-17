@@ -51,7 +51,8 @@ func New() (*App, error) {
 
 	mattClient := app.newMattermostConnection(cfg.Repository.Mattermost.Server, cfg.Repository.Mattermost.Token, cfg.ApiIntegrations.AddCommentFromApi, cfg.ApiIntegrations.DisableCalendarTaskNotificationApi, cfg.ApiIntegrations.AllowedHosts)
 	glpiApiClient := app.newGLPIApiConnection(cfg.Repository.GlpiApi.Server, cfg.Repository.GlpiApi.Token, cfg.Repository.GlpiApi.UserToken)
-	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, adConfigs, mattClient, glpiApiClient, hydraClient, oAuth2Client, oAuth2ClientAuthentik, app.log)
+
+	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, adConfigs, mattClient, glpiApiClient, hydraClient, oAuth2Client, oAuth2ClientAuthentik, app.cfg.ApiIntegrations.N8nWebhookIvc2Kaspersky, app.log)
 	app.c = c
 	app.c.GetUseCase().ClearRedisCaсhe()
 	app.c.GetUseCase().FillRedisCaсheFromAD()

@@ -10,6 +10,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/adapter/repository/redisclient"
 	"github.com/saygik/go-userinfo/internal/adapter/web/glpiapi"
 	"github.com/saygik/go-userinfo/internal/adapter/web/mattermost"
+	"github.com/saygik/go-userinfo/internal/adapter/web/webclient"
 	"github.com/saygik/go-userinfo/internal/auth/hydra"
 	"github.com/saygik/go-userinfo/internal/auth/oauth2"
 	"github.com/saygik/go-userinfo/internal/auth/oauth2authentik"
@@ -30,6 +31,7 @@ type Container struct {
 	hydra           *IDPClient
 	oAuth2          *OAuth2Client
 	oAuth2Authentik *OAuth2Client
+	webClientUrl    string
 	log             *logrus.Logger
 }
 
@@ -44,6 +46,7 @@ func NewAppContainer(
 	hydra *IDPClient,
 	oAuth2 *OAuth2Client,
 	oAuth2Authentik *OAuth2Client,
+	webClientUrl string,
 	log *logrus.Logger,
 ) *Container {
 	c := &Container{
@@ -57,12 +60,17 @@ func NewAppContainer(
 		hydra:           hydra,
 		oAuth2:          oAuth2,
 		oAuth2Authentik: oAuth2Authentik,
+		webClientUrl:    webClientUrl,
 		log:             log,
 	}
 	return c
 }
 func (c *Container) GetUseCase() *usecase.UseCase {
-	return usecase.New(c.getMssqlRepository(), c.getRedisRepository(), c.getADRepository(), c.getGlpiRepository(), c.getMattermostRepository(), c.getGlpiApiRepository(), c.log)
+	return usecase.New(c.getMssqlRepository(), c.getRedisRepository(), c.getADRepository(), c.getGlpiRepository(), c.getMattermostRepository(), c.getGlpiApiRepository(), c.getWebClientRepository(), c.log)
+}
+
+func (c *Container) getWebClientRepository() *webclient.Repository {
+	return webclient.New(c.webClientUrl, c.log)
 }
 
 func (c *Container) getMssqlRepository() *mssql.Repository {

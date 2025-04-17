@@ -64,6 +64,7 @@ type Integrations struct {
 	AddCommentFromApi                  string   `json:"add-comment-from-api,omitempty"`
 	DisableCalendarTaskNotificationApi string   `json:"disable-calendar-task-notification-api,omitempty"`
 	AllowedHosts                       []string `json:"allowed-hosts,omitempty"`
+	N8nWebhookIvc2Kaspersky            string   `json:"n8n-webhook-ivc2-kaspersky"`
 }
 
 type VaultConfig struct {

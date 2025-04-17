@@ -131,24 +131,31 @@ type GlpiApi interface {
 	AddTicketUser(entity.GLPITicketUserInputForm) (int, error)
 }
 
-type UseCase struct {
-	repo    Repository
-	redis   Redis
-	ad      AD
-	glpi    GLPI
-	matt    Mattermost
-	glpiApi GlpiApi
-	log     *logrus.Logger
+type WebClient interface {
+	AddWebhook(data entity.WebhookPayload) error
+	Log() error
 }
 
-func New(r Repository, redis Redis, adRepo AD, glpiRepo GLPI, matt Mattermost, glpiApi GlpiApi, log *logrus.Logger) *UseCase {
+type UseCase struct {
+	repo      Repository
+	redis     Redis
+	ad        AD
+	glpi      GLPI
+	matt      Mattermost
+	glpiApi   GlpiApi
+	webClient WebClient
+	log       *logrus.Logger
+}
+
+func New(r Repository, redis Redis, adRepo AD, glpiRepo GLPI, matt Mattermost, glpiApi GlpiApi, webClient WebClient, log *logrus.Logger) *UseCase {
 	return &UseCase{
-		repo:    r,
-		redis:   redis,
-		ad:      adRepo,
-		glpi:    glpiRepo,
-		matt:    matt,
-		glpiApi: glpiApi,
-		log:     log,
+		repo:      r,
+		redis:     redis,
+		ad:        adRepo,
+		glpi:      glpiRepo,
+		matt:      matt,
+		glpiApi:   glpiApi,
+		webClient: webClient,
+		log:       log,
 	}
 }
