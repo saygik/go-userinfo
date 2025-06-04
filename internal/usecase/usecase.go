@@ -38,6 +38,7 @@ type Repository interface {
 	GetSchedule(int) (entity.Schedule, error)
 	GetScheduleUsers(int, int) ([]entity.IdName, error)
 	GetScheduleUserGroups(int, string) ([]entity.IdNameType, error)
+	GetScheduleUserAvailableGroups(string, string) ([]entity.IdName, error)
 
 	GetScheduleTasks(int) ([]entity.ScheduleTask, error)
 	GetScheduleTasksNotifications(string) ([]entity.ScheduleTask, error)
@@ -81,6 +82,7 @@ type GLPI interface {
 	GetSoftwaresAdmins() ([]entity.SoftwareAdmins, error)
 	GetUsers() ([]entity.GLPIUserShort, error)
 	GetGroupUsers(int) ([]entity.IdName, error)
+	GetUserGroupsListByName(string) string
 	GetTicket(string) (entity.GLPI_Ticket, error)
 	GetGLPITicketSolutionTemplates(string) ([]entity.GLPI_Ticket_Profile, error)
 	GetTicketUsers(string) (users []entity.GLPIUser, err error)

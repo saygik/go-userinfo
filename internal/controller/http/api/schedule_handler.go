@@ -8,6 +8,21 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
+func (h *Handler) GetAllSchedules(c *gin.Context) {
+	user := ""
+	userI, exists := c.Get("user")
+	if exists {
+		user = userI.(string)
+	}
+	_ = user
+	results, err := h.uc.GetAllSchedules(user)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить расписания пользователя", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": results})
+}
+
 func (h *Handler) GetSchedule(c *gin.Context) {
 	user := ""
 	userI, exists := c.Get("user")

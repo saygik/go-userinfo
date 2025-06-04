@@ -8,9 +8,7 @@ import (
 )
 
 func (u *UseCase) GetSchedule(id int, currentUser string) (entity.Schedule, error) {
-	// dat, err := time.Parse("02.01.2006", "01.12.2024")
 
-	// formDate := dat.Format(time.RFC3339)
 	// testtask := entity.ScheduleTask{
 	// 	Id:             0,
 	// 	Idc:            6,
@@ -24,7 +22,6 @@ func (u *UseCase) GetSchedule(id int, currentUser string) (entity.Schedule, erro
 	// 	SendMattermost: true,
 	// 	Comment:        "ttest",
 	// }
-	// _, err = u.AddScheduleTask(testtask)
 
 	schedule, err := u.repo.GetSchedule(id)
 	if err != nil {
