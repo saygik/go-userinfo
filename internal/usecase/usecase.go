@@ -38,7 +38,7 @@ type Repository interface {
 	GetSchedule(int) (entity.Schedule, error)
 	GetScheduleUsers(int, int) ([]entity.IdName, error)
 	GetScheduleUserGroups(int, string) ([]entity.IdNameType, error)
-	GetScheduleUserAvailableGroups(string, string) ([]entity.IdName, error)
+	GetScheduleUserAvailableGroups(string, string) ([]entity.IdNameType, error)
 
 	GetScheduleTasks(int) ([]entity.ScheduleTask, error)
 	GetScheduleTasksNotifications(string) ([]entity.ScheduleTask, error)

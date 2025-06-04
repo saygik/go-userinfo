@@ -79,7 +79,7 @@ type UseCase interface {
 	GetStatRegions(string, string) ([]entity.GLPIRegionsStats, error)                                            //
 	GetStatPeriodOrgTreemap(string, string) ([]entity.TreemapData, error)                                        //
 	GetSchedule(int, string) (entity.Schedule, error)                                                            // Один календарь
-	GetAllSchedules(string) ([]entity.IdName, error)                                                             // Все календарь
+	GetAllSchedules(string) ([]entity.IdNameType, error)                                                         // Все календарь
 	GetScheduleTasks(int) ([]entity.ScheduleTaskCalendar, error)                                                 //
 	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTaskCalendar, error)                                    //
 	DelScheduleTask(int) error                                                                                   //

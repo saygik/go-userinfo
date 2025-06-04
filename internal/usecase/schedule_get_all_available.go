@@ -4,7 +4,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (u *UseCase) GetAllSchedules(currentUser string) ([]entity.IdName, error) {
+func (u *UseCase) GetAllSchedules(currentUser string) ([]entity.IdNameType, error) {
 	glpiGroups := u.glpi.GetUserGroupsListByName(currentUser)
 
 	schedules, err := u.repo.GetScheduleUserAvailableGroups(currentUser, glpiGroups)
