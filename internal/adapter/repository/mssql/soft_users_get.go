@@ -11,3 +11,8 @@ func (r *Repository) GetSoftwareUsersEOL() (users []entity.SoftUser, err error) 
 	_, err = r.db.Select(&users, "GetSoftwareUsersEOL")
 	return users, err
 }
+
+func (r *Repository) GetSoftwaresUsers() (users []entity.SoftUser, err error) {
+	_, err = r.db.Select(&users, "GetSoftwaresAll")
+	return users, err
+}

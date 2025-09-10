@@ -27,6 +27,15 @@ func (h *Handler) GetSoftwares(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": user})
 
 }
+func (h *Handler) GetSoftwaresUsers(c *gin.Context) {
+	user, err := h.uc.GetSoftwaresUsers()
+	if err != nil {
+		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка предоставления списка систем", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": user})
+
+}
 func (h *Handler) AddSoftwareUser(c *gin.Context) {
 	userName := c.Param("username")
 

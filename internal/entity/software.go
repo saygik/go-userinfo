@@ -36,6 +36,7 @@ type SoftwareForm struct {
 type SoftUser struct {
 	Id          int64                  `db:"id" json:"id"`
 	IdSoft      int                    `db:"id_soft" json:"id_soft"`
+	SoftName    string                 `db:"soft_name" json:"soft_name,omitempty"`
 	Name        string                 `db:"user_name" json:"name"`
 	Login       string                 `db:"user_login" json:"login,omitempty"`
 	Comment     string                 `db:"user_comment" json:"comment,omitempty"`

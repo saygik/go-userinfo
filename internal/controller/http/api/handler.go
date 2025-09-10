@@ -46,6 +46,7 @@ type UseCase interface {
 	GetADGroupUsers(string, string) ([]map[string]interface{}, error)                                            //
 	GetUserSoftwares(string) ([]entity.Software, error)                                                          // Список систем пользователя
 	GetSoftwares() ([]entity.Software, error)                                                                    // Список всех систем
+	GetSoftwaresUsers() ([]entity.SoftUser, error)                                                               // Список всех систем пользователя
 	GetSoftware(string) (entity.Software, error)                                                                 // Одна система
 	GetSoftwareUsers(string) ([]map[string]interface{}, error)                                                   // Список пользователей одной системы
 	AddUserSoftware(entity.SoftwareForm) error                                                                   // Добавление системы пользователя

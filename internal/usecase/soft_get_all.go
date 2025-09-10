@@ -37,3 +37,27 @@ func (u *UseCase) GetSoftwares() ([]entity.Software, error) {
 	return softwares, nil
 
 }
+
+func (u *UseCase) GetSoftwaresUsers() ([]entity.SoftUser, error) {
+
+	softwares, err := u.glpi.GetAllSoftwares()
+	if err != nil {
+
+		return nil, u.Error("невозможно получить список систем из GLPI")
+	}
+
+	softwaresUsers, err := u.repo.GetSoftwaresUsers()
+	if err != nil {
+		return nil, u.Error("невозможно получить список систем пользователя")
+	}
+	for i, softUser := range softwaresUsers {
+		for _, soft := range softwares {
+			if soft.Id == int64(softUser.IdSoft) {
+				softwaresUsers[i].SoftName = soft.Name
+			}
+		}
+	}
+
+	return softwaresUsers, nil
+
+}

@@ -12,6 +12,7 @@ func (h *Handler) NewSoftwareRouterGroup() *gin.RouterGroup {
 	rg.POST("/user/:username", h.TokenAuthMiddleware(), h.AddSoftwareUser)
 	rg.DELETE("/user/:id", h.TokenAuthMiddleware(), h.DelSoftwareUser)
 	rg.GET("/all", h.TokenAuthMiddleware(), h.GetSoftwares)
+	rg.GET("/all/users", h.TokenAuthMiddleware(), h.GetSoftwaresUsers)
 
 	return rg
 }

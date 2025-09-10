@@ -32,6 +32,7 @@ type Repository interface {
 	SetOneUserSoftwareSendedToCalendar(int64) error
 	GetOrgCodes() ([]entity.OrgWithCodes, error)
 	GetSoftwareUsers(int) ([]entity.SoftUser, error)
+	GetSoftwaresUsers() ([]entity.SoftUser, error)
 	GetSoftwareUsersEOL() ([]entity.SoftUser, error)
 	SetUserAvatar(string, string) error
 	SetUserIp(entity.UserActivityForm) (string, error)
