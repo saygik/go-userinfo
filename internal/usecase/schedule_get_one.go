@@ -55,9 +55,9 @@ func (u *UseCase) GetSchedule(id int, currentUser string) (entity.Schedule, erro
 	scheduleUsers := []entity.ScheduleUser{}
 	su := entity.ScheduleUser{}
 	for _, user := range scheduleUsersIdName {
-		if user.Name == currentUser {
-			scheduleAvailable = true
-		}
+		// if user.Name == currentUser {
+		// 	scheduleAvailable = true
+		// }
 		adUser := u.GetUserADPropertysShort(user.Name)
 		su = entity.ScheduleUser{
 			Name: fmt.Sprintf("%s", adUser["name"]),
