@@ -2,6 +2,7 @@ package adClient
 
 import (
 	"crypto/tls"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math"
@@ -34,6 +35,8 @@ type ADClient struct {
 
 var arrayAttributes = map[string]bool{
 	"objectSid":            true,
+	"objectGUID":           true,
+	"userWorkstations":     true,
 	"memberOf":             true,
 	"url":                  true,
 	"proxyAddresses":       true,
@@ -163,6 +166,8 @@ func (lc *ADClient) GetAllUsers() ([]map[string]interface{}, error) {
 					user[attr.Name] = firstMembersOfCommaStrings(attr.Values)
 				} else if attr.Name == "objectSid" {
 					user[attr.Name] = convertSIDToString(attr.ByteValues[0])
+				} else if attr.Name == "objectGUID" {
+					user[attr.Name] = convertObjectGUIDToString(attr.ByteValues[0])
 				} else {
 					user[attr.Name] = attr.Values
 				}
@@ -173,6 +178,17 @@ func (lc *ADClient) GetAllUsers() ([]map[string]interface{}, error) {
 		users = append(users, user)
 	}
 	return users, nil
+}
+
+func convertObjectGUIDToString(b []byte) string {
+	if len(b) != 16 {
+		return ""
+	}
+	d1 := binary.LittleEndian.Uint32(b[0:4])
+	d2 := binary.LittleEndian.Uint16(b[4:6])
+	d3 := binary.LittleEndian.Uint16(b[6:8])
+	return fmt.Sprintf("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+		d1, d2, d3, b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15])
 }
 
 func convertSIDToString(sid []byte) string {
