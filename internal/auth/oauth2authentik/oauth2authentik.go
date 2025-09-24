@@ -2,7 +2,11 @@ package oauth2authentik
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
+	"strings"
+	"time"
 
 	"github.com/coreos/go-oidc"
 	"github.com/saygik/go-userinfo/internal/entity"
@@ -98,8 +102,19 @@ func (o OAuth2) Exchange(code string) (*entity.Token, *entity.UserInfo, error) {
 
 }
 
+type jwtStdClaims struct {
+	Exp int64 `json:"exp"`
+}
+
 func (o OAuth2) IntrospectOAuth2Token(querytoken string) (*entity.UserInfo, error) {
 	token := &oauth2.Token{AccessToken: querytoken}
+	parts := strings.Split(querytoken, ".")
+
+	payload, _ := base64.RawURLEncoding.DecodeString(parts[1])
+	var claims jwtStdClaims
+	json.Unmarshal(payload, &claims)
+	expiry := time.Unix(claims.Exp, 0)
+	_ = expiry
 	userInfo, err := o.oidcProvider.UserInfo(context.Background(), oauth2.StaticTokenSource(token))
 	_ = userInfo
 	if err != nil {
