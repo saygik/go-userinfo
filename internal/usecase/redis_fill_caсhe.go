@@ -24,10 +24,13 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 
 				user["domain"] = one
 				user["rms_port"] = rmsPort
-				uac := user["userAccountControl"].(string)
-				if uac == "514" || uac == "66050" {
-					user["disabled"] = true
+				if val, ok := user["userAccountControl"]; ok {
+					uac := val.(string)
+					if uac == "514" || uac == "66050" {
+						user["disabled"] = true
+					}
 				}
+
 				if val, ok := user["lockoutTime"]; ok {
 					if val.(string) != "0" {
 						lockoutTime, err := ADFiletimeToGoTime(val.(string))
