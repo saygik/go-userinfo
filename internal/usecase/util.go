@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"regexp"
 	"strings"
 	"time"
@@ -217,4 +218,25 @@ func isStringObjsEqual(obj1 interface{}, obj2 interface{}) bool {
 		return false
 	}
 	return strings.ToUpper(str1) == strings.ToUpper(str2)
+}
+
+func ADFiletimeToGoTime(adFiletime string) (time.Time, error) {
+	filetime := new(big.Int)
+	if _, ok := filetime.SetString(adFiletime, 10); !ok {
+		return time.Time{}, fmt.Errorf("invalid filetime string")
+	}
+
+	// Файлвремени - 100 наносекундные интервалы, переводим в миллисекунды
+	msSince1601 := new(big.Int).Div(filetime, big.NewInt(10000))
+
+	// Миллисекунды между 1601 и 1970 (эпоха unix)
+	const msBetween1601And1970 int64 = 11644473600000
+
+	// Вычисляем unix время в миллисекундах
+	unixMs := new(big.Int).Sub(msSince1601, big.NewInt(msBetween1601And1970))
+
+	unixMsInt64 := unixMs.Int64()
+
+	// Конвертируем unixMs в time.Time
+	return time.Unix(0, unixMsInt64*int64(time.Millisecond)), nil
 }

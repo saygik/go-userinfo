@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 )
 
 func (u *UseCase) FillRedisCaсheFromAD() error {
@@ -20,8 +21,29 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			ips, _ := u.repo.GetDomainUsersIP(one.Name)
 			avatars, _ := u.repo.GetDomainUsersAvatars(one.Name)
 			for _, user := range users {
+
 				user["domain"] = one
 				user["rms_port"] = rmsPort
+				uac := user["userAccountControl"].(string)
+				if uac == "514" || uac == "66050" {
+					user["disabled"] = true
+				}
+				if val, ok := user["lockoutTime"]; ok {
+					if val.(string) != "0" {
+						lockoutTime, err := ADFiletimeToGoTime(val.(string))
+						if err == nil {
+							user["locked"] = true
+							user["lockoutTime"] = lockoutTime
+
+						}
+					}
+				}
+
+				arch := user["distinguishedName"].(string)
+				arch = strings.ToUpper(arch)
+				if strings.Contains(arch, "=АРХИВ") {
+					user["archive"] = true
+				}
 				if IsStringInArray("Пользователи интернета", user["memberOf"]) {
 					user["internet"] = true
 				}
