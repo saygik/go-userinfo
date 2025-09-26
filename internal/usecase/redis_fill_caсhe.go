@@ -47,6 +47,9 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 				if strings.Contains(arch, "=АРХИВ") {
 					user["archive"] = true
 				}
+				if IsStringInArray("Отключенные Кадровичком", user["memberOf"]) {
+					user["sap_disabled"] = true
+				}
 				if IsStringInArray("Пользователи интернета", user["memberOf"]) {
 					user["internet"] = true
 				}
