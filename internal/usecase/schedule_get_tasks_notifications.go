@@ -6,7 +6,7 @@ import (
 )
 
 func (u *UseCase) GetScheduleTasksNotifications() error {
-	if u.IsAppInitialized() {
+	if !u.IsAppInitialized() {
 		return u.Error("система не инициализирована")
 	}
 	currentTime := time.Now().Add(time.Minute * 10)

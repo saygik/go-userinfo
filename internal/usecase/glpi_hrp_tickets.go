@@ -10,7 +10,7 @@ import (
 )
 
 func (u *UseCase) GetHRPTickets() {
-	if u.IsAppInitialized() {
+	if !u.IsAppInitialized() {
 		return
 	}
 	//	FOR TEST!!!!!!!!!!!!!!!!!!!!
