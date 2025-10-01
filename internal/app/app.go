@@ -55,7 +55,7 @@ func New() (*App, error) {
 	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, adConfigs, mattClient, glpiApiClient, hydraClient, oAuth2Client, oAuth2ClientAuthentik, app.cfg.ApiIntegrations.N8nWebhookIvc2Kaspersky, app.log)
 	app.c = c
 	app.c.GetUseCase().ClearRedisCaсhe()
-	app.c.GetUseCase().FillRedisCaсheFromAD()
+	go app.c.GetUseCase().FillRedisCaсheFromAD()
 	ticker := time.NewTicker(30 * time.Minute)
 
 	quit := make(chan struct{})
@@ -79,7 +79,7 @@ func New() (*App, error) {
 
 	//FOR TEST!!!!!!!!!!!!!!!!!!!!
 	//	app.c.GetUseCase().GetScheduleTasksNotifications()
-	//app.c.GetUseCase().GetHRPTickets()
+	app.c.GetUseCase().GetHRPTickets()
 	//app.c.GetUseCase().GetSoftwareUsersEOL()
 	if app.cfg.App.Env == "prod" {
 		go getHrpTickets(app, ticker2, quit2, &fillingRedis)

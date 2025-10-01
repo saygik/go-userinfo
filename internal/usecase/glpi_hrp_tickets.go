@@ -10,13 +10,15 @@ import (
 )
 
 func (u *UseCase) GetHRPTickets() {
-
+	if u.IsAppInitialized() {
+		return
+	}
 	//	FOR TEST!!!!!!!!!!!!!!!!!!!!
 	//	u.matt.SendPostHRP(entity.MattermostHrpPost{})
 	// tickets := []entity.GLPI_Ticket{}
 	// tickets = append(tickets, entity.GLPI_Ticket{Id: 206238, Content: "Сотрудник: Казаков Юрий Геннадьевич(35407148)"})
 	//* TEST ***************************************
-	tickets, err := u.glpi.GetHRPTickets()
+	tickets, err := u.glpi.GetHRPTicketsTest()
 	_ = tickets
 	if err != nil || len(tickets) < 1 {
 		return

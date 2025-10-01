@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/saygik/go-userinfo/internal/state"
 )
 
 func (u *UseCase) FillRedisCaсheFromAD() error {
@@ -13,9 +15,11 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 	//	u.redis.ClearAllDomainsUsers()
 	u.redis.Delete("allusers")
 	for _, one := range adl {
+		u.log.Info("Получение данных домена " + one.Name + "...")
 		users, err := u.ad.GetDomainUsers(one.Name)
 		comps, _ := u.ad.GetDomainComputers(one.Name)
 		rmsPort := u.ad.GetDomainRMSPort(one.Name)
+		u.log.Info("Получение данных домена " + one.Name + " завершено. Обработка данных...")
 		if err == nil || len(users) > 0 {
 			println("Get from ad to redis from " + one.Name)
 			ips, _ := u.repo.GetDomainUsersIP(one.Name)
@@ -96,6 +100,11 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 		}
 		u.redis.DelKeyField("adc", one.Name)
 		u.redis.AddKeyFieldValue("adc", one.Name, jsonComps)
+		u.log.Info("Получение данных домена " + one.Name + " завершено. Обработка данных завершена.")
+	}
+	u.log.Info("Получение данных всех доменов завершено.")
+	if !state.IsInitialized() {
+		state.SetInitialized()
 	}
 	return nil
 }

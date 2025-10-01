@@ -6,6 +6,9 @@ import (
 )
 
 func (u *UseCase) GetScheduleTasksNotifications() error {
+	if u.IsAppInitialized() {
+		return u.Error("система не инициализирована")
+	}
 	currentTime := time.Now().Add(time.Minute * 10)
 	tasks, err := u.repo.GetScheduleTasksNotifications(currentTime.Format(time.RFC3339))
 	if err != nil {

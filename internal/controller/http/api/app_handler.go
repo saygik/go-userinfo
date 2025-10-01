@@ -20,6 +20,10 @@ func getUserID(c *gin.Context) (userID string) {
 }
 
 func (h *Handler) CurrentUser(c *gin.Context) {
+	if !h.uc.IsAppInitialized() {
+		c.JSON(http.StatusAccepted, gin.H{"message": "Application not initialized"})
+		return
+	}
 	if userID := getUserID(c); userID != "" {
 		adUser, adErr := h.uc.GetCurrentUser(userID, userID)
 		if adErr != nil {

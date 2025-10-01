@@ -7,7 +7,9 @@ import (
 )
 
 func (u *UseCase) GetSoftwareUsersEOL() ([]map[string]interface{}, error) {
-
+	if u.IsAppInitialized() {
+		return nil, u.Error("система не инициализирована")
+	}
 	users, err := u.repo.GetSoftwareUsersEOL()
 	if err != nil {
 		return nil, u.Error("невозможно получить системы из GLPI")
