@@ -69,6 +69,9 @@ func (u *UseCase) GetHRPTickets() {
 			for _, value := range redisADUsers {
 				var user map[string]interface{}
 				json.Unmarshal([]byte(value), &user)
+				if user["disabled"] == true {
+					continue
+				}
 				if (fmt.Sprintf("%v", user["displayName"])) == sfio {
 					finded = true
 					domain := user["domain"].(map[string]interface{})
