@@ -25,7 +25,7 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			rmsPort := u.ad.GetDomainRMSPort(one.Name)
 			u.log.Info("Получение данных домена " + one.Name + " завершено. Обработка данных...")
 			if err == nil || len(users) > 0 {
-				println("Get from ad to redis from " + one.Name)
+				//				println("Get from ad to redis from " + one.Name)
 				ips, _ := u.repo.GetDomainUsersIP(one.Name)
 				avatars, _ := u.repo.GetDomainUsersAvatars(one.Name)
 				for _, user := range users {
