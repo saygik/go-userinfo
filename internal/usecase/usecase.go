@@ -58,6 +58,8 @@ type Redis interface {
 	GetKeyFieldValue(string, string) (string, error)
 	DelKeyField(string, string) error
 	Delete(string) error
+	Rename(oldKey, newKey string) error
+	Unlink(keys ...string) (int64, error)
 }
 type AD interface {
 	DomainList() []entity.DomainList

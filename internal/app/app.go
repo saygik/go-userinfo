@@ -56,7 +56,7 @@ func New() (*App, error) {
 	app.c = c
 	app.c.GetUseCase().ClearRedisCaсhe()
 	go app.c.GetUseCase().FillRedisCaсheFromAD()
-	ticker := time.NewTicker(30 * time.Minute)
+	ticker := time.NewTicker(10 * time.Minute)
 
 	quit := make(chan struct{})
 	fillingRedis := false
