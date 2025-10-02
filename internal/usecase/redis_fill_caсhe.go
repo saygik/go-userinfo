@@ -38,14 +38,16 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 							user["disabled"] = true
 						}
 					}
-
+					if val, ok := user["msDS-User-Account-Control-Computed"]; ok {
+						if val.(string) == "16" {
+							user["locked"] = true
+						}
+					}
 					if val, ok := user["lockoutTime"]; ok {
 						if val.(string) != "0" {
 							lockoutTime, err := ADFiletimeToGoTime(val.(string))
 							if err == nil {
-								user["locked"] = true
 								user["lockoutTime"] = lockoutTime
-
 							}
 						}
 					}
