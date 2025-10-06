@@ -32,6 +32,7 @@ func New(oAuth2Config oauth2.Config, oidcProvider *oidc.Provider, logoutUrl stri
 		logoutUrl:    logoutUrl,
 	}
 }
+
 func (o OAuth2) GetRedirectUrl() string {
 	return o.oAuth2Config.RedirectURL
 }
@@ -84,10 +85,10 @@ func (o OAuth2) Exchange(code string) (*entity.Token, *entity.UserInfo, error) {
 		return nil, nil, err
 	}
 
-	rawIDToken, ok := accessToken.Extra("id_token").(string)
-	if !ok {
-		return nil, nil, errors.New("невозможно определить id token")
-	}
+	// rawIDToken, ok := accessToken.Extra("id_token").(string)
+	// if !ok {
+	// 	return nil, nil, errors.New("невозможно определить id token")
+	// }
 
 	// 	idToken, err := o.oidcVerifier.Verify(context.Background(), rawIDToken)
 	// if err != nil {
@@ -95,7 +96,7 @@ func (o OAuth2) Exchange(code string) (*entity.Token, *entity.UserInfo, error) {
 	// }
 	token.AccessToken = accessToken.AccessToken
 	token.RefreshToken = accessToken.RefreshToken
-	token.IdToken = rawIDToken
+	//	token.IdToken = rawIDToken
 	token.Expiry = accessToken.Expiry
 
 	return &token, &user, nil
@@ -103,27 +104,58 @@ func (o OAuth2) Exchange(code string) (*entity.Token, *entity.UserInfo, error) {
 }
 
 type jwtStdClaims struct {
-	Exp int64 `json:"exp"`
+	Exp   int64  `json:"exp"`
+	Sub   string `json:"sub"`   // standard user id
+	Name  string `json:"name"`  // if your provider uses this
+	Email string `json:"email"` // standard user Email
+}
+
+func (o OAuth2) ExchangeRefreshToAccessToken(refreshToken string) (*entity.Token, error) {
+	ctx := context.Background()
+	ts := o.oAuth2Config.TokenSource(ctx, &oauth2.Token{RefreshToken: refreshToken})
+
+	tok, err := ts.Token()
+	if err != nil {
+		return nil, err
+	}
+
+	return &entity.Token{
+		AccessToken:  tok.AccessToken,
+		RefreshToken: tok.RefreshToken,
+	}, nil
+
 }
 
 func (o OAuth2) IntrospectOAuth2Token(querytoken string) (*entity.UserInfo, error) {
-	token := &oauth2.Token{AccessToken: querytoken}
+	//	token := &oauth2.Token{AccessToken: querytoken}
 	parts := strings.Split(querytoken, ".")
 
-	payload, _ := base64.RawURLEncoding.DecodeString(parts[1])
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, err
+	}
 	var claims jwtStdClaims
-	json.Unmarshal(payload, &claims)
+
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return nil, err
+	}
 	expiry := time.Unix(claims.Exp, 0)
-	_ = expiry
-	userInfo, err := o.oidcProvider.UserInfo(context.Background(), oauth2.StaticTokenSource(token))
-	_ = userInfo
-	if err != nil {
-		return nil, err
+	if time.Now().After(expiry) {
+		return nil, errors.New("token expired")
 	}
+
+	// userInfo, err := o.oidcProvider.UserInfo(context.Background(), oauth2.StaticTokenSource(token))
+	// _ = userInfo
+	// if err != nil {
+	// 	return nil, err
+	// }
 	user := entity.UserInfo{}
-	err = userInfo.Claims(&user)
-	if err != nil {
-		return nil, err
-	}
+	//err = userInfo.Claims(&user)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	user.Sub = claims.Sub
+	user.Name = claims.Name
+	user.Email = claims.Email
 	return &user, err
 }

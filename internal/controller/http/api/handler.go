@@ -114,17 +114,18 @@ type OAuth2 interface {
 	LogOutURL() string
 	Exchange(string) (*entity.Token, *entity.UserInfo, error)
 	IntrospectOAuth2Token(string) (*entity.UserInfo, error)
+	ExchangeRefreshToAccessToken(string) (*entity.Token, error)
 	GetRedirectUrl() string
 	Refresh(string) (entity.Token, error)
 }
 
-func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, hydra Hydra, oAuth2 OAuth2, oAuth2Authentik OAuth2) {
+func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, hydra Hydra, oAuth2Authentik OAuth2) {
 	h := &Handler{
-		rtr:             router,
-		uc:              uc,
-		log:             log,
-		hydra:           hydra,
-		oAuth2:          oAuth2,
+		rtr:   router,
+		uc:    uc,
+		log:   log,
+		hydra: hydra,
+
 		oAuth2Authentik: oAuth2Authentik,
 	}
 
@@ -148,7 +149,7 @@ func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, hydra Hydra,
 	h.rg = h.rtr.Group("/api")
 	h.NewOAuthRouterGroup()
 	h.NewOAuth2RouterGroup()
-	h.NewHydraIDPRouterGroup()
+
 	h.NewADRouterGroup()
 	h.NewAppRouterGroup()
 	h.NewGlpiRouterGroup()

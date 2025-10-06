@@ -72,27 +72,14 @@ func (h *Handler) TokenValid(c *gin.Context) {
 		return
 	}
 	user := ""
-	if strings.HasPrefix(token, "ory_") {
-		resp, err := h.hydra.IntrospectOAuth2Token(token)
-		if err != nil { //if any goes wrong
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
-			return
-		}
-		_ = resp
-		if !resp.Active {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "token is not active"})
-			return
-		}
-		user = *resp.Sub
-	} else {
 
-		userInfo, err := h.oAuth2Authentik.IntrospectOAuth2Token(token)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "token is not active"})
-			return
-		}
-		user = userInfo.Sub
+	userInfo, err := h.oAuth2Authentik.IntrospectOAuth2Token(token)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "token is not active"})
+		return
 	}
+	user = userInfo.Sub
+
 	c.Set("user", user)
 
 }
@@ -107,23 +94,13 @@ func (h *Handler) UserFromToken(c *gin.Context) {
 		return
 	}
 	user := ""
-	if strings.HasPrefix(token, "ory_") {
-		resp, err := h.hydra.IntrospectOAuth2Token(token)
-		if err != nil { //if any goes wrong
-			return
-		}
-		_ = resp
-		if !resp.Active {
-			return
-		}
-		user = *resp.Sub
-	} else {
-		userInfo, err := h.oAuth2Authentik.IntrospectOAuth2Token(token)
-		if err != nil {
-			return
-		}
-		user = userInfo.Sub
+
+	userInfo, err := h.oAuth2Authentik.IntrospectOAuth2Token(token)
+	if err != nil {
+		return
 	}
+	user = userInfo.Sub
+
 	//To be called from GetUserID()
 	c.Set("user", user)
 }
