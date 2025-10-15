@@ -65,6 +65,7 @@ type UseCase interface {
 	GetGLPITicketsNonClosed(string) ([]entity.GLPI_Ticket, error)                                                // Все нерешённые заявки GLPI
 	GetGLPIUsers() ([]entity.GLPIUserShort, error)                                                               // Все пользователи GLPI
 	GetGLPITicket(string, string) (entity.GLPI_Ticket, error)                                                    // Одна заявка GLPI
+	GetGLPITicketSimple(string) (entity.GLPI_Ticket, error)                                                      // Одна заявка GLPI
 	GetGLPITicketSolutionTemplates(string) ([]entity.GLPI_Ticket_Profile, error)                                 // Шаблоны решений заявки
 	GetGLPIProblem(string, string) (entity.GLPI_Problem, error)                                                  // Одна проблема GLPI
 	GetGLPIOtkazes(string, string) ([]entity.GLPI_Otkaz, error)                                                  // Отказы GLPI за период
@@ -151,6 +152,7 @@ func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, hydra Hydra,
 	h.NewOAuth2RouterGroup()
 
 	h.NewADRouterGroup()
+	h.NewImgRouterGroup()
 	h.NewAppRouterGroup()
 	h.NewGlpiRouterGroup()
 	h.NewSoftwareRouterGroup()

@@ -161,3 +161,16 @@ func (u *UseCase) GetGLPITicket(id string, user string) (entity.GLPI_Ticket, err
 	}
 	return entity.GLPI_Ticket{}, u.Error("у вас нет прав на эту заявку GLPI")
 }
+
+func (u *UseCase) GetGLPITicketSimple(id string) (entity.GLPI_Ticket, error) {
+	if id == "" {
+		return entity.GLPI_Ticket{}, u.Error("неверное ID заявки")
+	}
+
+	ticket, err := u.glpi.GetTicket(id)
+	if err != nil {
+		return entity.GLPI_Ticket{}, u.Error(fmt.Sprintf("ошибка MySQL: %s", err.Error()))
+	}
+
+	return ticket, nil
+}

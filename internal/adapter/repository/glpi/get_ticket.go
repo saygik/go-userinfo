@@ -38,6 +38,7 @@ func (r *Repository) GetTicket(id string) (ticket entity.GLPI_Ticket, err error)
 		gt.requesttypes_id,
 		IFNULL((SELECT CONCAT('[',GROUP_CONCAT(CONCAT('{"id":', glpi_tickets_users.users_id, ', "name":"',glpi_users.name,'"', ', "type":',glpi_tickets_users.type,'}') ),']')  FROM glpi_tickets_users INNER JOIN glpi_users ON glpi_users.id=glpi_tickets_users.users_id  WHERE glpi_tickets_users.tickets_id = gt.id  ),'[]') AS users_s,
 		IFNULL((SELECT CONCAT('[',GROUP_CONCAT(CONCAT('{"id":', glpi_groups_tickets.groups_id, ', "name":"',glpi_groups.name,'"', ', "type":',glpi_groups_tickets.type,'}') ),']')  FROM glpi_groups_tickets INNER JOIN glpi_groups ON glpi_groups.id=glpi_groups_tickets.groups_id  WHERE glpi_groups_tickets.tickets_id = gt.id  ),'[]') AS user_groups_s,
+      (SELECT IFNULL(completename,"")  FROM glpi_groups_tickets INNER JOIN glpi_groups ON glpi_groups.id=glpi_groups_tickets.groups_id  WHERE type=2 and glpi_groups_tickets.tickets_id = gt.id) AS 'group_name',
      	(SELECT count(id) FROM glpi_problems_tickets where glpi_problems_tickets.tickets_id=gt.id)   AS 'problemscount'
 		FROM (SELECT * FROM glpi_tickets WHERE glpi_tickets.id=%[1]s) gt
 		INNER JOIN glpi_entities ON gt.entities_id=glpi_entities.id
