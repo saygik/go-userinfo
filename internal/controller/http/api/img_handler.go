@@ -47,12 +47,15 @@ func (h *Handler) getImgTicketStatus(c *gin.Context) {
 		5: "completed",
 		6: "closed",
 	}
-
+	groupCaption := "Текущая группа"
 	ticketId := c.Param("id")
 	ticket, err := h.uc.GetGLPITicketSimple(ticketId)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"Message": "Заявка не найдена", "error": err.Error()})
 		return
+	}
+	if ticket.GroupName == "" {
+		groupCaption = "Не назначена ни одной группе"
 	}
 	statusText, ok := statusMap[ticket.Status]
 	if !ok {
@@ -83,7 +86,7 @@ func (h *Handler) getImgTicketStatus(c *gin.Context) {
       width: 100%;
       height: 100%;
       background: #fff;
-      border-radius: 8px;
+      border-radius: 4px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.15);
       padding: 12px 18px 5px 18px;
       box-sizing: border-box;
@@ -180,6 +183,11 @@ letter-spacing: 4px;
 .little-number  {
   font-size: 10px;
 }
+  .little-grey-text  {
+  font-size: 12px;
+   color: #777755;
+   padding-right:5px;
+}
   </style>
 </head>
 <body>
@@ -193,11 +201,11 @@ letter-spacing: 4px;
         ` + ticket.Name + `
       </div>
       <div class="group">
-        <div class="group-title">Текущая группа</div>
+        <div class="group-title">` + groupCaption + `</div>
         ` + ticket.GroupName + `
       </div>
     </div>
-    <div class="footer2">` + ticket.Company + `</div>
+    <div class="footer2"><span class="little-grey-text">Организация:</span>` + ticket.Company + `</div>
     <div class="footer">Создано в системе support.rw, <span class="little-number">` + formatted + `</span></div>
   </div>
 </body>
