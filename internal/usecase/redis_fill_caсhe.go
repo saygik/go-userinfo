@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/saygik/go-userinfo/internal/state"
 )
@@ -18,7 +19,11 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 	for _, one := range adl {
 		wg.Add(1)
 		go func() {
-			defer wg.Done()
+			start := time.Now()
+			defer func() {
+				observeGetADUsers(time.Since(start), one.Name)
+				wg.Done()
+			}()
 			u.log.Info("Получение данных домена " + one.Name + "...")
 			users, err := u.ad.GetDomainUsers(one.Name)
 			comps, _ := u.ad.GetDomainComputers(one.Name)

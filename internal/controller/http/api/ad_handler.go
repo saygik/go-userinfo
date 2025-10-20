@@ -2,12 +2,18 @@ package api
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
 func (h *Handler) Users(c *gin.Context) {
+	start := time.Now()
+	defer func() {
+		observeRequest(time.Since(start), c.Writer.Status())
+	}()
+
 	userID := ""
 	if userID = getUserID(c); userID == "" {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain users", "error": "Empty domain name"})
