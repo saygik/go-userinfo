@@ -69,14 +69,14 @@ func (u *UseCase) GetHRPTickets() {
 		u.webClient.AddWebhook(entity.WebhookPayload{Data: hrpUserforHook, WebhookId: strconv.Itoa(ticket.Id)})
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
 			for _, value := range redisADUsers {
-				var user map[string]interface{}
+				var user map[string]any
 				json.Unmarshal([]byte(value), &user)
 				if user["disabled"] == true {
 					continue
 				}
-				if (fmt.Sprintf("%v", user["displayName"])) == sfio {
+				if normalizeRussianString(fmt.Sprintf("%v", user["displayName"])) == normalizeRussianString(sfio) {
 					finded = true
-					domain := user["domain"].(map[string]interface{})
+					domain := user["domain"].(map[string]any)
 					domainAdminsGLPIId := u.ad.GetDomainAdminsGLPI(domain["name"].(string))
 					domainAdminsGLPIName, _, _, _ := u.glpi.GetGroupMattermostChannel(domainAdminsGLPIId)
 					u.sendHRPToCalendarAndMattermostChannel(hrpUser, "домен "+domain["name"].(string), ticket, sfio, dateToNotificate, domainAdminsGLPIId)
@@ -217,4 +217,23 @@ func (u *UseCase) sendHRPToCalendarAndMattermostChannel(
 			u.log.Error(fmt.Sprintf("Error sending post for  ticket %d to Mattermost channel %s to  glpi group %s. Error: %v", ticket.Id, channelId, adminsName, err))
 		}
 	}
+}
+
+// normalizeRussianString нормализует русские символы для корректного сравнения
+func normalizeRussianString(s string) string {
+	// Заменяем проблемные символы на их нормализованные варианты
+	replacements := map[string]string{
+		"ё": "е", "Ё": "Е",
+		"й": "и", "Й": "И",
+	}
+
+	result := s
+	for old, new := range replacements {
+		result = strings.ReplaceAll(result, old, new)
+	}
+
+	// Убираем лишние пробелы и приводим к нижнему регистру
+	result = strings.ToLower(strings.TrimSpace(result))
+
+	return result
 }

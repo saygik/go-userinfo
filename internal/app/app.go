@@ -79,7 +79,9 @@ func New() (*App, error) {
 
 	//FOR TEST!!!!!!!!!!!!!!!!!!!!
 	//	app.c.GetUseCase().GetScheduleTasksNotifications()
-	//app.c.GetUseCase().GetHRPTickets()
+	//	duration := 20 * time.Second
+	//	time.Sleep(duration)
+	//	app.c.GetUseCase().GetHRPTickets()
 	//app.c.GetUseCase().GetSoftwareUsersEOL()
 	if app.cfg.App.Env == "prod" {
 		go getHrpTickets(app, ticker2, quit2, &fillingRedis)
