@@ -65,12 +65,12 @@ type AD interface {
 	DomainList() []entity.DomainList
 	GetDomainAdminsGLPI(string) int
 	GetDomainRMSPort(string) int
-	GetDomainUsers(string) ([]map[string]interface{}, error)
-	GetDomainComputers(string) ([]map[string]interface{}, error)
+	GetDomainUsers(string) ([]map[string]any, error)
+	GetDomainComputers(string) ([]map[string]any, error)
 	IsDomainExist(string) bool
 	Authenticate(string, entity.LoginForm) (bool, map[string]string, error)
-	GetGroupUsers(string, string) ([]map[string]interface{}, error)
-	GetUser(string, string) (map[string]interface{}, error)
+	GetGroupUsers(string, string) ([]map[string]any, error)
+	GetUser(string, string) (map[string]any, error)
 }
 
 type GLPI interface {
