@@ -237,11 +237,13 @@ func ADFiletimeToGoTime(adFiletime string) (time.Time, error) {
 	return time.Unix(0, unixMsInt64*int64(time.Millisecond)), nil
 }
 
-// AnyOfFirstInSecond returns true if any element from 'first' exists in 'second'.
+// AnyOfFirstInSecond returns true if any element from 'first' exists in 'second' or if any element from 'second' starts with any element from 'first'.
 func AnyOfFirstInSecond(first, second []string) bool {
 	if len(first) == 0 || len(second) == 0 {
 		return false
 	}
+
+	// Check exact matches
 	lookup := make(map[string]struct{}, len(second))
 	for _, v := range second {
 		lookup[v] = struct{}{}
@@ -251,5 +253,15 @@ func AnyOfFirstInSecond(first, second []string) bool {
 			return true
 		}
 	}
+
+	// Check if any string from 'second' starts with any string from 'first'
+	for _, firstStr := range first {
+		for _, secondStr := range second {
+			if strings.HasPrefix(secondStr, firstStr) {
+				return true
+			}
+		}
+	}
+
 	return false
 }
