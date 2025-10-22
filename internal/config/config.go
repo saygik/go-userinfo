@@ -12,26 +12,32 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-// type DBConfig struct {
-// 	DBServer   string `json:"CLCK_DB_SERVER"`
-// 	DBName     string `json:"CLCK_DB_NAME"`
-// 	DBUser     string `json:"CLCK_DB_USER"`
-// 	DBPassword string `json:"CLCK_DB_PASS"`
-// }
+//	type DBConfig struct {
+//		DBServer   string `json:"CLCK_DB_SERVER"`
+//		DBName     string `json:"CLCK_DB_NAME"`
+//		DBUser     string `json:"CLCK_DB_USER"`
+//		DBPassword string `json:"CLCK_DB_PASS"`
+//	}
+type ADInternetGroups struct {
+	WhiteList string `json:"whitelist"`
+	Full      string `json:"full"`
+	Tech      string `json:"tech"`
+}
 
 type ADConfig struct {
-	Key            string        `json:"key"`
-	Name           string        `json:"name"`
-	Base           string        `json:"base"`
-	Dc             string        `json:"dc"`
-	GroupFilter    string        `json:"groupFilter"`
-	Filter         string        `json:"filter"`
-	ComputerFilter string        `json:"computerFilter"`
-	BindDN         string        `json:"bindDN"`
-	BindPassword   string        `json:"bindpassword"`
-	AdminGLPIGroup int           `json:"adminGLPIGroup"`
-	RmsPort        int           `json:"rmsPort"`
-	Time           time.Duration `json:"time"`
+	Key            string           `json:"key"`
+	Name           string           `json:"name"`
+	Base           string           `json:"base"`
+	Dc             string           `json:"dc"`
+	GroupFilter    string           `json:"groupFilter"`
+	Filter         string           `json:"filter"`
+	ComputerFilter string           `json:"computerFilter"`
+	BindDN         string           `json:"bindDN"`
+	BindPassword   string           `json:"bindpassword"`
+	AdminGLPIGroup int              `json:"adminGLPIGroup"`
+	RmsPort        int              `json:"rmsPort"`
+	InternetGroups ADInternetGroups `json:"internetGroups"`
+	Time           time.Duration    `json:"time"`
 }
 
 type AppConfig struct {

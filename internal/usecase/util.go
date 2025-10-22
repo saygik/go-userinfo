@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -34,16 +35,11 @@ func CurrentTimeFormattedRFC3339() (string, error) {
 	return formatted, nil
 }
 
-func IsStringInArray(str string, arr interface{}) bool {
+func IsStringInArray(str string, arr any) bool {
 	if arr == nil {
 		return false
 	}
-	for _, b := range arr.([]string) {
-		if b == str {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(arr.([]string), str)
 }
 
 func IsStringInArrayIdName(str string, arr []entity.IdName) bool {
@@ -239,4 +235,21 @@ func ADFiletimeToGoTime(adFiletime string) (time.Time, error) {
 
 	// Конвертируем unixMs в time.Time
 	return time.Unix(0, unixMsInt64*int64(time.Millisecond)), nil
+}
+
+// AnyOfFirstInSecond returns true if any element from 'first' exists in 'second'.
+func AnyOfFirstInSecond(first, second []string) bool {
+	if len(first) == 0 || len(second) == 0 {
+		return false
+	}
+	lookup := make(map[string]struct{}, len(second))
+	for _, v := range second {
+		lookup[v] = struct{}{}
+	}
+	for _, v := range first {
+		if _, ok := lookup[v]; ok {
+			return true
+		}
+	}
+	return false
 }

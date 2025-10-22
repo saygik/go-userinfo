@@ -8,3 +8,9 @@ type DomainList struct {
 type AvatarForm struct {
 	Avatar string `form:"avatar" json:"avatar"`
 }
+
+type ADInternetGroups struct {
+	WhiteList []string `json:"whitelist"`
+	Full      []string `json:"full"`
+	Tech      []string `json:"tech"`
+}

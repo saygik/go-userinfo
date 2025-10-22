@@ -25,6 +25,8 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 				wg.Done()
 			}()
 			u.log.Info("Получение данных домена " + one.Name + "...")
+			internetGroups := u.ad.GetDomainInternetGroups(one.Name)
+
 			users, err := u.ad.GetDomainUsers(one.Name)
 			comps, _ := u.ad.GetDomainComputers(one.Name)
 			rmsPort := u.ad.GetDomainRMSPort(one.Name)
@@ -62,15 +64,26 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 					if strings.Contains(arch, "=АРХИВ") {
 						user["archive"] = true
 					}
-					if IsStringInArray("Отключенные Кадровичком", user["memberOf"]) {
+					userGroups := []string{}
+					userGroups, ok := user["memberOf"].([]string)
+					if ok {
+						userGroups = user["memberOf"].([]string)
+
+					}
+					if IsStringInArray("Отключенные Кадровичком", userGroups) {
 						user["sap_disabled"] = true
 					}
-					if IsStringInArray("Пользователи интернета", user["memberOf"]) {
-						user["internet"] = true
-					}
-					if IsStringInArray("Пользователи интернета Белый список", user["memberOf"]) {
+
+					if AnyOfFirstInSecond(internetGroups.WhiteList, userGroups) {
 						user["internetwl"] = true
 					}
+					if AnyOfFirstInSecond(internetGroups.Full, userGroups) {
+						user["internet"] = true
+					}
+					if AnyOfFirstInSecond(internetGroups.Tech, userGroups) {
+						user["internettech"] = true
+					}
+
 					if len(ips) > 0 {
 						for _, ip := range ips {
 							if isStringObjsEqual(user["userPrincipalName"], ip.Login) {
