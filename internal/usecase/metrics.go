@@ -17,7 +17,7 @@ var getADUsersMetrics = promauto.NewSummaryVec(prometheus.SummaryOpts{
 var gaugeUsersPerDomain = promauto.NewGaugeVec(prometheus.GaugeOpts{
 	Name: "ad_users_per_domain",
 	Help: "Number of users per domain by types",
-}, []string{"domain", "type"})
+}, []string{"domain", "type", "subtype"})
 
 var countTicketsPerRegion = promauto.NewCounterVec(prometheus.CounterOpts{
 	Name: "glpi_hrp_tickets_per_region",
@@ -27,8 +27,8 @@ var countTicketsPerRegion = promauto.NewCounterVec(prometheus.CounterOpts{
 func observeGetADUsers(d time.Duration, domain string) {
 	getADUsersMetrics.WithLabelValues(domain).Observe(d.Seconds())
 }
-func observeUsersPerDomain(domain string, types string, users int) {
-	gaugeUsersPerDomain.WithLabelValues(domain, types).Set(float64(users))
+func observeUsersPerDomain(domain string, types string, subtype string, users int) {
+	gaugeUsersPerDomain.WithLabelValues(domain, types, subtype).Set(float64(users))
 }
 
 func observeCountTicketsPerRegion(region string) {
