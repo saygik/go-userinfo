@@ -19,6 +19,8 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 	for _, one := range adl {
 		wg.Add(1)
 		go func() {
+			enabledUsersCount, disabledUsersCount, lockedUsersCount := 0, 0, 0
+			fullInternetUsersCount, whiteListInternetUsersCount, techInternetUsersCount := 0, 0, 0
 			start := time.Now()
 			defer func() {
 				observeGetADUsers(time.Since(start), one.Name)
@@ -43,11 +45,15 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 						uac := val.(string)
 						if uac == "514" || uac == "66050" {
 							user["disabled"] = true
+							disabledUsersCount++
+						} else {
+							enabledUsersCount++
 						}
 					}
 					if val, ok := user["msDS-User-Account-Control-Computed"]; ok {
 						if val.(string) == "16" {
 							user["locked"] = true
+							lockedUsersCount++
 						}
 					}
 					if val, ok := user["lockoutTime"]; ok {
@@ -76,12 +82,15 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 
 					if AnyOfFirstInSecond(internetGroups.WhiteList, userGroups) {
 						user["internetwl"] = true
+						whiteListInternetUsersCount++
 					}
 					if AnyOfFirstInSecond(internetGroups.Full, userGroups) {
 						user["internet"] = true
+						fullInternetUsersCount++
 					}
 					if AnyOfFirstInSecond(internetGroups.Tech, userGroups) {
 						user["internettech"] = true
+						techInternetUsersCount++
 					}
 
 					if len(ips) > 0 {
@@ -115,6 +124,13 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			sort.Slice(users, func(i, j int) bool {
 				return fmt.Sprintf("%v", users[i]["cn"]) < fmt.Sprintf("%v", users[j]["cn"])
 			})
+			observeUsersPerDomain(one.Name, "all", len(users))
+			observeUsersPerDomain(one.Name, "enabled", enabledUsersCount)
+			observeUsersPerDomain(one.Name, "disabled", disabledUsersCount)
+			observeUsersPerDomain(one.Name, "locked", lockedUsersCount)
+			observeUsersPerDomain(one.Name, "full_internet", fullInternetUsersCount)
+			observeUsersPerDomain(one.Name, "white_list_internet", whiteListInternetUsersCount)
+			observeUsersPerDomain(one.Name, "tech_internet", techInternetUsersCount)
 			jsonUsers, _ := json.Marshal(users)
 			jsonComps, _ := json.Marshal(comps)
 			u.redis.DelKeyField("ad", one.Name)

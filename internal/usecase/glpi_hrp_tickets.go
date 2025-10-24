@@ -20,6 +20,7 @@ func (u *UseCase) GetHRPTickets() {
 	//* TEST ***************************************
 	tickets, err := u.glpi.GetHRPTickets()
 	_ = tickets
+
 	if err != nil || len(tickets) < 1 {
 		return
 	}
@@ -32,6 +33,15 @@ func (u *UseCase) GetHRPTickets() {
 	val := ""
 	ok := false
 	for _, ticket := range tickets {
+		parts := strings.Split(ticket.Company, ">")
+		if len(parts) > 2 {
+			parts = parts[:2]
+		}
+		for i := range parts {
+			parts[i] = strings.TrimSpace(parts[i])
+		}
+		region := strings.Join(parts, " > ")
+		observeCountTicketsPerRegion(region)
 
 		finded := false
 		_, channelId, _, _ := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
