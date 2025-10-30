@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/saygik/go-userinfo/internal/entity"
 	"github.com/saygik/go-userinfo/internal/state"
 )
 
@@ -18,12 +19,15 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 	var wg sync.WaitGroup
 	for _, one := range adl {
 		wg.Add(1)
-		go func() {
+		go func(one entity.DomainList) {
 			enabledUsersCount, disabledUsersCount, lockedUsersCount := 0, 0, 0
 			fullInternetUsersCount, whiteListInternetUsersCount, techInternetUsersCount := 0, 0, 0
 			start := time.Now()
 			defer func() {
 				observeGetADUsers(time.Since(start), one.Name)
+				if r := recover(); r != nil {
+					u.log.Error(fmt.Sprintf(" Паника в горутине FillRedisCaсheFromAD для домена %s: %v", one.Name, r))
+				}
 				wg.Done()
 			}()
 			u.log.Info("Получение данных домена " + one.Name + "...")
@@ -141,7 +145,7 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			u.redis.DelKeyField("adc", one.Name)
 			u.redis.AddKeyFieldValue("adc", one.Name, jsonComps)
 			u.log.Info("Получение данных домена " + one.Name + " завершено. Обработка данных завершена.")
-		}()
+		}(one)
 	}
 	wg.Wait()
 	u.redis.Rename("allusers", "prev")
