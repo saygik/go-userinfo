@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"time"
 
 	"github.com/saygik/go-userinfo/internal/config"
@@ -13,7 +14,7 @@ type App struct {
 	log *logrus.Logger
 }
 
-func New() (*App, error) {
+func New(ctx context.Context) (*App, error) {
 	app := &App{}
 	cfg, err := config.NewConfig("config.json")
 	if err != nil {
@@ -55,27 +56,6 @@ func New() (*App, error) {
 	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, adConfigs, mattClient, glpiApiClient, hydraClient, oAuth2Client, oAuth2ClientAuthentik, app.cfg.ApiIntegrations.N8nWebhookIvc2Kaspersky, app.log)
 	app.c = c
 	app.c.GetUseCase().ClearRedisCaсhe()
-	go app.c.GetUseCase().FillRedisCaсheFromAD()
-	ticker := time.NewTicker(10 * time.Minute)
-
-	quit := make(chan struct{})
-	fillingRedis := false
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				// do stuff
-				fillingRedis = true
-				app.c.GetUseCase().FillRedisCaсheFromAD()
-				fillingRedis = false
-			case <-quit:
-				ticker.Stop()
-				return
-			}
-		}
-	}()
-	ticker2 := time.NewTicker(1 * time.Minute)
-	quit2 := make(chan struct{})
 
 	//FOR TEST!!!!!!!!!!!!!!!!!!!!
 	//	app.c.GetUseCase().GetScheduleTasksNotifications()
@@ -83,64 +63,70 @@ func New() (*App, error) {
 	//	time.Sleep(duration)
 	//	app.c.GetUseCase().GetHRPTickets()
 	//app.c.GetUseCase().GetSoftwareUsersEOL()
+	go app.c.GetUseCase().FillRedisCaсheFromAD()
+	go app.fillRedis(ctx)
 	if app.cfg.App.Env == "prod" {
-		go getHrpTickets(app, ticker2, quit2, &fillingRedis)
+		go app.getHrpTickets(ctx)
 	}
-
-	ticker3 := time.NewTicker(1 * time.Minute)
-	quit3 := make(chan struct{})
-	go getCalendarTaskNotifikations(app, ticker3, quit3)
-
-	//	ticker4 := time.NewTicker(24 * time.Hour)
-	softwarebottime := app.cfg.App.Softwarebottime
-	if softwarebottime == 0 {
-		softwarebottime = 10
-	}
-	ticker4 := time.NewTicker(time.Duration(softwarebottime) * time.Minute)
-	quit4 := make(chan struct{})
-	go getSoftwareUsersEOL(app, ticker4, quit4)
+	go app.getCalendarTaskNotifikations(ctx)
+	go app.getSoftwareUsersEOL(ctx)
 
 	return app, nil
 }
 
-func getHrpTickets(app *App, ticker2 *time.Ticker, quit2 chan struct{}, fillingRedis *bool) {
+func (a *App) fillRedis(ctx context.Context) {
+	ticker := time.NewTicker(10 * time.Minute)
+	defer ticker.Stop()
 	for {
 		select {
-		case <-ticker2.C:
-			// do stuff
-			if !*fillingRedis {
-				app.c.GetUseCase().GetHRPTickets()
-			}
-		case <-quit2:
-			ticker2.Stop()
+		case <-ctx.Done():
 			return
+		case <-ticker.C:
+			a.c.GetUseCase().FillRedisCaсheFromAD()
 		}
 	}
 }
 
-func getCalendarTaskNotifikations(app *App, ticker3 *time.Ticker, quit3 chan struct{}) {
+func (a *App) getHrpTickets(ctx context.Context) {
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
 	for {
 		select {
-		case <-ticker3.C:
-			// do stuff
-			app.c.GetUseCase().GetScheduleTasksNotifications()
-		case <-quit3:
-			ticker3.Stop()
+		case <-ctx.Done():
 			return
+		case <-ticker.C:
+			a.c.GetUseCase().GetHRPTickets()
+		}
+	}
+}
+
+func (a *App) getCalendarTaskNotifikations(ctx context.Context) {
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			a.c.GetUseCase().GetScheduleTasksNotifications()
 		}
 	}
 }
 
 // ** Проверка срока окончания действия учетных записей в системах, оповещение пользователя по emnail, создание задачи календаря администраторам системы на отключение
-func getSoftwareUsersEOL(app *App, ticker4 *time.Ticker, quit4 chan struct{}) {
+func (a *App) getSoftwareUsersEOL(ctx context.Context) {
+	softwarebottime := a.cfg.App.Softwarebottime
+	if softwarebottime == 0 {
+		softwarebottime = 10
+	}
+	ticker := time.NewTicker(time.Duration(softwarebottime) * time.Minute)
 	for {
 		select {
-		case <-ticker4.C:
-			// do stuff
-			app.c.GetUseCase().GetSoftwareUsersEOL()
-		case <-quit4:
-			ticker4.Stop()
+		case <-ctx.Done():
 			return
+		case <-ticker.C:
+			// do stuff
+			a.c.GetUseCase().GetSoftwareUsersEOL()
 		}
 	}
 }

@@ -13,6 +13,18 @@ import (
 )
 
 func (u *UseCase) FillRedisCaсheFromAD() error {
+	if state.IsFillingRedis() {
+		u.log.Error("кеш не обновлён, попытка заполнения кеша пользователей при невыполненной предыдущей задаче...")
+		return u.Error("кеш не обновлён")
+	}
+	defer func() {
+		if !state.IsInitialized() {
+			state.SetInitialized()
+		}
+		state.SetFillingRedis(false)
+	}()
+
+	state.SetFillingRedis(true)
 	adl := u.ad.DomainList()
 	//	u.redis.ClearAllDomainsUsers()
 	u.redis.Delete("allusers:stagging")
@@ -152,8 +164,6 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 	u.redis.Rename("allusers:stagging", "allusers")
 	u.redis.Unlink("prev")
 	u.log.Info("Получение данных всех доменов завершено.")
-	if !state.IsInitialized() {
-		state.SetInitialized()
-	}
+
 	return nil
 }
