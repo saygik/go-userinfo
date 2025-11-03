@@ -14,8 +14,6 @@ type Handler struct {
 	rg              *gin.RouterGroup
 	uc              UseCase
 	log             *logrus.Logger
-	hydra           Hydra
-	oAuth2          OAuth2
 	oAuth2Authentik OAuth2
 }
 
@@ -95,21 +93,6 @@ type UseCase interface {
 	UserInGropScopes(string, []string, []entity.IDPScope, *entity.OAuth2Client) ([]string, bool, error)          // У пользователя есть права на требуемый scope
 }
 
-type Hydra interface {
-	CheckHydra() bool
-	GetOAuth2LoginRequest(string) (*entity.OAuth2LoginRequest, error)
-	AcceptOAuth2LoginRequest(string, string) (string, error)
-	GetOAuth2ConsentRequest(string) (*entity.OAuth2ConsentRequest, error)
-	AcceptNewOAuth2LoginRequest(string, string, bool) (string, error)
-	AcceptOAuth2ConsentRequest(*entity.OAuth2ConsentRequest, map[string]interface{}) (string, error)
-	IntrospectOAuth2Token(string) (*entity.IntrospectedOAuth2Token, error)
-	AcceptOAuth2LogoutRequest(string) (string, error)
-	GetOAuth2Client(string) (*entity.OAuth2Client, error)
-	LogoutURL() string
-
-	GetScopes() []entity.IDPScope
-}
-
 type OAuth2 interface {
 	AuthCodeURL(string) string
 	LogOutURL() string
@@ -120,12 +103,11 @@ type OAuth2 interface {
 	Refresh(string) (entity.Token, error)
 }
 
-func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, hydra Hydra, oAuth2Authentik OAuth2) {
+func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, oAuth2Authentik OAuth2) {
 	h := &Handler{
-		rtr:   router,
-		uc:    uc,
-		log:   log,
-		hydra: hydra,
+		rtr: router,
+		uc:  uc,
+		log: log,
 
 		oAuth2Authentik: oAuth2Authentik,
 	}
@@ -148,7 +130,6 @@ func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, hydra Hydra,
 		})
 	})
 	h.rg = h.rtr.Group("/api")
-	h.NewOAuthRouterGroup()
 	h.NewOAuth2RouterGroup()
 
 	h.NewADRouterGroup()

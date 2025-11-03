@@ -13,8 +13,6 @@ import (
 	"github.com/saygik/go-userinfo/internal/adapter/web/glpiapi"
 	"github.com/saygik/go-userinfo/internal/adapter/web/mattermost"
 	"github.com/saygik/go-userinfo/internal/adapter/web/webclient"
-	"github.com/saygik/go-userinfo/internal/auth/hydra"
-	"github.com/saygik/go-userinfo/internal/auth/oauth2"
 	"github.com/saygik/go-userinfo/internal/auth/oauth2authentik"
 	"github.com/saygik/go-userinfo/internal/config"
 	"github.com/saygik/go-userinfo/internal/usecase"
@@ -31,8 +29,6 @@ type Container struct {
 	adconfigs       map[string]*config.ADConfig
 	matt            *MattClient
 	glpiApi         *GLPIApiClient
-	hydra           *IDPClient
-	oAuth2          *OAuth2Client
 	oAuth2Authentik *OAuth2Client
 	webClientUrl    string
 	log             *logrus.Logger
@@ -49,8 +45,6 @@ func NewAppContainer(
 	adconfigs map[string]*config.ADConfig,
 	matt *MattClient,
 	glpiApi *GLPIApiClient,
-	hydra *IDPClient,
-	oAuth2 *OAuth2Client,
 	oAuth2Authentik *OAuth2Client,
 	webClientUrl string,
 	log *logrus.Logger,
@@ -64,8 +58,6 @@ func NewAppContainer(
 		adconfigs:       adconfigs,
 		matt:            matt,
 		glpiApi:         glpiApi,
-		hydra:           hydra,
-		oAuth2:          oAuth2,
 		oAuth2Authentik: oAuth2Authentik,
 		webClientUrl:    webClientUrl,
 		log:             log,
@@ -120,13 +112,6 @@ func (c *Container) getMattermostRepository() *mattermost.Repository {
 }
 func (c *Container) getGlpiApiRepository() *glpiapi.Repository {
 	return glpiapi.New(c.glpiApi.url, c.glpiApi.token, c.glpiApi.usertoken)
-}
-
-func (c *Container) GetHydra() *hydra.Hydra {
-	return hydra.New(c.hydra.client, c.hydra.scopes)
-}
-func (c *Container) GetOAuth2() *oauth2.OAuth2 {
-	return oauth2.New(c.oAuth2.oAuth2Config, c.oAuth2.oidcProvider)
 }
 
 func (c *Container) GetOAuth2Authentik() *oauth2authentik.OAuth2 {

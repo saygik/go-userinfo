@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
 	"github.com/ory/viper"
-	"github.com/saygik/go-userinfo/internal/entity"
 )
 
 //	type DBConfig struct {
@@ -80,15 +79,6 @@ type VaultConfig struct {
 	SecretPath string `json:"secretpath" binding:"required"`
 }
 
-type HydraConfig struct {
-	Url          string            `json:"url" binding:"required"`
-	ClientId     string            `json:"client-id" binding:"required"`
-	ClientSecret string            `json:"client-secret" binding:"required"`
-	RedirectUrl  string            `json:"redirect-url" binding:"required"`
-	IDPScopes    []entity.IDPScope `json:"idpscopes"`
-	Scopes       []string
-	LogOutUrl    string `json:"log-out-url" binding:"required"`
-}
 type AuthentikConfig struct {
 	Url          string `json:"url" binding:"required"`
 	ClientId     string `json:"client-id" binding:"required"`
@@ -100,7 +90,6 @@ type AuthentikConfig struct {
 type Config struct {
 	App             AppConfig
 	Vault           VaultConfig
-	Hydra           HydraConfig
 	AD              []ADConfig
 	Repository      Repository
 	ApiIntegrations Integrations
@@ -190,26 +179,6 @@ func vaultConfig(conf Config) (*Config, error) {
 		return cfg, fmt.Errorf("ошибка Vault: %v", err)
 	}
 	cfg.Repository = repo
-	//* hydra
-	secret, err = cl.Read(context.Background(), fmt.Sprintf("%shydra", conf.Vault.SecretPath))
-	if err != nil {
-		return cfg, fmt.Errorf("ошибка Hydra client, секрет по пути %s недоступен: %v", fmt.Sprintf("%sjwt", conf.Vault.SecretPath), err)
-	}
-	value, ok = secret.Data["data"]
-	if !ok {
-		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
-	}
-
-	data, err = json.Marshal(value)
-	if err != nil {
-		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
-	}
-	hydra := HydraConfig{}
-	err = json.Unmarshal(data, &hydra)
-	if err != nil {
-		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
-	}
-	cfg.Hydra = hydra
 
 	//* authentik
 	secret, err = cl.Read(context.Background(), fmt.Sprintf("%sauthentik", conf.Vault.SecretPath))

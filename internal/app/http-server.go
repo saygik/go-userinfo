@@ -19,7 +19,7 @@ func (a *App) StartHTTPServer() error {
 	// 	}
 	// }()
 
-	api.NewHandler(s.Rtr, a.c.useCase, a.log, a.c.GetHydra(), a.c.GetOAuth2Authentik())
+	api.NewHandler(s.Rtr, a.c.useCase, a.log, a.c.GetOAuth2Authentik())
 
 	go func() {
 		err := metrics.Listen(":9100")

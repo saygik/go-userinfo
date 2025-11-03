@@ -35,14 +35,7 @@ func New(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	hydraClient, err := app.newHydraClient(cfg.Hydra.Url, cfg.Hydra.IDPScopes)
-	if err != nil {
-		return nil, err
-	}
-	oAuth2Client, err := app.newOAuth2Client(cfg.Hydra.Url, cfg.Hydra.ClientId, cfg.Hydra.ClientSecret, cfg.Hydra.RedirectUrl, cfg.Hydra.Scopes, cfg.Hydra.LogOutUrl)
-	if err != nil {
-		return nil, err
-	}
+
 	oAuth2ClientAuthentik, err := app.newOAuth2Client(cfg.Authentik.Url, cfg.Authentik.ClientId, cfg.Authentik.ClientSecret, cfg.Authentik.RedirectUrl, cfg.Authentik.Scopes, cfg.Authentik.LogOutUrl)
 	if err != nil {
 		return nil, err
@@ -53,7 +46,7 @@ func New(ctx context.Context) (*App, error) {
 	mattClient := app.newMattermostConnection(cfg.Repository.Mattermost.Server, cfg.Repository.Mattermost.Token, cfg.ApiIntegrations.AddCommentFromApi, cfg.ApiIntegrations.DisableCalendarTaskNotificationApi, cfg.ApiIntegrations.AllowedHosts)
 	glpiApiClient := app.newGLPIApiConnection(cfg.Repository.GlpiApi.Server, cfg.Repository.GlpiApi.Token, cfg.Repository.GlpiApi.UserToken)
 
-	c := NewAppContainer(ctx, msSQLConnect, glpiConnect, redisConnect, adClients, adConfigs, mattClient, glpiApiClient, hydraClient, oAuth2Client, oAuth2ClientAuthentik, app.cfg.ApiIntegrations.N8nWebhookIvc2Kaspersky, app.log)
+	c := NewAppContainer(ctx, msSQLConnect, glpiConnect, redisConnect, adClients, adConfigs, mattClient, glpiApiClient, oAuth2ClientAuthentik, app.cfg.ApiIntegrations.N8nWebhookIvc2Kaspersky, app.log)
 	app.c = c
 	app.c.useCase.ClearRedisCaсhe()
 
