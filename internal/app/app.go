@@ -53,17 +53,17 @@ func New(ctx context.Context) (*App, error) {
 	mattClient := app.newMattermostConnection(cfg.Repository.Mattermost.Server, cfg.Repository.Mattermost.Token, cfg.ApiIntegrations.AddCommentFromApi, cfg.ApiIntegrations.DisableCalendarTaskNotificationApi, cfg.ApiIntegrations.AllowedHosts)
 	glpiApiClient := app.newGLPIApiConnection(cfg.Repository.GlpiApi.Server, cfg.Repository.GlpiApi.Token, cfg.Repository.GlpiApi.UserToken)
 
-	c := NewAppContainer(msSQLConnect, glpiConnect, redisConnect, adClients, adConfigs, mattClient, glpiApiClient, hydraClient, oAuth2Client, oAuth2ClientAuthentik, app.cfg.ApiIntegrations.N8nWebhookIvc2Kaspersky, app.log)
+	c := NewAppContainer(ctx, msSQLConnect, glpiConnect, redisConnect, adClients, adConfigs, mattClient, glpiApiClient, hydraClient, oAuth2Client, oAuth2ClientAuthentik, app.cfg.ApiIntegrations.N8nWebhookIvc2Kaspersky, app.log)
 	app.c = c
-	app.c.GetUseCase().ClearRedisCaсhe()
+	app.c.useCase.ClearRedisCaсhe()
 
 	//FOR TEST!!!!!!!!!!!!!!!!!!!!
-	//	app.c.GetUseCase().GetScheduleTasksNotifications()
+	//	app.c.useCase.GetScheduleTasksNotifications()
 	//	duration := 20 * time.Second
 	//	time.Sleep(duration)
-	//	app.c.GetUseCase().GetHRPTickets()
-	//app.c.GetUseCase().GetSoftwareUsersEOL()
-	go app.c.GetUseCase().FillRedisCaсheFromAD()
+	//	app.c.useCase.GetHRPTickets()
+	//app.c.useCase.GetSoftwareUsersEOL()
+	go app.c.useCase.FillRedisCaсheFromAD()
 	go app.fillRedis(ctx)
 	if app.cfg.App.Env == "prod" {
 		go app.getHrpTickets(ctx)
@@ -82,7 +82,7 @@ func (a *App) fillRedis(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			a.c.GetUseCase().FillRedisCaсheFromAD()
+			a.c.useCase.FillRedisCaсheFromAD()
 		}
 	}
 }
@@ -95,7 +95,7 @@ func (a *App) getHrpTickets(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			a.c.GetUseCase().GetHRPTickets()
+			a.c.useCase.GetHRPTickets()
 		}
 	}
 }
@@ -108,7 +108,7 @@ func (a *App) getCalendarTaskNotifikations(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			a.c.GetUseCase().GetScheduleTasksNotifications()
+			a.c.useCase.GetScheduleTasksNotifications()
 		}
 	}
 }
@@ -126,7 +126,7 @@ func (a *App) getSoftwareUsersEOL(ctx context.Context) {
 			return
 		case <-ticker.C:
 			// do stuff
-			a.c.GetUseCase().GetSoftwareUsersEOL()
+			a.c.useCase.GetSoftwareUsersEOL()
 		}
 	}
 }

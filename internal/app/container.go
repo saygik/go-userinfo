@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+
 	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/go-gorp/gorp"
 	"github.com/redis/go-redis/v9"
@@ -21,6 +23,7 @@ import (
 )
 
 type Container struct {
+	ctx             context.Context
 	mssql           *gorp.DbMap
 	glpi            *gorp.DbMap
 	rc              *redis.Client
@@ -33,9 +36,12 @@ type Container struct {
 	oAuth2Authentik *OAuth2Client
 	webClientUrl    string
 	log             *logrus.Logger
+	// cached singletons
+	useCase *usecase.UseCase
 }
 
 func NewAppContainer(
+	ctx context.Context,
 	mssqlConnect *gorp.DbMap,
 	glpiConnect *gorp.DbMap,
 	r *redis.Client,
@@ -50,6 +56,7 @@ func NewAppContainer(
 	log *logrus.Logger,
 ) *Container {
 	c := &Container{
+		ctx:             ctx,
 		mssql:           mssqlConnect,
 		glpi:            glpiConnect,
 		rc:              r,
@@ -63,14 +70,38 @@ func NewAppContainer(
 		webClientUrl:    webClientUrl,
 		log:             log,
 	}
+	uc := usecase.New(
+		c.getMssqlRepository(),
+		c.getRedisRepository(),
+		c.getADRepository(),
+		c.getGlpiRepository(),
+		c.getMattermostRepository(),
+		c.getGlpiApiRepository(),
+		c.getWebClientRepository(),
+		c.log,
+	)
+	c.useCase = uc
 	return c
 }
-func (c *Container) GetUseCase() *usecase.UseCase {
-	return usecase.New(c.getMssqlRepository(), c.getRedisRepository(), c.getADRepository(), c.getGlpiRepository(), c.getMattermostRepository(), c.getGlpiApiRepository(), c.getWebClientRepository(), c.log)
-}
+
+// func (c *Container) GetUseCase() *usecase.UseCase {
+// 	if c.useCase == nil {
+// 		c.useCase = usecase.New(
+// 			c.getMssqlRepository(),
+// 			c.getRedisRepository(),
+// 			c.getADRepository(),
+// 			c.getGlpiRepository(),
+// 			c.getMattermostRepository(),
+// 			c.getGlpiApiRepository(),
+// 			c.getWebClientRepository(),
+// 			c.log,
+// 		)
+// 	}
+// 	return c.useCase
+// }
 
 func (c *Container) getWebClientRepository() *webclient.Repository {
-	return webclient.New(c.webClientUrl, c.log)
+	return webclient.New(c.ctx, c.webClientUrl, c.log)
 }
 
 func (c *Container) getMssqlRepository() *mssql.Repository {
