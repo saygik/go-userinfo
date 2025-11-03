@@ -76,8 +76,9 @@ func (u *UseCase) GetHRPTickets() {
 		hrpUserforHook := entity.HRPUser{Id: ticket.Id, FIO: sfio, Dolg: sDolg, Mero: sMero, Company: sCompany, Date: sDate}
 		upn := ""
 		u.log.Info("Processing HRP user " + sfio + "...")
-		u.webClient.AddWebhook(entity.WebhookPayload{Data: hrpUserforHook, WebhookId: strconv.Itoa(ticket.Id)})
+
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
+			u.webClient.AddWebhook(entity.WebhookPayload{Data: hrpUserforHook, WebhookId: strconv.Itoa(ticket.Id)})
 			for _, value := range redisADUsers {
 				var user map[string]any
 				json.Unmarshal([]byte(value), &user)
