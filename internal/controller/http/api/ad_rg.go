@@ -7,7 +7,7 @@ func (h *Handler) NewADRouterGroup() *gin.RouterGroup {
 	rg.GET("/users", h.TokenAuthMiddleware(), h.Users)
 	rg.GET("/public/users", h.TokenAuthMiddleware(), h.PUsers)
 	rg.GET("/user/:username", h.TokenAuthMiddleware(), h.User)
-	rg.GET("/user-data/:username", h.UserSimple)
+	rg.GET("/finduser/:username", h.UserSimple)
 	rg.GET("/computers", h.TokenAuthMiddleware(), h.Computers)
 	rg.GET("/stats/counts", h.TokenAuthMiddleware(), h.GetAdCounts)
 
