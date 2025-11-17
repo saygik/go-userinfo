@@ -95,6 +95,25 @@ func (h *Handler) User(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "User finded", "data": adUser})
 }
+func (h *Handler) UserSimple(c *gin.Context) {
+	user := c.Param("username")
+	if user == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get user info from request", "error": ""})
+		return
+	}
+	if !isEmailValid(user) {
+		c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": "Invalid username. The name must include the domain in the format: user@domain", "error": ""})
+		return
+	}
+
+	adUser, err := h.uc.GetUserADPropertysSimple(user)
+	if err != nil {
+		c.JSON(http.StatusNoContent, gin.H{"message": "Invalid user", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, adUser)
+}
 
 func (h *Handler) GetUserADActivity(c *gin.Context) {
 	userName := c.Param("username")

@@ -1,5 +1,7 @@
 package usecase
 
+import "github.com/saygik/go-userinfo/internal/entity"
+
 func (u *UseCase) GetUserADPropertysShort(username string) map[string]interface{} {
 
 	user, err := u.GetUserShort(username)
@@ -25,4 +27,47 @@ func (u *UseCase) GetUserADPropertysShort(username string) map[string]interface{
 		return user
 	}
 
+}
+
+func (u *UseCase) GetUserADPropertysSimple(username string) (*entity.SimpleUser, error) {
+	userRes := entity.SimpleUser{Id: username}
+
+	user, err := u.GetUserShort(username)
+	if err != nil {
+		return &userRes, err
+
+	} else {
+		if val, ok := user["displayName"]; ok {
+			if deptStr, ok := val.(string); ok {
+				userRes.Name = deptStr
+			}
+		}
+		if val, ok := user["company"]; ok {
+			if deptStr, ok := val.(string); ok {
+				userRes.Company = deptStr
+			}
+		}
+		if val, ok := user["department"]; ok {
+			if deptStr, ok := val.(string); ok {
+				userRes.Department = deptStr
+			}
+		}
+		if val, ok := user["title"]; ok {
+			if deptStr, ok := val.(string); ok {
+				userRes.Title = deptStr
+			}
+		}
+		if val, ok := user["mail"]; ok {
+			if deptStr, ok := val.(string); ok {
+				userRes.Mail = deptStr
+			}
+		}
+
+		if val, ok := user["telephoneNumber"]; ok {
+			if deptStr, ok := val.(string); ok {
+				userRes.Telephone = deptStr
+			}
+		}
+		return &userRes, nil
+	}
 }

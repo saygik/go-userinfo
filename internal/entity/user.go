@@ -29,3 +29,13 @@ type UserActivityForm struct {
 	ActiviyIp string `form:"activityip" json:"activityip,omitempty"`
 	Date      string `form:"date" json:"date,omitempty"`
 }
+
+type SimpleUser struct {
+	Id         string `json:"id,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Company    string `json:"company,omitempty"`
+	Department string `json:"department,omitempty"`
+	Title      string `json:"title,omitempty"`
+	Mail       string `json:"mail,omitempty"`
+	Telephone  string `json:"telephone,omitempty"`
+}

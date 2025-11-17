@@ -37,6 +37,7 @@ type UseCase interface {
 	UserExist(string) error                                                                                      // Существует ли пользователь в доменах
 	GetCurrentUser(string, string) (map[string]interface{}, error)                                               // Свойства залогиненного пользователя домена
 	GetUserADPropertys(string, string) (map[string]interface{}, error)                                           // Разрешённые сппециалисту свойства пользователя домена
+	GetUserADPropertysSimple(string) (*entity.SimpleUser, error)                                                 // Упрощенные  свойства пользователя домена
 	GetCurrentUserResources(string) ([]entity.AppResource, error)                                                // Разрешённые ресурсы
 	GetGlpiUser(string) (entity.GLPIUser, error)                                                                 // Пользователь GLPI
 	GetGlpiUserForTechnical(string, string) (*entity.GLPIUser, error)                                            // Пользователь GLPI для технического специалиста
