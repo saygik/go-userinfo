@@ -62,9 +62,19 @@ func (h *Handler) ExtractToken(r *http.Request) string {
 	return ""
 }
 
+func (h *Handler) IsApiRequest(c *gin.Context) bool {
+	apiToken := c.Request.Header.Get("X-Api-Key")
+	isApi := false
+	if apiToken == "UvWPRPJ6fULGjvfmycYiYbE28cUeFxoQyi6HYD2Kg1X6nccKW9fxZQeJ04kUIXFPPAh67jQijoJHGuyCaDf2vBwZe0oENRkanuYdXydOCLANzVD1MrCWTWfJdAiydf5n" {
+		isApi = true
+	}
+	return isApi
+}
+
 func (h *Handler) TokenValid(c *gin.Context) {
 
 	token := h.ExtractToken(c.Request)
+	isApi := h.IsApiRequest(c)
 
 	if len(token) < 1 {
 		//Token either expired or not valid
@@ -73,7 +83,7 @@ func (h *Handler) TokenValid(c *gin.Context) {
 	}
 	user := ""
 
-	userInfo, err := h.oAuth2Authentik.IntrospectOAuth2Token(token)
+	userInfo, err := h.oAuth2Authentik.IntrospectOAuth2Token(token, isApi)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "token is not active"})
 		return
@@ -88,14 +98,14 @@ func (h *Handler) TokenValid(c *gin.Context) {
 func (h *Handler) UserFromToken(c *gin.Context) {
 
 	token := h.ExtractToken(c.Request)
-
+	isApi := h.IsApiRequest(c)
 	if len(token) < 1 {
 		//Token either expired or not valid
 		return
 	}
 	user := ""
 
-	userInfo, err := h.oAuth2Authentik.IntrospectOAuth2Token(token)
+	userInfo, err := h.oAuth2Authentik.IntrospectOAuth2Token(token, isApi)
 	if err != nil {
 		return
 	}

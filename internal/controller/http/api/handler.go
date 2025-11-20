@@ -98,7 +98,7 @@ type OAuth2 interface {
 	AuthCodeURL(string) string
 	LogOutURL() string
 	Exchange(string) (*entity.Token, *entity.UserInfo, error)
-	IntrospectOAuth2Token(string) (*entity.UserInfo, error)
+	IntrospectOAuth2Token(string, bool) (*entity.UserInfo, error)
 	ExchangeRefreshToAccessToken(string) (*entity.Token, error)
 	GetRedirectUrl() string
 	Refresh(string) (entity.Token, error)

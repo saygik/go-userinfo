@@ -98,7 +98,8 @@ func (h *Handler) User(c *gin.Context) {
 func (h *Handler) UserSimple(c *gin.Context) {
 	user := c.Param("username")
 	if user == "" {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get user info from request", "error": ""})
+		c.JSON(http.StatusOK, entity.SimpleUser{Name: "--", Department: "--"})
+		//		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get user info from request", "error": ""})
 		return
 	}
 	if !isEmailValid(user) {

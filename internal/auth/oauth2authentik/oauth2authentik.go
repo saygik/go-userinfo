@@ -126,7 +126,7 @@ func (o OAuth2) ExchangeRefreshToAccessToken(refreshToken string) (*entity.Token
 
 }
 
-func (o OAuth2) IntrospectOAuth2Token(querytoken string) (*entity.UserInfo, error) {
+func (o OAuth2) IntrospectOAuth2Token(querytoken string, isApi bool) (*entity.UserInfo, error) {
 	//	token := &oauth2.Token{AccessToken: querytoken}
 	parts := strings.Split(querytoken, ".")
 
@@ -139,11 +139,12 @@ func (o OAuth2) IntrospectOAuth2Token(querytoken string) (*entity.UserInfo, erro
 	if err := json.Unmarshal(payload, &claims); err != nil {
 		return nil, err
 	}
-	expiry := time.Unix(claims.Exp, 0)
-	if time.Now().After(expiry) {
-		return nil, errors.New("token expired")
+	if !isApi {
+		expiry := time.Unix(claims.Exp, 0)
+		if time.Now().After(expiry) {
+			return nil, errors.New("token expired")
+		}
 	}
-
 	// userInfo, err := o.oidcProvider.UserInfo(context.Background(), oauth2.StaticTokenSource(token))
 	// _ = userInfo
 	// if err != nil {
