@@ -20,3 +20,15 @@ func (r *Repository) GetTicketGroupForCurrentUser(id string, user int) (users []
 	return users, err
 
 }
+
+func (r *Repository) GetTicketGroupExecutors(id string) (group entity.IdName, err error) {
+
+	sql := fmt.Sprintf(`
+            select glpi_groups_tickets.groups_id as 'id', glpi_groups.name
+			FROM glpi_groups_tickets INNER JOIN glpi_groups ON glpi_groups.id=glpi_groups_tickets.groups_id
+			WHERE glpi_groups_tickets.tickets_id =%s LIMIT 1`, id)
+	err = r.db.SelectOne(&group, sql)
+
+	return group, err
+
+}

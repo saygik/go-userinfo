@@ -20,3 +20,9 @@ type AppResource struct {
 	Name string `db:"name" json:"name"`
 	Edit string `db:"edit" json:"edit"`
 }
+
+type IdNameFio struct {
+	Id   int    `db:"id" json:"id"`
+	Name string `db:"name" json:"name"`
+	Fio  string `db:"fio" json:"fio"`
+}

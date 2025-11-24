@@ -57,3 +57,29 @@ func (r *Repository) GetTicketWorks(ticketID string) (work []entity.GLPI_Work, e
 	}
 	return work, nil
 }
+
+func (r *Repository) GetTicketComments(ticketID string) (work []entity.GLPI_Work, err error) {
+	var proc = fmt.Sprintf(`
+	SELECT glpi_itilfollowups.id, glpi_itilfollowups.content, is_private, glpi_itilfollowups.date_creation, glpi_itilfollowups.date_mod, name, CONCAT(realname," ", firstname) AS author, "commens" AS type, 0 as "status"
+	FROM glpi_itilfollowups
+	LEFT JOIN glpi_users ON glpi_itilfollowups.users_id= glpi_users.id
+	WHERE items_id=%[1]s AND itemtype="Ticket"`, ticketID)
+	_, err = r.db.Select(&work, proc)
+	if err != nil {
+		return nil, err
+	}
+	return work, nil
+}
+
+func (r *Repository) GetTicketSolutions(ticketID string) (work []entity.GLPI_Work, err error) {
+	var proc = fmt.Sprintf(`
+	SELECT glpi_itilsolutions.id, glpi_itilsolutions.content, 0 as is_private, glpi_itilsolutions.date_creation, glpi_itilsolutions.date_mod, name, CONCAT(realname," ", firstname) AS author, "solutions" AS type, status as "status"
+	FROM glpi_itilsolutions
+	LEFT JOIN glpi_users ON glpi_itilsolutions.users_id= glpi_users.id
+	WHERE items_id=%[1]s AND itemtype="Ticket"`, ticketID)
+	_, err = r.db.Select(&work, proc)
+	if err != nil {
+		return nil, err
+	}
+	return work, nil
+}

@@ -27,3 +27,10 @@ func parseDate(sDate string) string {
 	}
 	return parsedTime.Format("02.01.2006")
 }
+func parseGlpiDate(sDate string) string {
+	t, err := time.Parse("2006-01-02 15:04:05", sDate)
+	if err != nil {
+		return sDate
+	}
+	return t.Format("02.01.2006 15:04:05")
+}

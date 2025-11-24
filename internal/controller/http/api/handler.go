@@ -64,6 +64,7 @@ type UseCase interface {
 	GetGLPITicketsNonClosed(string) ([]entity.GLPI_Ticket, error)                                                // Все нерешённые заявки GLPI
 	GetGLPIUsers() ([]entity.GLPIUserShort, error)                                                               // Все пользователи GLPI
 	GetGLPITicket(string, string) (entity.GLPI_Ticket, error)                                                    // Одна заявка GLPI
+	GetGLPITicketReport(string, string) (*entity.GLPI_Ticket_Report, error)                                      // Одна заявка GLPI для отчетов
 	GetGLPITicketSimple(string) (entity.GLPI_Ticket, error)                                                      // Одна заявка GLPI
 	GetGLPITicketSolutionTemplates(string) ([]entity.GLPI_Ticket_Profile, error)                                 // Шаблоны решений заявки
 	GetGLPIProblem(string, string) (entity.GLPI_Problem, error)                                                  // Одна проблема GLPI

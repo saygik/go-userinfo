@@ -174,3 +174,100 @@ func (u *UseCase) GetGLPITicketSimple(id string) (entity.GLPI_Ticket, error) {
 
 	return ticket, nil
 }
+
+func (u *UseCase) GetGLPITicketReport(id string, user string) (*entity.GLPI_Ticket_Report, error) {
+	if id == "" {
+		return nil, u.Error("неверное ID заявки")
+	}
+
+	ticket, err := u.glpi.GetTicketReport(id)
+	if err != nil {
+		return nil, u.Error(fmt.Sprintf("ошибка MySQL: %s", err.Error()))
+	}
+	ticket.Date = parseGlpiDate(ticket.Date)
+	ticket.SolveDate = parseGlpiDate(ticket.SolveDate)
+	ticket.Closedate = parseGlpiDate(ticket.Closedate)
+	ticket.DateCreation = parseGlpiDate(ticket.DateCreation)
+	ticket.DateMod = parseGlpiDate(ticket.DateMod)
+
+	var ADiniciators []entity.SimpleUser
+	var ADexetutors []entity.SimpleUser
+	var ADobservers []entity.SimpleUser
+
+	//	if err := json.Unmarshal([]byte(ticket.UsersS), &ticketUsers); err == nil {
+	users, err := u.glpi.GetTicketUsers(id)
+	if err == nil {
+		//		ticket.Users = ticketUsers
+		for _, user := range users {
+			adUserPtr, err := u.GetUserADPropertysSimple(user.Name)
+			adUser := *adUserPtr
+			if err != nil {
+				adUser.Name = user.Fio
+				adUser.Mail = user.Email
+			}
+			switch user.Type {
+			case 1:
+				ADiniciators = append(ADiniciators, adUser)
+			case 2:
+				ADexetutors = append(ADexetutors, adUser)
+			case 3:
+				ADobservers = append(ADobservers, adUser)
+			}
+		}
+		ticket.Users.Initiators = ADiniciators
+		ticket.Users.Executors = ADexetutors
+		ticket.Users.Observers = ADobservers
+	}
+	works, _ := u.glpi.GetTicketComments(id)
+
+	for i, work := range works {
+		adUserPtr, err := u.GetUserADPropertysSimple(work.Name)
+		adUser := *adUserPtr
+		if err != nil {
+			adUser.Name = work.Author
+			adUser.Department = ""
+			adUser.Title = ""
+		}
+		works[i].AuthorProps = adUser
+		works[i].DateCreation = parseGlpiDate(work.DateCreation)
+	}
+	ticket.Comments = works
+	works, _ = u.glpi.GetTicketSolutions(id)
+	for i, work := range works {
+		adUserPtr, err := u.GetUserADPropertysSimple(work.Name)
+		adUser := *adUserPtr
+		if err != nil {
+			adUser.Name = work.Author
+			adUser.Department = ""
+			adUser.Title = ""
+		}
+		works[i].AuthorProps = adUser
+		works[i].DateCreation = parseGlpiDate(work.DateCreation)
+	}
+	ticket.Solutions = works
+	group, err := u.glpi.GetTicketGroupExecutors(id)
+	if err == nil {
+		ticket.ExecutorsGroup = group.Name
+		users, err := u.glpi.GetGroupUsersFio(group.Id)
+		if err == nil {
+			var ExecutorsUsers []entity.SimpleUser
+			for _, user := range users {
+				adUserPtr, err := u.GetUserADPropertysSimple(user.Name)
+				adUser := *adUserPtr
+				if err != nil {
+					adUser.Name = user.Fio
+					adUser.Department = ""
+					adUser.Title = ""
+				}
+				ExecutorsUsers = append(ExecutorsUsers, adUser)
+			}
+			ticket.ExecutorsGroupUsers = ExecutorsUsers
+		}
+
+	}
+	ticket.Objects.NetworkEquipment, _ = u.glpi.GetTicketNetworkEquipment(id)
+	ticket.Objects.Servers, _ = u.glpi.GetTicketServers(id)
+	ticket.Objects.Softwares, _ = u.glpi.GetTicketSoft(id)
+
+	return &ticket, nil
+}

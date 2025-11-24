@@ -49,3 +49,59 @@ func (r *Repository) GetTicket(id string) (ticket entity.GLPI_Ticket, err error)
 	return ticket, err
 
 }
+
+func (r *Repository) GetTicketReport(id string) (ticket entity.GLPI_Ticket_Report, err error) {
+
+	sql := fmt.Sprintf(`
+			SELECT glpi_tickets.id, glpi_tickets.content, glpi_tickets.name, glpi_tickets.status, impact,
+			 glpi_entities.completename as org, IFNULL(fail_category,"") as fail_category, IFNULL(fail_category_comment,"") as fail_category_comment, glpi_requesttypes.name as requesttype,
+			 IFNULL(dufoursixfield,0) AS du, IFNULL(mdfield,0) AS mds,
+			CASE
+				WHEN type=1
+					THEN 'инцидент'
+				ELSE 'заявка'
+			END AS type,
+			CASE
+				WHEN STATUS=6
+					THEN 'Закрыта'
+				WHEN STATUS=5
+					THEN 'Решена'
+				WHEN STATUS=4
+					THEN 'Ожидающие'
+				WHEN STATUS=3
+					THEN 'В работе(запланирована)'
+				WHEN STATUS=2
+					THEN 'В работе(назначена)'
+				ELSE 'Новый'
+			END AS statustext,
+			CASE
+				WHEN impact=5
+					THEN 'Очень высокое'
+				WHEN impact=4
+					THEN 'Высокое'
+				WHEN impact=3
+					THEN 'Среднее'
+				WHEN impact=2
+					THEN 'Низкое'
+				WHEN impact=1
+					THEN 'Очень низкое'
+				ELSE 'Очень низкое'
+			END AS impacttext,
+			IFNULL(date,'') AS 'date_vos',
+			IFNULL(glpi_tickets.date_creation,'') AS 'date_creation',
+			IFNULL(glpi_tickets.solvedate,'') AS 'solvedate',
+			IFNULL(glpi_tickets.closedate,'') AS 'closedate',
+            IFNULL(glpi_tickets.date_mod,'') AS 'date_mod'
+			FROM glpi_tickets
+			LEFT JOIN glpi_entities ON glpi_tickets.entities_id = glpi_entities.id
+			LEFT JOIN (SELECT glpi_plugin_fields_ticketfailures.items_id ,glpi_plugin_fields_failcategoryfielddropdowns.name AS fail_category, glpi_plugin_fields_failcategoryfielddropdowns.comment AS fail_category_comment FROM glpi_plugin_fields_ticketfailures
+					LEFT JOIN glpi_plugin_fields_failcategoryfielddropdowns ON glpi_plugin_fields_ticketfailures.plugin_fields_failcategoryfielddropdowns_id =glpi_plugin_fields_failcategoryfielddropdowns.id) dCategory ON glpi_tickets.id=dCategory.items_id
+			LEFT JOIN glpi_requesttypes ON glpi_requesttypes.id=glpi_tickets.requesttypes_id
+			LEFT JOIN  glpi_plugin_fields_ticketfailures ON glpi_tickets.id=glpi_plugin_fields_ticketfailures.items_id
+			WHERE glpi_tickets.id=%[1]s
+	`, id)
+	err = r.db.SelectOne(&ticket, sql)
+
+	return ticket, err
+
+}

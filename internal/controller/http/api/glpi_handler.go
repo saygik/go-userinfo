@@ -87,6 +87,23 @@ func (h *Handler) GetTicket(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Ticket finded", "data": ticket})
 
 }
+func (h *Handler) GetTicketReport(c *gin.Context) {
+	//	user := getUserID(c)
+	user := "say@brnv.rw"
+	if user == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	ticketId := c.Param("id")
+	ticket, err := h.uc.GetGLPITicketReport(ticketId, user)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "ошибка получения заявки из GLPI", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Ticket finded", "data": ticket})
+
+}
 
 func (h *Handler) AddTicketUser(c *gin.Context) {
 	user := getUserID(c)

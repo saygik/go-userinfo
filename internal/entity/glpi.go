@@ -48,15 +48,16 @@ type GLPIUserShort struct {
 }
 
 type GLPI_Work struct {
-	Id           string `db:"id" json:"id"`
-	Content      string `db:"content" json:"content"`
-	DateMod      string `db:"date_mod" json:"date_mod"`
-	DateCreation string `db:"date_creation" json:"date_creation"`
-	Name         string `db:"name" json:"name"`
-	Author       string `db:"author" json:"author"`
-	IsPrivate    bool   `db:"is_private" json:"is_private"`
-	Type         string `db:"type" json:"type"`
-	Status       int    `db:"status" json:"status"`
+	Id           string     `db:"id" json:"id"`
+	Content      string     `db:"content" json:"content"`
+	DateMod      string     `db:"date_mod" json:"date_mod"`
+	DateCreation string     `db:"date_creation" json:"date_creation"`
+	Name         string     `db:"name" json:"name"`
+	Author       string     `db:"author" json:"author"`
+	AuthorProps  SimpleUser `db:"author_props" json:"author_props"`
+	IsPrivate    bool       `db:"is_private" json:"is_private"`
+	Type         string     `db:"type" json:"type"`
+	Status       int        `db:"status" json:"status"`
 }
 
 type GLPI_Ticket_Profile struct {
@@ -221,4 +222,49 @@ type GLPIRegionsStats struct {
 type TreemapData struct {
 	X string `db:"x" json:"x"`
 	Y int    `db:"y" json:"y"`
+}
+
+type GLPI_Ticket_Users_Simple struct {
+	Initiators []SimpleUser ` json:"initiators"`
+	Executors  []SimpleUser ` json:"executors"`
+	Observers  []SimpleUser ` json:"observers"`
+}
+
+type GLPI_Ticket_Report struct {
+	Id                  int                      `db:"id" json:"id"`
+	Name                string                   `db:"name" json:"name"`
+	Content             string                   `db:"content" json:"content"`
+	Type                string                   `db:"type" json:"type"`
+	Status              int                      `db:"status" json:"status"`
+	Statustext          string                   `db:"statustext" json:"statustext"`
+	Impact              int                      `db:"impact" json:"impact"`
+	Impacttext          string                   `db:"impacttext" json:"impacttext"`
+	Org                 string                   `db:"org" json:"org"`
+	Date                string                   `db:"date_vos" json:"date_vos"`
+	DateMod             string                   `db:"date_mod" json:"date_mod"`
+	DateCreation        string                   `db:"date_creation" json:"date_creation"`
+	SolveDate           string                   `db:"solvedate" json:"solvedate"`
+	Closedate           string                   `db:"closedate" json:"closedate"`
+	FailCategory        string                   `db:"fail_category" json:"fail_category"`
+	FailCategoryComment string                   `db:"fail_category_comment" json:"fail_category_comment"`
+	RequestType         string                   `db:"requesttype" json:"requesttype"`
+	Du                  bool                     `db:"du" json:"du"`
+	Mds                 bool                     `db:"mds" json:"mds"`
+	Users               GLPI_Ticket_Users_Simple `json:"users"`
+	Comments            []GLPI_Work              `json:"comments"`
+	Solutions           []GLPI_Work              `json:"solutions"`
+	ExecutorsGroup      string                   `json:"executors_group"`
+	ExecutorsGroupUsers []SimpleUser             `json:"executors_group_users"`
+	Objects             GLPI_Objects             `json:"objects"`
+}
+type GLPI_Objects struct {
+	Softwares        []GLPI_Object `json:"softwares"`
+	Servers          []GLPI_Object `json:"servers"`
+	NetworkEquipment []GLPI_Object `json:"network_equipment"`
+}
+type GLPI_Object struct {
+	Name     string `db:"name" json:"name"`
+	Fullname string `db:"fullname" json:"fullname"`
+	Group    string `db:"group" json:"group"`
+	Place    string `db:"place" json:"place"`
 }
