@@ -176,14 +176,36 @@ func (u *UseCase) GetGLPITicketSimple(id string) (entity.GLPI_Ticket, error) {
 }
 
 func (u *UseCase) GetGLPITicketReport(id string, user string) (*entity.GLPI_Ticket_Report, error) {
-	if id == "" {
-		return nil, u.Error("неверное ID заявки")
+	ti := entity.GLPI_Ticket_Report{}
+	if id == "" || id == "0" {
+		return &ti, u.Error("неверное ID заявки")
+	}
+	userRequesterInGLPI, err := u.glpi.GetUserByName(user)
+	_ = userRequesterInGLPI
+	if err != nil {
+		return &ti, u.Error("вы не найдены в системе GLPI")
+	}
+	glpiUserRequesterProfiles, err := u.glpi.GetUserProfiles(userRequesterInGLPI.Id)
+	if err == nil {
+		if len(glpiUserRequesterProfiles) == 0 {
+			return &ti, u.Error("ваш профиль не найден в системе GLPI")
+		}
+		userRequesterInGLPI.Profiles = glpiUserRequesterProfiles
+	} else {
+		return &ti, u.Error("ваш профиль не найден в системе GLPI")
+	}
+	glpiUserGroups, err := u.glpi.GetUserGroups(userRequesterInGLPI.Id)
+	if err == nil {
+		userRequesterInGLPI.Groups = glpiUserGroups
+	} else {
+		userRequesterInGLPI.Groups = []entity.IdName{}
 	}
 
 	ticket, err := u.glpi.GetTicketReport(id)
 	if err != nil {
-		return nil, u.Error(fmt.Sprintf("ошибка MySQL: %s", err.Error()))
+		return &ti, u.Error("ошибка доступа к базе данных GLPI")
 	}
+
 	ticket.Date = parseGlpiDate(ticket.Date)
 	ticket.SolveDate = parseGlpiDate(ticket.SolveDate)
 	ticket.Closedate = parseGlpiDate(ticket.Closedate)

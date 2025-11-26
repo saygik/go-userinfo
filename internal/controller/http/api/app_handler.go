@@ -11,8 +11,7 @@ import (
 func getUserID(c *gin.Context) (userID string) {
 	//MustGet returns the value for the given key if it exists, otherwise it panics.
 	_, isExist := c.Get("user")
-	dd := c.MustGet("user")
-	_ = dd
+
 	if isExist {
 		return c.MustGet("user").(string)
 	}
