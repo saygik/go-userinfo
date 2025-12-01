@@ -45,8 +45,8 @@ func New(ctx context.Context) (*App, error) {
 
 	mattClient := app.newMattermostConnection(cfg.Repository.Mattermost.Server, cfg.Repository.Mattermost.Token, cfg.ApiIntegrations.AddCommentFromApi, cfg.ApiIntegrations.DisableCalendarTaskNotificationApi, cfg.ApiIntegrations.AllowedHosts)
 	glpiApiClient := app.newGLPIApiConnection(cfg.Repository.GlpiApi.Server, cfg.Repository.GlpiApi.Token, cfg.Repository.GlpiApi.UserToken)
-
-	c := NewAppContainer(ctx, msSQLConnect, glpiConnect, redisConnect, adClients, adConfigs, mattClient, glpiApiClient, oAuth2ClientAuthentik, app.cfg.ApiIntegrations.N8nWebhookIvc2Kaspersky, app.log)
+	iutmApiClient := app.newIUTMApiConnection("https://iutm.brnv.rw:8443", "userinfo-bot", "UHg&-nMA?c1G")
+	c := NewAppContainer(ctx, msSQLConnect, glpiConnect, redisConnect, adClients, adConfigs, mattClient, glpiApiClient, iutmApiClient, oAuth2ClientAuthentik, app.cfg.ApiIntegrations.N8nWebhookIvc2Kaspersky, app.log)
 	app.c = c
 	app.c.useCase.ClearRedisCaсhe()
 
@@ -63,7 +63,7 @@ func New(ctx context.Context) (*App, error) {
 	}
 	go app.getCalendarTaskNotifikations(ctx)
 	go app.getSoftwareUsersEOL(ctx)
-
+	go app.fillCaсheIUTM(ctx)
 	return app, nil
 }
 
@@ -122,4 +122,18 @@ func (a *App) getSoftwareUsersEOL(ctx context.Context) {
 			a.c.useCase.GetSoftwareUsersEOL()
 		}
 	}
+}
+
+func (a *App) fillCaсheIUTM(ctx context.Context) {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			a.c.useCase.FillRedisCaсheFromIUTM()
+		}
+	}
+
 }

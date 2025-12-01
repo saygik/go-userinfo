@@ -11,6 +11,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/adapter/repository/mssql"
 	"github.com/saygik/go-userinfo/internal/adapter/repository/redisclient"
 	"github.com/saygik/go-userinfo/internal/adapter/web/glpiapi"
+	"github.com/saygik/go-userinfo/internal/adapter/web/iutm"
 	"github.com/saygik/go-userinfo/internal/adapter/web/mattermost"
 	"github.com/saygik/go-userinfo/internal/adapter/web/webclient"
 	"github.com/saygik/go-userinfo/internal/auth/oauth2authentik"
@@ -29,6 +30,7 @@ type Container struct {
 	adconfigs       map[string]*config.ADConfig
 	matt            *MattClient
 	glpiApi         *GLPIApiClient
+	iutm            *IUTMApiClient
 	oAuth2Authentik *OAuth2Client
 	webClientUrl    string
 	log             *logrus.Logger
@@ -45,6 +47,7 @@ func NewAppContainer(
 	adconfigs map[string]*config.ADConfig,
 	matt *MattClient,
 	glpiApi *GLPIApiClient,
+	iutmApi *IUTMApiClient,
 	oAuth2Authentik *OAuth2Client,
 	webClientUrl string,
 	log *logrus.Logger,
@@ -53,6 +56,7 @@ func NewAppContainer(
 		ctx:             ctx,
 		mssql:           mssqlConnect,
 		glpi:            glpiConnect,
+		iutm:            iutmApi,
 		rc:              r,
 		ads:             adclients,
 		adconfigs:       adconfigs,
@@ -67,6 +71,7 @@ func NewAppContainer(
 		c.getRedisRepository(),
 		c.getADRepository(),
 		c.getGlpiRepository(),
+		c.getIUTMRepository(),
 		c.getMattermostRepository(),
 		c.getGlpiApiRepository(),
 		c.getWebClientRepository(),
@@ -102,7 +107,9 @@ func (c *Container) getMssqlRepository() *mssql.Repository {
 func (c *Container) getGlpiRepository() *glpi.Repository {
 	return glpi.NewRepository(c.glpi)
 }
-
+func (c *Container) getIUTMRepository() *iutm.Repository {
+	return iutm.New(c.iutm.url, c.iutm.user, c.iutm.password)
+}
 func (c *Container) getRedisRepository() *redisclient.Repository {
 	return redisclient.New(c.rc)
 }

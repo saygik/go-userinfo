@@ -18,6 +18,7 @@ type Handler struct {
 }
 
 type UseCase interface {
+	IUTMGetWlist() ([]string, error)
 	IsAppInitialized() bool                                                                                      // Приложение инициализировано
 	ADUserLocked(string) bool                                                                                    // Пользователь заблокирован
 	GetAppRoles(string) ([]entity.IdName, error)                                                                 // Все роли пользователей приложения
@@ -143,6 +144,7 @@ func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, oAuth2Authen
 	h.NewMattermostRouterGroup()
 	h.NewScheduleRouterGroup()
 	h.NewMattermostCommandsRouterGroup()
+	h.NewIUTMRouterGroup()
 	h.rtr.NoRoute(h.NoRoute)
 }
 

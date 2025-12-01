@@ -61,6 +61,9 @@ type Redis interface {
 	Rename(oldKey, newKey string) error
 	Unlink(keys ...string) (int64, error)
 }
+type IUTM interface {
+	List() []entity.IutmCategoryList
+}
 type AD interface {
 	DomainList() []entity.DomainList
 	GetDomainAdminsGLPI(string) int
@@ -159,14 +162,16 @@ type UseCase struct {
 	glpiApi   GlpiApi
 	webClient WebClient
 	log       *logrus.Logger
+	iutm      IUTM
 }
 
-func New(r Repository, redis Redis, adRepo AD, glpiRepo GLPI, matt Mattermost, glpiApi GlpiApi, webClient WebClient, log *logrus.Logger) *UseCase {
+func New(r Repository, redis Redis, adRepo AD, glpiRepo GLPI, iutmRepo IUTM, matt Mattermost, glpiApi GlpiApi, webClient WebClient, log *logrus.Logger) *UseCase {
 	return &UseCase{
 		repo:      r,
 		redis:     redis,
 		ad:        adRepo,
 		glpi:      glpiRepo,
+		iutm:      iutmRepo,
 		matt:      matt,
 		glpiApi:   glpiApi,
 		webClient: webClient,
