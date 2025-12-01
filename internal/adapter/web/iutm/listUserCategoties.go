@@ -19,7 +19,8 @@ func (r *Repository) List() []entity.IutmCategoryList {
 	client := &http.Client{Jar: jar}
 
 	// Авторизация
-	loginJSON := []byte(`{"login": "userinfo-bot", "password": "UHg&-nMA?c1G", "rest_path": "/"}`)
+
+	loginJSON := []byte(fmt.Sprintf(`{"login": "%s", "password": "%s", "rest_path": "/"}`, r.User, r.Password))
 	reqLogin, _ := http.NewRequest("POST", loginURL, bytes.NewBuffer(loginJSON))
 	reqLogin.Header.Set("Content-Type", "application/json")
 
