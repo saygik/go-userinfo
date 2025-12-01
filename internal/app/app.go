@@ -63,6 +63,7 @@ func New(ctx context.Context) (*App, error) {
 	}
 	go app.getCalendarTaskNotifikations(ctx)
 	go app.getSoftwareUsersEOL(ctx)
+	app.c.useCase.FillRedisCaсheFromIUTM()
 	go app.fillCaсheIUTM(ctx)
 	return app, nil
 }
