@@ -45,7 +45,7 @@ func New(ctx context.Context) (*App, error) {
 
 	mattClient := app.newMattermostConnection(cfg.Repository.Mattermost.Server, cfg.Repository.Mattermost.Token, cfg.ApiIntegrations.AddCommentFromApi, cfg.ApiIntegrations.DisableCalendarTaskNotificationApi, cfg.ApiIntegrations.AllowedHosts)
 	glpiApiClient := app.newGLPIApiConnection(cfg.Repository.GlpiApi.Server, cfg.Repository.GlpiApi.Token, cfg.Repository.GlpiApi.UserToken)
-	iutmApiClient := app.newIUTMApiConnection("https://iutm.brnv.rw:8443", "userinfo-bot", "UHg&-nMA?c1G")
+	iutmApiClient := app.newIUTMApiConnection(cfg.Repository.IUTM.Server, cfg.Repository.IUTM.Token, cfg.Repository.IUTM.UserToken)
 	c := NewAppContainer(ctx, msSQLConnect, glpiConnect, redisConnect, adClients, adConfigs, mattClient, glpiApiClient, iutmApiClient, oAuth2ClientAuthentik, app.cfg.ApiIntegrations.N8nWebhookIvc2Kaspersky, app.log)
 	app.c = c
 	app.c.useCase.ClearRedisCaсhe()

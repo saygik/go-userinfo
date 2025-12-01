@@ -63,6 +63,7 @@ type Repository struct {
 	Glpi       DBConfig
 	Mattermost APIConfig
 	GlpiApi    APIConfig
+	IUTM       APIConfig
 }
 
 type Integrations struct {
