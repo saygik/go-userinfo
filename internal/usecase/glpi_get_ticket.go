@@ -3,6 +3,7 @@ package usecase
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	"github.com/saygik/go-userinfo/internal/entity"
 )
@@ -230,10 +231,20 @@ func (u *UseCase) GetGLPITicketReport(id string, user string) (*entity.GLPI_Tick
 			switch user.Type {
 			case 1:
 				ADiniciators = append(ADiniciators, adUser)
+				if userRequesterInGLPI.Id == user.Id {
+					ticket.MyTicket = 1
+				}
 			case 2:
 				ADexetutors = append(ADexetutors, adUser)
+				if userRequesterInGLPI.Id == user.Id {
+					ticket.MyTicket = 1
+				}
+
 			case 3:
 				ADobservers = append(ADobservers, adUser)
+				if userRequesterInGLPI.Id == user.Id {
+					ticket.MyTicket = 1
+				}
 			}
 		}
 		ticket.Users.Initiators = ADiniciators
@@ -290,6 +301,47 @@ func (u *UseCase) GetGLPITicketReport(id string, user string) (*entity.GLPI_Tick
 	ticket.Objects.NetworkEquipment, _ = u.glpi.GetTicketNetworkEquipment(id)
 	ticket.Objects.Servers, _ = u.glpi.GetTicketServers(id)
 	ticket.Objects.Softwares, _ = u.glpi.GetTicketSoft(id)
-
+	access := isAccessToTicket(userRequesterInGLPI, ticket)
+	if !access {
+		return &ti, u.Error("ваши профили GLPI не дают доступа к этой заявке")
+	}
 	return &ticket, nil
+}
+
+func isAccessToTicket(user entity.GLPIUser, ticket entity.GLPI_Ticket_Report) bool {
+	var ticketOrgs []int
+	technicalProfiles := []int{6, 12, 14, 16, 17}
+	administratorProfiles := []int{2, 3, 4, 5, 7, 11, 15}
+	if len(ticket.FailCategory) > 0 {
+		return true
+	}
+	for _, tp := range user.Profiles {
+		if slices.Contains(technicalProfiles, tp.Id) {
+			if ticket.MyTicket > 0 {
+				return true
+			}
+		}
+		if !slices.Contains(administratorProfiles, tp.Id) {
+			continue
+		}
+		if tp.Recursive {
+			if err := json.Unmarshal([]byte(ticket.Orgs), &ticketOrgs); err != nil {
+				continue
+			}
+			if ticket.Eid == tp.Eid {
+				return true
+
+			}
+			if containsInt(ticketOrgs, tp.Eid) {
+				return true
+
+			}
+		} else {
+			if ticket.Eid == tp.Eid {
+				return true
+
+			}
+		}
+	}
+	return false
 }

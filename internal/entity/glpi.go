@@ -256,6 +256,9 @@ type GLPI_Ticket_Report struct {
 	ExecutorsGroup      string                   `json:"executors_group"`
 	ExecutorsGroupUsers []SimpleUser             `json:"executors_group_users"`
 	Objects             GLPI_Objects             `json:"objects"`
+	MyTicket            int                      `json:"my_ticket"`
+	Orgs                string                   `db:"orgs" json:"orgs"`
+	Eid                 int                      `db:"eid" json:"eid"`
 }
 type GLPI_Objects struct {
 	Softwares        []GLPI_Object `json:"softwares"`

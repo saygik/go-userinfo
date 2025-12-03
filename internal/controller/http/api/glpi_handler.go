@@ -89,7 +89,7 @@ func (h *Handler) GetTicket(c *gin.Context) {
 }
 func (h *Handler) GetTicketReport(c *gin.Context) {
 	//user := getUserID(c)
-	user := "say@brnv.rw"
+	user := "sb@brnv.rw"
 	//user := ""
 	if user == "" {
 		//		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
