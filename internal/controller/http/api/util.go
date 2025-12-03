@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -65,7 +66,7 @@ func (h *Handler) ExtractToken(r *http.Request) string {
 func (h *Handler) IsApiRequest(c *gin.Context) bool {
 	apiToken := c.Request.Header.Get("X-Api-Key")
 	isApi := false
-	if apiToken == "UvWPRPJ6fULGjvfmycYiYbE28cUeFxoQyi6HYD2Kg1X6nccKW9fxZQeJ04kUIXFPPAh67jQijoJHGuyCaDf2vBwZe0oENRkanuYdXydOCLANzVD1MrCWTWfJdAiydf5n" {
+	if slices.Contains(h.allowedApi, apiToken) {
 		isApi = true
 	}
 	return isApi

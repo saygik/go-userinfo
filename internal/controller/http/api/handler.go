@@ -15,6 +15,7 @@ type Handler struct {
 	uc              UseCase
 	log             *logrus.Logger
 	oAuth2Authentik OAuth2
+	allowedApi      []string
 }
 
 type UseCase interface {
@@ -106,11 +107,12 @@ type OAuth2 interface {
 	Refresh(string) (entity.Token, error)
 }
 
-func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, oAuth2Authentik OAuth2) {
+func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, oAuth2Authentik OAuth2, allowedApi []string) {
 	h := &Handler{
-		rtr: router,
-		uc:  uc,
-		log: log,
+		rtr:        router,
+		uc:         uc,
+		log:        log,
+		allowedApi: allowedApi,
 
 		oAuth2Authentik: oAuth2Authentik,
 	}

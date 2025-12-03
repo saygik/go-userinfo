@@ -70,6 +70,7 @@ type Integrations struct {
 	AddCommentFromApi                  string   `json:"add-comment-from-api,omitempty"`
 	DisableCalendarTaskNotificationApi string   `json:"disable-calendar-task-notification-api,omitempty"`
 	AllowedHosts                       []string `json:"allowed-hosts,omitempty"`
+	AllowedApi                         []string `json:"allowed-api,omitempty"`
 	N8nWebhookIvc2Kaspersky            string   `json:"n8n-webhook-ivc2-kaspersky"`
 }
 
