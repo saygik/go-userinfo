@@ -147,6 +147,7 @@ type GLPI_Problem struct {
 	Krit           int                       `db:"krit" json:"krit"`
 	Category       int                       `db:"category" json:"category"`
 	Status         int                       `db:"status" json:"status"`
+	Type           int                       `db:"type" json:"type"`
 	Recursive      bool                      `db:"recursive" json:"recursive"`
 	Name           string                    `db:"name" json:"name"`
 	Content        string                    `db:"content" json:"content"`

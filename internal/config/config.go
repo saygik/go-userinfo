@@ -214,7 +214,7 @@ func vaultConfig(conf Config) (*Config, error) {
 
 	data, err = json.Marshal(value)
 	if err != nil {
-		return cfg, fmt.Errorf("ошибка Hydra: %v", err)
+		return cfg, fmt.Errorf("ошибка integrations: %v", err)
 	}
 	integrations := Integrations{}
 	err = json.Unmarshal(data, &integrations)
