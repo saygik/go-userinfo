@@ -27,7 +27,18 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 	state.SetFillingRedis(true)
 	adl := u.ad.DomainList()
 	//	u.redis.ClearAllDomainsUsers()
+
+	// Копируем данные из текущего allusers в stagging, чтобы сохранить данные для доменов, которые не успеют обновиться
 	u.redis.Delete("allusers:stagging")
+	existingUsers, err := u.redis.GetKeyFieldAll("allusers")
+	if err == nil && len(existingUsers) > 0 {
+		// Копируем все существующие данные в stagging
+		for upn, userData := range existingUsers {
+			u.redis.AddKeyFieldValue("allusers:stagging", upn, []byte(userData))
+		}
+		u.log.Info(fmt.Sprintf("Скопировано %d пользователей из allusers в allusers:stagging для сохранения данных при возможном таймауте", len(existingUsers)))
+	}
+
 	var wg sync.WaitGroup
 	for _, one := range adl {
 		wg.Add(1)
@@ -50,6 +61,25 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			rmsPort := u.ad.GetDomainRMSPort(one.Name)
 			u.log.Info("Получение данных домена " + one.Name + " завершено. Обработка данных...")
 			if err == nil || len(users) > 0 {
+				// Удаляем старых пользователей этого домена из stagging перед добавлением новых
+				// Это нужно, чтобы удаленные пользователи не оставались в кеше
+				// Делаем это только после успешного получения данных, чтобы при ошибке сохранить старые данные
+				stagingUsers, _ := u.redis.GetKeyFieldAll("allusers:stagging")
+				deletedCount := 0
+				for upn, userDataStr := range stagingUsers {
+					var userData map[string]interface{}
+					if err := json.Unmarshal([]byte(userDataStr), &userData); err == nil {
+						if domainObj, ok := userData["domain"].(map[string]interface{}); ok {
+							if domainName, ok := domainObj["name"].(string); ok && domainName == one.Name {
+								u.redis.DelKeyField("allusers:stagging", upn)
+								deletedCount++
+							}
+						}
+					}
+				}
+				if deletedCount > 0 {
+					u.log.Info(fmt.Sprintf("Удалено %d старых пользователей домена %s из stagging", deletedCount, one.Name))
+				}
 				//				println("Get from ad to redis from " + one.Name)
 				ips, _ := u.repo.GetDomainUsersIP(one.Name)
 				avatars, _ := u.repo.GetDomainUsersAvatars(one.Name)
@@ -147,19 +177,42 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			observeUsersPerDomain(one.Name, "internet", "full", fullInternetUsersCount)
 			observeUsersPerDomain(one.Name, "internet", "white", whiteListInternetUsersCount)
 			observeUsersPerDomain(one.Name, "internet", "tech", techInternetUsersCount)
-			jsonUsers, _ := json.Marshal(users)
-			jsonComps, _ := json.Marshal(comps)
-			u.redis.DelKeyField("ad", one.Name)
-			err1 := u.redis.AddKeyFieldValue("ad", one.Name, jsonUsers)
-			if err1 != nil {
-				return
+
+			if len(users) > 0 {
+				jsonUsers, _ := json.Marshal(users)
+				u.redis.DelKeyField("ad", one.Name)
+				err1 := u.redis.AddKeyFieldValue("ad", one.Name, jsonUsers)
+				if err1 != nil {
+					return
+				}
+
 			}
-			u.redis.DelKeyField("adc", one.Name)
-			u.redis.AddKeyFieldValue("adc", one.Name, jsonComps)
-			u.log.Info("Получение данных домена " + one.Name + " завершено. Обработка данных завершена.")
+			if len(comps) > 0 {
+				jsonComps, _ := json.Marshal(comps)
+				u.redis.DelKeyField("adc", one.Name)
+				u.redis.AddKeyFieldValue("adc", one.Name, jsonComps)
+			}
+			u.log.Info(fmt.Sprintf("Получение данных домена  %s завершено. Обработка данных завершена.", one.Name))
+
 		}(one)
 	}
-	wg.Wait()
+
+	// Ожидание завершения всех горутин с таймаутом
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	// Таймаут ожидания - 8 минут для всех доменов (меньше интервала запуска 10 минут)
+	timeout := 2 * time.Minute
+	select {
+	case <-done:
+		u.log.Info("Все горутины доменов завершены успешно.")
+	case <-time.After(timeout):
+		u.log.Error(fmt.Sprintf("Таймаут ожидания завершения обработки доменов (превышен лимит %v). Продолжаем выполнение.", timeout))
+	}
+
 	u.redis.Rename("allusers", "prev")
 	u.redis.Rename("allusers:stagging", "allusers")
 	u.redis.Unlink("prev")
