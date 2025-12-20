@@ -185,12 +185,14 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 				if err1 != nil {
 					return
 				}
-
+				u.log.Info(fmt.Sprintf("Добавлено %d пользователей домена %s", len(users), one.Name))
 			}
 			if len(comps) > 0 {
 				jsonComps, _ := json.Marshal(comps)
 				u.redis.DelKeyField("adc", one.Name)
 				u.redis.AddKeyFieldValue("adc", one.Name, jsonComps)
+				u.log.Info(fmt.Sprintf("Добавлено %d компьютеров домена %s", len(comps), one.Name))
+
 			}
 			u.log.Info(fmt.Sprintf("Получение данных домена  %s завершено. Обработка данных завершена.", one.Name))
 
