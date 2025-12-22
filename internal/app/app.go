@@ -9,9 +9,10 @@ import (
 )
 
 type App struct {
-	cfg config.Config
-	c   *Container
-	log *logrus.Logger
+	cfg       config.Config
+	c         *Container
+	log       *logrus.Logger
+	accessLog *logrus.Logger
 }
 
 func New(ctx context.Context) (*App, error) {

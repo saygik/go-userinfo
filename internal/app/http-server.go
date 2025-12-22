@@ -10,7 +10,7 @@ import (
 
 func (a *App) StartHTTPServer() error {
 
-	s := http.NewServer(a.cfg.App.Env, a.log)
+	s := http.NewServer(a.cfg.App.Env, a.accessLog)
 
 	// Start pprof server on :6060
 	// go func() {
