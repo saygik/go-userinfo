@@ -14,3 +14,9 @@ type ADInternetGroups struct {
 	Full      []string `json:"full"`
 	Tech      []string `json:"tech"`
 }
+
+type ADInternetGroupsDN struct {
+	WhiteList string `json:"whitelist"`
+	Full      string `json:"full"`
+	Tech      string `json:"tech"`
+}

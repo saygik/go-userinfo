@@ -30,3 +30,10 @@ func (r *Repository) GetDomainInternetGroups(domain string) entity.ADInternetGro
 		return entity.ADInternetGroups{WhiteList: []string{}, Full: []string{}, Tech: []string{}}
 	}
 }
+func (r *Repository) GetDomainInternetGroupsDN(domain string) entity.ADInternetGroupsDN {
+	if val, ok := r.adconfigs[domain]; ok {
+		return entity.ADInternetGroupsDN{WhiteList: val.InternetGroupsDN.WhiteList, Full: val.InternetGroupsDN.Full, Tech: val.InternetGroupsDN.Tech}
+	} else {
+		return entity.ADInternetGroupsDN{WhiteList: "", Full: "", Tech: ""}
+	}
+}

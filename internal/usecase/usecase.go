@@ -71,10 +71,13 @@ type AD interface {
 	GetDomainUsers(string) ([]map[string]any, error)
 	GetDomainComputers(string) ([]map[string]any, error)
 	GetDomainInternetGroups(string) entity.ADInternetGroups
+	GetDomainInternetGroupsDN(string) entity.ADInternetGroupsDN
 	IsDomainExist(string) bool
 	Authenticate(string, entity.LoginForm) (bool, map[string]string, error)
 	GetGroupUsers(string, string) ([]map[string]any, error)
 	GetUser(string, string) (map[string]any, error)
+	AddUserGroup(string, string, string) error
+	DelUserGroup(string, string, string) error
 }
 
 type GLPI interface {

@@ -3,7 +3,7 @@ package usecase
 import "github.com/saygik/go-userinfo/internal/entity"
 
 func (u *UseCase) GetUser(userID string, techUser string) (map[string]interface{}, error) {
-	var user map[string]interface{}
+	var user map[string]any
 	domain := getDomainFromUserName(userID)
 	if !u.ad.IsDomainExist(domain) {
 		return nil, u.Error("такой домен отсутствует в системе")

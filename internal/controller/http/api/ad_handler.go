@@ -265,3 +265,49 @@ func (h *Handler) GroupUsers(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }
+
+// func (h *Handler) ADUserAddGroup(c *gin.Context) {
+// 	user := "say@brnv.rw"
+// 	group := "CN=as-test-group,OU=ИВЦ2АС,OU=Пользователи,OU=ИВЦ,OU=_Служебные записи,DC=brnv,DC=rw"
+// 	err := h.uc.ADUserAddGroup(user, group)
+// 	if err != nil {
+// 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно добавить пользователя в группу.", "error": "Failed to add user to group"})
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, gin.H{"data": "OK"})
+// }
+
+//	func (h *Handler) ADUserDelGroup(c *gin.Context) {
+//		user := "say@brnv.rw"
+//		group := "CN=as-test-group,OU=ИВЦ2АС,OU=Пользователи,OU=ИВЦ,OU=_Служебные записи,DC=brnv,DC=rw"
+//		err := h.uc.ADUserDelGroup(user, group)
+//		if err != nil {
+//			c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно удалить пользователя из группы.", "error": "Failed to delete user from group"})
+//			return
+//		}
+//		c.JSON(http.StatusOK, gin.H{"data": "OK"})
+//	}
+func (h *Handler) SwitchUserGroupInternet(c *gin.Context) {
+	userID := getUserID(c)
+	user := c.Param("username")
+
+	type inet struct {
+		Group string `db:"group" json:"group"`
+	}
+	var idForm inet
+
+	err := c.ShouldBindJSON(&idForm)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить новую группу интернета: " + err.Error()})
+		return
+	}
+	//userID = "say@brnv.rw"
+	//user := "say@brnv.rw"
+	group := idForm.Group
+	err = h.uc.SwitchUserGroupInternet(userID, user, group)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно добавить пользователя в группу", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": "OK"})
+}

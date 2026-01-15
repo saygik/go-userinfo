@@ -45,7 +45,10 @@ type UseCase interface {
 	GetGlpiUserForTechnical(string, string) (*entity.GLPIUser, error)                                            // Пользователь GLPI для технического специалиста
 	GetAdCounts() (int, int, error)                                                                              // Основная статистика доменов
 	GetDomainList(string) []entity.DomainList                                                                    // Список доменов
-	GetADGroupUsers(string, string) ([]map[string]interface{}, error)                                            //
+	GetADGroupUsers(string, string) ([]map[string]interface{}, error)                                            // Пользователи группы
+	ADUserAddGroup(string, string) error                                                                         // Добавить пользователя в группу
+	ADUserDelGroup(string, string) error                                                                         // Удалить пользователя из группы
+	SwitchUserGroupInternet(string, string, string) error                                                        // Удалить пользователя из группы
 	GetUserSoftwares(string) ([]entity.Software, error)                                                          // Список систем пользователя
 	GetSoftwares() ([]entity.Software, error)                                                                    // Список всех систем
 	GetSoftwaresUsers() ([]entity.SoftUser, error)                                                               // Список всех систем пользователя

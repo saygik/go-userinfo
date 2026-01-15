@@ -120,7 +120,6 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 					userGroups, ok := user["memberOf"].([]string)
 					if ok {
 						userGroups = user["memberOf"].([]string)
-
 					}
 					if IsStringInArray("Отключенные Кадровичком", userGroups) {
 						user["sap_disabled"] = true

@@ -465,3 +465,41 @@ func getTime(input int64) time.Time {
 	}
 	return t
 }
+
+func (lc *ADClient) AddUserToGroup(userDN string, groupDN string) error {
+	err := lc.Connect()
+	if err != nil {
+		return err
+	}
+	err = lc.Bind()
+	if err != nil {
+		return err
+	}
+	// Запрос на добавление member
+	modify := ldap.NewModifyRequest(groupDN, nil)
+	modify.Add("member", []string{userDN})
+	err = lc.Conn.Modify(modify)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (lc *ADClient) DelUserFromGroup(userDN string, groupDN string) error {
+	err := lc.Connect()
+	if err != nil {
+		return err
+	}
+	err = lc.Bind()
+	if err != nil {
+		return err
+	}
+	// Запрос на добавление member
+	modify := ldap.NewModifyRequest(groupDN, nil)
+	modify.Delete("member", []string{userDN})
+	err = lc.Conn.Modify(modify)
+	if err != nil {
+		return err
+	}
+	return nil
+}
