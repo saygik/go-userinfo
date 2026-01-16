@@ -11,12 +11,12 @@ import (
 
 const (
 	// Error messages
-	errDomainNotFound     = "домен не найден"
-	errUserNotFound       = "пользователь не существует"
-	errUserDNNotDefined   = "не орпеделен dn пользователя"
-	errNoPermission       = "У Вас нет прав на эту операцию"
-	errUserNotInSystem    = "нет таккого пользователя в системе"
-	errCashAllNotFound    = "нет общего кеша для обновления"
+	errDomainNotFound   = "домен не найден"
+	errUserNotFound     = "пользователь не существует"
+	errUserDNNotDefined = "не орпеделен dn пользователя"
+	errNoPermission     = "У Вас нет прав на эту операцию"
+	errUserNotInSystem  = "нет таккого пользователя в системе"
+	//	errCashAllNotFound    = "нет общего кеша для обновления"
 	errInvalidGroup       = "Неправильная группа: %s. Должна быть 'whitelist', 'full', 'tech' or ''"
 	errFailedToAddToGroup = "failed to add to group %s: %w"
 
@@ -108,15 +108,7 @@ func (u *UseCase) ADUserAddGroup(user string, group string) error {
 		return err
 	}
 	return u.ADUserAddGroup2(domain, userDN, group)
-	// err = u.ad.AddUserGroup(domain, userDN, group)
-	// if err != nil {
-	// 	//		"ENTRY_EXISTS"
-	// 	if strings.Contains(err.Error(), "ENTRY_EXISTS") || strings.Contains(err.Error(), "already exists") {
-	// 		return nil
-	// 	}
-	// 	return u.Error(err.Error())
-	// }
-	// return nil
+
 }
 
 func (u *UseCase) ADUserAddGroup2(domain string, userDN string, groupDN string) error {
