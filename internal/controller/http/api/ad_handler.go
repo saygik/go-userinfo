@@ -1,7 +1,9 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -292,7 +294,9 @@ func (h *Handler) SwitchUserGroupInternet(c *gin.Context) {
 	user := c.Param("username")
 
 	type inet struct {
-		Group string `db:"group" json:"group"`
+		Group       string `json:"group"`       // Группа: whitelist, full, tech или ""
+		IsTemporary bool   `json:"isTemporary"` // Временное изменение (по умолчанию false)
+		Days        int    `json:"days"`        // Количество суток (1 = завтра в 8:00, 2 = послезавтра в 8:00 и т.д., используется только если isTemporary = true)
 	}
 	var idForm inet
 
@@ -301,13 +305,83 @@ func (h *Handler) SwitchUserGroupInternet(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить новую группу интернета: " + err.Error()})
 		return
 	}
-	//userID = "say@brnv.rw"
-	//user := "say@brnv.rw"
+
 	group := idForm.Group
-	err = h.uc.SwitchUserGroupInternet(userID, user, group)
+	isTemporary := idForm.IsTemporary
+	days := idForm.Days
+
+	// Валидация days
+	if isTemporary {
+		if days < 1 {
+			days = 1 // По умолчанию 1 сутки (завтра в 8:00)
+		}
+	}
+
+	err = h.uc.SwitchUserGroupInternet(userID, user, group, isTemporary, days)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно добавить пользователя в группу", "error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": "OK"})
+
+	message := "Группа успешно изменена"
+	if isTemporary {
+		dayWord := "суток"
+		if days == 1 {
+			dayWord = "сутки"
+		}
+		message = fmt.Sprintf("Группа временно изменена на %d %s (возврат в 8:00 утра)", days, dayWord)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": "OK", "message": message})
+}
+
+// GetTemporaryGroupChange получает информацию о временном изменении группы пользователя
+func (h *Handler) GetTemporaryGroupChange(c *gin.Context) {
+	user := c.Param("username")
+
+	change, err := h.uc.GetTemporaryGroupChange(user)
+	if err != nil {
+		// Если запись не найдена, возвращаем 404
+		c.JSON(http.StatusNotFound, gin.H{"error": "Временное изменение не найдено", "message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": change})
+}
+
+// getDomainFromUserName извлекает домен из имени пользователя (user@domain)
+func getDomainFromUserName(user string) string {
+	parts := strings.Split(user, "@")
+	if len(parts) < 2 {
+		return ""
+	}
+	return parts[1]
+}
+
+// DeleteTemporaryGroupChange удаляет временное изменение группы и восстанавливает предыдущую группу
+func (h *Handler) DeleteTemporaryGroupChange(c *gin.Context) {
+	userID := getUserID(c)
+	user := c.Param("username")
+
+	// Проверяем права доступа (только администраторы домена могут удалять)
+	domain := getDomainFromUserName(user)
+	if domain == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Неверный формат имени пользователя"})
+		return
+	}
+
+	// Проверяем права (только администраторы домена могут удалять)
+	permissionGroupDomainAdmins := "Администраторы пользователей домена"
+	if err := h.uc.UserInDomainGroup2(userID, permissionGroupDomainAdmins, domain); err != nil {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "У Вас нет прав на эту операцию"})
+		return
+	}
+
+	err := h.uc.DeleteTemporaryGroupChange(user)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Ошибка при удалении временного изменения", "message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": "OK", "message": "Временное изменение удалено, группа восстановлена"})
 }

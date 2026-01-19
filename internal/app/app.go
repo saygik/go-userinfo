@@ -57,6 +57,7 @@ func New(ctx context.Context) (*App, error) {
 	//	time.Sleep(duration)
 	//	app.c.useCase.GetHRPTickets()
 	//app.c.useCase.GetSoftwareUsersEOL()
+
 	go app.c.useCase.FillRedisCaсheFromAD()
 	go app.fillRedis(ctx)
 	if app.cfg.App.Env == "prod" {
@@ -64,6 +65,7 @@ func New(ctx context.Context) (*App, error) {
 	}
 	go app.getCalendarTaskNotifikations(ctx)
 	go app.getSoftwareUsersEOL(ctx)
+	go app.restoreExpiredTemporaryGroups(ctx)
 	app.c.useCase.FillRedisCaсheFromIUTM()
 	go app.fillCaсheIUTM(ctx)
 	return app, nil
@@ -137,5 +139,21 @@ func (a *App) fillCaсheIUTM(ctx context.Context) {
 			a.c.useCase.FillRedisCaсheFromIUTM()
 		}
 	}
+}
 
+// restoreExpiredTemporaryGroups проверяет и восстанавливает группы с истекшим временем
+func (a *App) restoreExpiredTemporaryGroups(ctx context.Context) {
+	// Проверяем каждые 5 минут
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := a.c.useCase.RestoreExpiredTemporaryGroups(); err != nil {
+				a.log.Warnf("Ошибка при восстановлении временных групп: %v", err)
+			}
+		}
+	}
 }

@@ -6,6 +6,8 @@ func (h *Handler) NewADRouterGroup() *gin.RouterGroup {
 	rg := h.rg.Group("/ad")
 
 	rg.POST("/user-to-internet-group/:username", h.TokenAuthMiddleware(), h.SwitchUserGroupInternet)
+	rg.GET("/user-to-internet-group/:username", h.TokenAuthMiddleware(), h.GetTemporaryGroupChange)
+	rg.DELETE("/user-to-internet-group/:username", h.TokenAuthMiddleware(), h.DeleteTemporaryGroupChange)
 	rg.GET("/users", h.TokenAuthMiddleware(), h.Users)
 	rg.GET("/public/users", h.TokenAuthMiddleware(), h.PUsers)
 	rg.GET("/user/:username", h.TokenAuthMiddleware(), h.User)

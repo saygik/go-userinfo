@@ -46,9 +46,12 @@ type UseCase interface {
 	GetAdCounts() (int, int, error)                                                                              // Основная статистика доменов
 	GetDomainList(string) []entity.DomainList                                                                    // Список доменов
 	GetADGroupUsers(string, string) ([]map[string]interface{}, error)                                            // Пользователи группы
+	UserInDomainGroup2(string, string, string) error                                                             // Проверить, находится ли пользователь в группе домена
 	ADUserAddGroup(string, string) error                                                                         // Добавить пользователя в группу
 	ADUserDelGroup(string, string) error                                                                         // Удалить пользователя из группы
-	SwitchUserGroupInternet(string, string, string) error                                                        // Удалить пользователя из группы
+	SwitchUserGroupInternet(string, string, string, bool, int) error                                             // Изменить группу интернета пользователя (с поддержкой временного режима)
+	GetTemporaryGroupChange(string) (*entity.TemporaryGroupChange, error)                                        // Получить информацию о временном изменении группы пользователя
+	DeleteTemporaryGroupChange(string) error                                                                     // Удалить временное изменение группы и восстановить предыдущую группу
 	GetUserSoftwares(string) ([]entity.Software, error)                                                          // Список систем пользователя
 	GetSoftwares() ([]entity.Software, error)                                                                    // Список всех систем
 	GetSoftwaresUsers() ([]entity.SoftUser, error)                                                               // Список всех систем пользователя

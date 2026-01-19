@@ -143,6 +143,7 @@ type Mattermost interface {
 	SendPostHRP(string, entity.HRPUser) (err error)
 	SendPost(string, string, string, string, string, string, bool) (err error)
 	SendPostHRPSoft(string, entity.HRPUser, string, int) (err error)
+	SendPostSimple(string, string) error
 }
 type GlpiApi interface {
 	CreateTicket(entity.NewTicketInputForm) (int, error)
