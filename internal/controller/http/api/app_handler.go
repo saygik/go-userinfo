@@ -20,18 +20,18 @@ func getUserID(c *gin.Context) (userID string) {
 
 func (h *Handler) CurrentUser(c *gin.Context) {
 	if !h.uc.IsAppInitialized() {
-		c.JSON(http.StatusAccepted, gin.H{"message": "Application not initialized"})
+		c.JSON(http.StatusAccepted, gin.H{"message": "Приложение не инициализированно"})
 		return
 	}
 	if userID := getUserID(c); userID != "" {
 		adUser, adErr := h.uc.GetCurrentUser(userID, userID)
 		if adErr != nil {
-			c.JSON(http.StatusNotAcceptable, gin.H{"message": "Invalid credentials", "error": adErr.Error()})
+			c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка получения данных пользователя", "error": adErr.Error()})
 			return
 		}
 		//	jadUser, _ := json.Marshal(adUser)
 
-		c.JSON(http.StatusOK, gin.H{"message": "User finded", "user": adUser})
+		c.JSON(http.StatusOK, gin.H{"message": "Пользователь найден", "user": adUser})
 	}
 
 }

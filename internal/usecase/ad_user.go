@@ -1,16 +1,20 @@
 package usecase
 
-import "github.com/saygik/go-userinfo/internal/entity"
+import (
+	"fmt"
+
+	"github.com/saygik/go-userinfo/internal/entity"
+)
 
 func (u *UseCase) GetUser(userID string, techUser string) (map[string]interface{}, error) {
 	var user map[string]any
 	domain := getDomainFromUserName(userID)
 	if !u.ad.IsDomainExist(domain) {
-		return nil, u.Error("такой домен отсутствует в системе")
+		return nil, u.Error(fmt.Sprintf("домен %s пользователя %s отсутствует в системе", domain, userID))
 	}
 	userJSON, err := u.redis.GetKeyFieldValue("allusers", userID)
 	if err != nil {
-		return nil, u.Error("нет таккого пользователя в системе")
+		return nil, u.Error(fmt.Sprintf("пользователь %s отсутствует в системе", userID))
 	}
 
 	unmarshalString(userJSON, &user)

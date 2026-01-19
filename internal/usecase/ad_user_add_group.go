@@ -392,9 +392,7 @@ func (u *UseCase) SwitchUserGroupInternet(tuser string, user string, groupName s
 
 	// Определяем текущую группу пользователя (для временного режима)
 	var previousGroup string
-	if isTemporary {
-		previousGroup = u.getCurrentUserInternetGroup(user, domain, userInfo)
-	}
+	previousGroup = u.getCurrentUserInternetGroup(user, domain, userInfo)
 
 	internetGroups := u.ad.GetDomainInternetGroupsDN(domain)
 	// Remove user from all internet groups
@@ -423,6 +421,15 @@ func (u *UseCase) SwitchUserGroupInternet(tuser string, user string, groupName s
 	domainAdminsGLPIId := u.ad.GetDomainAdminsGLPI(domain)
 	_, channelId, _, _ := u.glpi.GetGroupMattermostChannel(domainAdminsGLPIId)
 
+	msgCurrentGroup := groupName
+	if groupName == "" {
+		msgCurrentGroup = "отсутствует"
+	}
+	msgPrevGroup := previousGroup
+	if previousGroup == "" {
+		msgPrevGroup = "отсутствует"
+	}
+
 	// Если это временное изменение, сохраняем информацию для автоматического возврата
 	if isTemporary {
 		expiresAt, err := calculateExpirationTime(days)
@@ -450,16 +457,23 @@ func (u *UseCase) SwitchUserGroupInternet(tuser string, user string, groupName s
 			u.log.Warnf("Не удалось сохранить информацию о временном изменении для %s: %v", user, err)
 			// Не возвращаем ошибку, так как основная операция выполнена успешно
 		}
-		message := fmt.Sprintf(`У пользователя %s (%s) с помощью UserInfo **временно** изменилась /n
-		текущая группа интернет с %s на %s /n
-        группа %s вернётся у пользователя %s /n
+
+		message := fmt.Sprintf(`У пользователя %s (%s) с помощью UserInfo **временно** изменилась текущая группа интернет
+		**предыдущая группа:** %s
+		**текущая группа:** %s
+		группа %s вернётся у пользователя %s
 		*Группу изменил %s*
-		`, usercn, user, previousGroup, groupName, previousGroup, expiresAt, tuser)
+		`, usercn, user, msgPrevGroup, msgCurrentGroup, msgPrevGroup, expiresAt, tuser)
 		if len(channelId) > 0 {
 			u.SendPostSimple(channelId, message)
 		}
 	} else {
-		message := fmt.Sprintf(`У пользователя %s (%s) с помощью UserInfo изменилась текущая группа интернет на %s`, usercn, user, groupName)
+		message := fmt.Sprintf(`У пользователя %s (%s) с помощью UserInfo изменилась текущая группа интернет
+		**предыдущая группа:** %s
+		**текущая группа:** %s
+		*Группу изменил %s*
+		`,
+			usercn, user, msgPrevGroup, msgCurrentGroup, tuser)
 		if len(channelId) > 0 {
 			u.SendPostSimple(channelId, message)
 		}
