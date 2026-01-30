@@ -265,3 +265,10 @@ func AnyOfFirstInSecond(first, second []string) bool {
 
 	return false
 }
+
+func GetStringFromMap(m map[string]any, key string) string {
+	if val, ok := m[key].(string); ok {
+		return val
+	}
+	return ""
+}

@@ -13,11 +13,10 @@ func (h *Handler) NewADRouterGroup() *gin.RouterGroup {
 	rg.GET("/user/:username", h.TokenAuthMiddleware(), h.User)
 	rg.GET("/finduser/:username", h.UserSimple)
 	rg.GET("/computers", h.TokenAuthMiddleware(), h.Computers)
+	rg.GET("/lastcomputers/:domain", h.TokenAuthMiddleware(), h.LastComputers)
 	rg.GET("/stats/counts", h.TokenAuthMiddleware(), h.GetAdCounts)
-
 	rg.GET("/activity/user/:username", h.TokenAuthMiddleware(), h.GetUserADActivity)
 	rg.GET("/user-mailbox-delegates/:username", h.TokenAuthMiddleware(), h.GetUserMailboxPermissions)
-
 	rg.PUT("/user/avatar/:username", h.TokenAuthMiddleware(), h.UpdateUserAvatar)
 	rg.PUT("/user/role/:username", h.TokenAuthMiddleware(), h.UpdateUserRole)
 	rg.POST("/user/group/:username", h.TokenAuthMiddleware(), h.AddUserGroup)

@@ -35,6 +35,7 @@ type UseCase interface {
 	GetADUsers(string) ([]map[string]interface{}, error)                                                         // Пользователи домена
 	GetADUsersPublicInfo(string) ([]map[string]interface{}, error)                                               // Пользователи домена соклащённая информация
 	GetADComputers(string) ([]map[string]interface{}, error)                                                     // Компьютеры домена
+	GetADLastComputers(string, string) ([]entity.DomainComputer, error)                                          // Компьютеры домена с последними логинами
 	GetUser(string, string) (map[string]interface{}, error)                                                      // Свойства пользователя домена
 	UserExist(string) error                                                                                      // Существует ли пользователь в доменах
 	GetCurrentUser(string, string) (map[string]interface{}, error)                                               // Свойства залогиненного пользователя домена

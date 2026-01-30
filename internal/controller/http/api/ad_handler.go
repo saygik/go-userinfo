@@ -73,6 +73,30 @@ func (h *Handler) Computers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": computers})
 }
 
+// LastComputers возвращает компьютеры домена с последними логинами пользователей
+// и дополнительными AD‑свойствами из Redis.
+func (h *Handler) LastComputers(c *gin.Context) {
+	domain := c.Param("domain")
+	if domain == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить домен.", "error": "Empty domain name"})
+		return
+	}
+
+	userID := ""
+	if userID = getUserID(c); userID == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить пользователя.", "error": "Empty user id"})
+		return
+	}
+
+	computers, err := h.uc.GetADLastComputers(domain, userID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить список компьютеров домена", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": computers})
+}
+
 func (h *Handler) User(c *gin.Context) {
 	user := c.Param("username")
 	if user == "" {

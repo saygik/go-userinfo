@@ -50,6 +50,7 @@ type Repository interface {
 	DelScheduleTask(int) error
 	GetOneDelegateMailBoxes(string) ([]entity.MailBoxDelegates, error)
 	GetUserGlpiTrackingGroups(string) ([]entity.Id, error)
+	GetComputerByDomain(string) ([]entity.DomainComputer, error)
 }
 type Redis interface {
 	ClearAllDomainsUsers()
