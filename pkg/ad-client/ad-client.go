@@ -223,7 +223,7 @@ func convertSIDToString(sid []byte) string {
 func (lc *ADClient) GetAllComputers() ([]map[string]interface{}, error) {
 	//	filter := "(&(objectCategory=computer)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
 	attr := []string{"name", "description", "cn", "operatingSystem", "operatingSystemVersion", "primaryGroupID", "servicePrincipalName",
-		"distinguishedName", "userAccountControl", "lastLogonTimestamp", "extensionAttribute10"}
+		"distinguishedName", "userAccountControl", "lastLogonTimestamp", "ms-Mcs-AdmPwdExpirationTime", "extensionAttribute10"}
 	err := lc.Connect()
 	if err != nil {
 		return nil, err
