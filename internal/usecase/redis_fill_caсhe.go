@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -11,6 +12,61 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 	"github.com/saygik/go-userinfo/internal/state"
 )
+
+// соответствие build-номера Windows маркетинговому имени версии
+var windowsBuildToHuman = map[int]string{
+	26200: "25H2", // Windows 11 24H2
+	26100: "24H2", // Windows 11 24H2
+	22631: "23H2", // Windows 11 23H2
+	22621: "22H2", // Windows 11 22H2
+	22000: "21H2", // Windows 11 21H2
+
+	19045: "22H2", // Windows 10 22H2
+	19044: "21H2", // Windows 10 21H2
+	19043: "21H1", // Windows 10 21H1
+	19042: "20H2", // Windows 10 20H2
+	19041: "2004",
+	18363: "1909",
+	18362: "1903",
+	17763: "1809",
+	17134: "1803",
+	16299: "1709",
+	15063: "1703",
+	14393: "1607",
+	10586: "1511",
+	10240: "1507",
+	7601:  "WIN7", // Windows 7 SP1
+}
+
+// windowsVersionToHuman преобразует строку operatingSystemVersion AD в вид 24H2 / 22H2 и т.п.
+// Примеры входа:
+//   - "10.0 (26100)" -> "24H2"
+//   - "10.0 (19045)" -> "22H2"
+func windowsVersionToHuman(osVersion string) string {
+	if osVersion == "" {
+		return ""
+	}
+
+	// оставляем только числовые последовательности и берём последнюю (build)
+	parts := strings.FieldsFunc(osVersion, func(r rune) bool {
+		return r < '0' || r > '9'
+	})
+	if len(parts) == 0 {
+		return ""
+	}
+
+	buildStr := parts[len(parts)-1]
+	build, err := strconv.Atoi(buildStr)
+	if err != nil {
+		return ""
+	}
+
+	if human, ok := windowsBuildToHuman[build]; ok {
+		return human
+	}
+
+	return ""
+}
 
 func (u *UseCase) FillRedisCaсheFromAD() error {
 	if state.IsFillingRedis() {
@@ -58,6 +114,16 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 
 			users, err := u.ad.GetDomainUsers(one.Name)
 			comps, _ := u.ad.GetDomainComputers(one.Name)
+			// Добавляем человекочитаемую версию ОС по operatingSystemVersion (например, 24H2)
+			for _, comp := range comps {
+				if v, ok := comp["operatingSystemVersion"]; ok {
+					if verStr, ok := v.(string); ok {
+						if human := windowsVersionToHuman(verStr); human != "" {
+							comp["operatingSystemVersionHuman"] = human
+						}
+					}
+				}
+			}
 			rmsPort := u.ad.GetDomainRMSPort(one.Name)
 			u.log.Info("Получение данных домена " + one.Name + " завершено. Обработка данных...")
 			if err == nil || len(users) > 0 {
