@@ -8,15 +8,19 @@ import (
 
 // GetADComputersOSFamily возвращает количество компьютеров домена, сгруппированное по семейству ОС (OperatingSystemFamily).
 func (u *UseCase) GetADComputersOSFamily(domain, user string) ([]entity.ComputerFamilyCount, error) {
-	if !u.ad.IsDomainExist(domain) {
-		return nil, u.Error("домен " + domain + " отсутствует в системе")
-	}
 
 	access := u.GetAccessToResource(domain, user)
 	if access == -1 {
 		return nil, u.Error("у вас нет прав на просмотр информации по домену " + domain)
 	}
 
+	if !u.ad.IsDomainExist(domain) {
+		return nil, u.Error("домен " + domain + " отсутствует в системе")
+	}
+
+	if domain == "все домены" {
+
+	}
 	comps, err := u.ad.GetDomainComputers(domain)
 	if err != nil {
 		return nil, err
@@ -54,4 +58,3 @@ func (u *UseCase) GetADComputersOSFamily(domain, user string) ([]entity.Computer
 
 	return res, nil
 }
-

@@ -28,7 +28,7 @@ var windowsBuildToHuman = map[int]string{
 	10586: "1511",
 	10240: "1507",
 
-	7601: "WIN7", // Windows 7 SP1 / Server 2008 R2
+	7601: "7 SP1", // Windows 7 SP1 / Server 2008 R2
 
 	// Server-only ветка
 	20348: "Server 2022",
@@ -44,7 +44,7 @@ var windowsBuildToHuman = map[int]string{
 //   - "10.0 (19045)"  -> "22H2"
 //   - "6.3 (9600)"    -> "Server 2012 R2"
 //   - "10.0 (20348)"  -> "Server 2022"
-func windowsVersionToHuman(osVersion string) string {
+func versionNumber(osVersion string) string {
 	osVersion = strings.TrimSpace(osVersion)
 	if osVersion == "" {
 		return ""
@@ -59,6 +59,11 @@ func windowsVersionToHuman(osVersion string) string {
 	}
 
 	buildStr := parts[len(parts)-1]
+	return buildStr
+}
+func windowsVersionToHuman(osVersion string) string {
+
+	buildStr := versionNumber(osVersion)
 	build, err := strconv.Atoi(buildStr)
 	if err != nil {
 		return ""

@@ -48,7 +48,21 @@ func (h *Handler) PUsers(c *gin.Context) {
 }
 
 func (h *Handler) GetAdCounts(c *gin.Context) {
-	users, computers, err := h.uc.GetAdCounts()
+	domain := c.Param("domain")
+
+	var (
+		users     int
+		computers int
+		err       error
+	)
+
+	if domain == "" || domain == "-" || domain == "все домены" {
+		// Старое поведение: считаем по всем доменам
+		users, computers, err = h.uc.GetAdCounts()
+	} else {
+		// Новое поведение: считаем только по одному домену
+		users, computers, err = h.uc.GetAdCountsDomain(domain)
+	}
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get all domains counts", "error": err.Error()})
 		return

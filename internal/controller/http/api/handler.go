@@ -46,7 +46,8 @@ type UseCase interface {
 	GetCurrentUserResources(string) ([]entity.AppResource, error)                                                // Разрешённые ресурсы
 	GetGlpiUser(string) (entity.GLPIUser, error)                                                                 // Пользователь GLPI
 	GetGlpiUserForTechnical(string, string) (*entity.GLPIUser, error)                                            // Пользователь GLPI для технического специалиста
-	GetAdCounts() (int, int, error)                                                                              // Основная статистика доменов
+	GetAdCounts() (int, int, error)                                                                              // Основная статистика доменов (все домены)
+	GetAdCountsDomain(string) (int, int, error)                                                                  // Статистика по одному домену
 	GetDomainList(string) []entity.DomainList                                                                    // Список доменов
 	GetADGroupUsers(string, string) ([]map[string]interface{}, error)                                            // Пользователи группы
 	UserInDomainGroup2(string, string, string) error                                                             // Проверить, находится ли пользователь в группе домена

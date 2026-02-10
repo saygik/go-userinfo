@@ -47,10 +47,26 @@ func (u *UseCase) GetADComputersVersions(domain, user string) ([]entity.Computer
 	res := make([]entity.ComputerVersionCount, 0, len(counts))
 	for k, cnt := range counts {
 		family := osFamilyName(k.os)
+		versionName := versionNumber(k.raw)
+		if versionName != "" {
+			// Проверяем LTSC/LTSB и заменяем
+			ltscNames := map[string]string{
+				"10240": "LTSB 2015",
+				"14393": "LTSB 2016",
+				"17763": "LTSC 2019",
+				"19044": "LTSC 2021",
+				"26100": "LTSC 2024",
+			}
+			if name, ok := ltscNames[versionName]; ok {
+				versionName = name + " (" + versionName + ")"
+			} else {
+				versionName = "(" + versionName + ")"
+			}
+		}
 		res = append(res, entity.ComputerVersionCount{
 			OperatingSystem:             k.os,
 			OperatingSystemFamily:       family,
-			OperatingSystemVersion:      k.raw,
+			OperatingSystemVersion:      versionName,
 			OperatingSystemVersionHuman: k.human,
 			Count:                       cnt,
 		})
@@ -188,4 +204,3 @@ func extractBuildNumber(osVersion string) int {
 	}
 	return n
 }
-

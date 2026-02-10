@@ -17,6 +17,7 @@ func (h *Handler) NewADRouterGroup() *gin.RouterGroup {
 	rg.GET("/computers/osfamily/:domain", h.TokenAuthMiddleware(), h.ComputersOSFamily)
 	rg.GET("/lastcomputers/:domain", h.TokenAuthMiddleware(), h.LastComputers)
 	rg.GET("/stats/counts", h.TokenAuthMiddleware(), h.GetAdCounts)
+	rg.GET("/stats/counts/:domain", h.TokenAuthMiddleware(), h.GetAdCounts)
 	rg.GET("/activity/user/:username", h.TokenAuthMiddleware(), h.GetUserADActivity)
 	rg.GET("/user-mailbox-delegates/:username", h.TokenAuthMiddleware(), h.GetUserMailboxPermissions)
 	rg.PUT("/user/avatar/:username", h.TokenAuthMiddleware(), h.UpdateUserAvatar)
