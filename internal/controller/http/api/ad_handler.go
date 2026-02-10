@@ -73,6 +73,53 @@ func (h *Handler) Computers(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": computers})
 }
 
+// ComputersVersions возвращает количество компьютеров домена, сгруппированное по версии ОС (operatingSystemVersion).
+// Включает также человекочитаемую версию Windows (operatingSystemVersionHuman, например 24H2).
+func (h *Handler) ComputersVersions(c *gin.Context) {
+	domain := c.Param("domain")
+	if domain == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить домен.", "error": "Empty domain name"})
+		return
+	}
+
+	userID := ""
+	if userID = getUserID(c); userID == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить пользователя.", "error": "Empty user id"})
+		return
+	}
+
+	data, err := h.uc.GetADComputersVersions(domain, userID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить версии компьютеров домена", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}
+
+// ComputersOSFamily возвращает количество компьютеров домена, сгруппированное по семейству ОС (OperatingSystemFamily).
+func (h *Handler) ComputersOSFamily(c *gin.Context) {
+	domain := c.Param("domain")
+	if domain == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить домен.", "error": "Empty domain name"})
+		return
+	}
+
+	userID := ""
+	if userID = getUserID(c); userID == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить пользователя.", "error": "Empty user id"})
+		return
+	}
+
+	data, err := h.uc.GetADComputersOSFamily(domain, userID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить статистику по семействам ОС домена", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": data})
+}
+
 // LastComputers возвращает компьютеры домена с последними логинами пользователей
 // и дополнительными AD‑свойствами из Redis.
 func (h *Handler) LastComputers(c *gin.Context) {
