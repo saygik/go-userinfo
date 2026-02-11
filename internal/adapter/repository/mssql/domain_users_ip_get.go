@@ -13,3 +13,8 @@ func (r *Repository) GetDomainUsersAvatars(domain string) (users []entity.IdName
 	_, err = r.db.Select(&users, "GetAllUsersAvatars $1", domain)
 	return users, err
 }
+
+func (r *Repository) GetComputerRMS(domain string) (computers []string, err error) {
+	_, err = r.db.Select(&computers, "GetComputerRMS $1", domain)
+	return computers, err
+}

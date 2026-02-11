@@ -132,3 +132,23 @@ func (h *Handler) AppGroups(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": groups})
 }
+
+func (h *Handler) ComputerRMS(c *gin.Context) {
+	isApi := h.IsApiRequest(c)
+	if !isApi {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Этот запрос обслуживает только другие API"})
+		return
+	}
+	domain := c.Param("domain")
+	if domain == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить домен.", "error": "Empty domain name"})
+		return
+	}
+	computers, err := h.uc.GetComputerRMS(domain)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить список коспьютеров с RMS", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, computers)
+}

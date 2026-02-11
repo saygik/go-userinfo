@@ -105,6 +105,7 @@ type UseCase interface {
 	AddTicketUser(entity.GLPITicketUserForm) error                                                               //
 	GetTicketsInExecutionGroups(string) ([]entity.GLPI_Ticket, error)                                            // Незакрытые заявки в группах слежения пользователя
 	UserInGropScopes(string, []string, []entity.IDPScope, *entity.OAuth2Client) ([]string, bool, error)          // У пользователя есть права на требуемый scope
+	GetComputerRMS(string) ([]string, error)                                                                     //Списсок компьютеров с RMS
 }
 
 type OAuth2 interface {

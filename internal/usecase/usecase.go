@@ -10,6 +10,7 @@ type Repository interface {
 	GetAppGroups() ([]entity.IdName, error)
 	GetAppResources() ([]entity.IdName, error)
 	GetDomainUsersIP(string) ([]entity.UserIPComputer, error)
+	GetComputerRMS(string) ([]string, error)
 	GetDomainUsersAvatars(string) ([]entity.IdNameAvatar, error)
 	GetUserResourceAccess(string, string) (int, error)
 	GetUserRoles(string) ([]entity.IdName, error)
