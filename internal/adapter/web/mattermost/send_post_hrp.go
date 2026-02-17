@@ -30,16 +30,6 @@ func (r *Repository) SendPostHRP(channelId string, hrppost entity.HRPUser) (err 
 				Title:      "Заявка на отключение учетных данных сотрудника №" + strconv.Itoa(hrppost.Id),
 				TitleLink:  "https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(hrppost.Id),
 				Footer:     hrppost.Company,
-				// Fields: []*model.SlackAttachmentField{
-				// 	{
-				// 		Title: "ФИО",
-				// 		Value: hrppost.FIO,
-				// 	},
-				// 	{
-				// 		Title: "должность",
-				// 		Value: hrppost.Dolg,
-				// 	},
-				// },
 			},
 		},
 	})

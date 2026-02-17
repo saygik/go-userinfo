@@ -69,6 +69,7 @@ type IUTM interface {
 type AD interface {
 	DomainList() []entity.DomainList
 	GetDomainAdminsGLPI(string) int
+	GetDomainMattermostLogChannel(string) string
 	GetDomainRMSPort(string) int
 	GetDomainUsers(string) ([]map[string]any, error)
 	GetDomainComputers(string) ([]map[string]any, error)

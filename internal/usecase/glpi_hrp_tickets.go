@@ -44,10 +44,8 @@ func (u *UseCase) GetHRPTickets() {
 		observeCountTicketsPerRegion(region)
 
 		finded := false
-		_, channelId, _, _ := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
-		// if err != nil {
-		// 	u.log.Error(fmt.Sprintf("Error getting channelId for group %d: %v", ticket.GroupId, err))
-		// }
+		//_, channelId, _, _ := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
+		domainMattermostLogChannel := ""
 
 		if len(ticket.Content) < 20 || !strings.Contains(ticket.Content, "Сотрудник:") {
 			u.glpi.SetHRPTicket(ticket.Id)
@@ -88,7 +86,10 @@ func (u *UseCase) GetHRPTickets() {
 				if normalizeRussianString(fmt.Sprintf("%v", user["displayName"])) == normalizeRussianString(sfio) {
 					finded = true
 					domain := user["domain"].(map[string]any)
-					domainAdminsGLPIId := u.ad.GetDomainAdminsGLPI(domain["name"].(string))
+					domainName := domain["name"].(string)
+					domainMattermostLogChannel = u.ad.GetDomainMattermostLogChannel(domainName)
+
+					domainAdminsGLPIId := u.ad.GetDomainAdminsGLPI(domainName)
 					domainAdminsGLPIName, _, _, _ := u.glpi.GetGroupMattermostChannel(domainAdminsGLPIId)
 					u.sendHRPToCalendarAndMattermostChannel(hrpUser, "домен "+domain["name"].(string), ticket, sfio, dateToNotificate, domainAdminsGLPIId)
 
@@ -129,8 +130,6 @@ func (u *UseCase) GetHRPTickets() {
 				_ = soft
 				finded = true
 
-				//_, adminsChannelId, calId, _ := u.glpi.GetGroupMattermostChannel(int(soft.Groups_id_tech))
-
 				u.sendHRPToCalendarAndMattermostChannel(hrpUser, soft.Name, ticket, sfio, dateToNotificate, int(soft.Groups_id_tech))
 
 				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
@@ -163,12 +162,13 @@ func (u *UseCase) GetHRPTickets() {
 		//|| strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3")
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") {
 			if !finded {
-				if len(channelId) > 0 {
-					err = u.matt.SendPostHRP(channelId, hrpUser)
+
+				if len(domainMattermostLogChannel) > 0 {
+					err = u.matt.SendPostHRP(domainMattermostLogChannel, hrpUser)
 					if err != nil {
-						u.log.Error(fmt.Sprintf("Error sending post for autoresolved ticket %d to Mattermost channel %s to HRP ticket group %d. Error: %v", ticket.Id, channelId, ticket.GroupId, err))
+						u.log.Error(fmt.Sprintf("Error sending post for autoresolved ticket %d to Mattermost channel %s to HRP ticket group %d. Error: %v", ticket.Id, domainMattermostLogChannel, ticket.GroupId, err))
 					} else {
-						u.log.Info(fmt.Sprintf(`Post for autoresolved ticket %d to Mattermost channel %s to HRP ticket group %d sended`, ticket.Id, channelId, ticket.GroupId))
+						u.log.Info(fmt.Sprintf(`Post for autoresolved ticket %d to Mattermost channel %s to HRP ticket group %d sended`, ticket.Id, domainMattermostLogChannel, ticket.GroupId))
 					}
 				}
 				u.AddTicketSolution(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
@@ -200,7 +200,7 @@ func (u *UseCase) sendHRPToCalendarAndMattermostChannel(
 ) {
 	adminsName, channelId, calId, _ := u.glpi.GetGroupMattermostChannel(groupId)
 	//* TEST ***************************************
-	//	channelId, calId = "dhsjngrtztfpm8777ud6gnxbph", 6
+
 	sheduleTaskId := 0
 	if dateToNotificate != "" && calId > 0 {
 		content := parseHTML(ticket.Content)
