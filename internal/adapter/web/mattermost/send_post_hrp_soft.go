@@ -2,6 +2,7 @@ package mattermost
 
 import (
 	"context"
+	"regexp"
 	"strconv"
 
 	"github.com/mattermost/mattermost/server/public/model"
@@ -51,8 +52,10 @@ func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, s
 	actions = append(actions, &glpiCommentAction)
 
 	//*************************************
+
 	post := &model.Post{
 		ChannelId: channelId,
+		Message:   "> " + deleteParentheses(hrpUser.FIO),
 		Metadata: &model.PostMetadata{
 			Priority: &model.PostPriority{
 				Priority:     model.NewPointer("important"), // Options: "standard", "important", "urgent"
@@ -94,4 +97,9 @@ func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, s
 		return err
 	}
 	return nil
+}
+
+func deleteParentheses(s string) string {
+	re := regexp.MustCompile(`\([^)]*\)`)
+	return re.ReplaceAllString(s, "")
 }

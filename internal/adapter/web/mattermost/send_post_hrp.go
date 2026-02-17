@@ -11,6 +11,7 @@ import (
 func (r *Repository) SendPostHRP(channelId string, hrppost entity.HRPUser) (err error) {
 	post := &model.Post{
 		ChannelId: channelId,
+		Message:   "> " + deleteParentheses(hrppost.FIO),
 		Metadata: &model.PostMetadata{
 			Priority: &model.PostPriority{
 				Priority:     model.NewPointer("standard"), // Options: "standard", "important", "urgent"

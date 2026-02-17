@@ -34,14 +34,19 @@ func (h *Handler) AddGLPICommentFromMattermostUser(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"ephemeral_text": err.Error()})
 		return
 	}
-	var res = struct {
-		Message string `json:"message,omitempty"`
-		Props   any    `json:"props,omitempty"`
-	}{
-		Message: "> *" + comment + "*",
+	// var res = struct {
+	// 	Message string `json:"message,omitempty"`
+	// 	Props   any    `json:"props,omitempty"`
+	// }{
+	// 	Message: "> *" + comment + "*",
+	// }
+	err = h.uc.ReplyPost(commentFormMatt.ChannelId, commentFormMatt.PostId, comment)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"ephemeral_text": err.Error()})
+		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"ephemeral_text": comment, "update": res})
+	//	c.JSON(http.StatusOK, gin.H{"ephemeral_text": comment, "update": res})
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func (h *Handler) DisableCalendarTaskNotification(c *gin.Context) {
@@ -62,12 +67,18 @@ func (h *Handler) DisableCalendarTaskNotification(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"ephemeral_text": err.Error()})
 		return
 	}
-	var res = struct {
-		Message string `json:"message,omitempty"`
-		Props   any    `json:"props,omitempty"`
-	}{
-		Message: "> *" + comment + "*",
+	err = h.uc.ReplyPost(commentFormMatt.ChannelId, commentFormMatt.PostId, comment)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"ephemeral_text": err.Error()})
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"ephemeral_text": comment, "update": res})
+	// var res = struct {
+	// 	Message string `json:"message,omitempty"`
+	// 	Props   any    `json:"props,omitempty"`
+	// }{
+	// 	Message: "> *" + comment + "*",
+	// }
+
+	c.JSON(http.StatusOK, gin.H{})
 }

@@ -51,18 +51,19 @@ func New(ctx context.Context) (*App, error) {
 	app.c = c
 	app.c.useCase.ClearRedisCaсhe()
 
-	//FOR TEST!!!!!!!!!!!!!!!!!!!!
-	//	app.c.useCase.GetScheduleTasksNotifications()
-	//	duration := 20 * time.Second
-	//	time.Sleep(duration)
-	//	app.c.useCase.GetHRPTickets()
-	//app.c.useCase.GetSoftwareUsersEOL()
-
 	go app.c.useCase.FillRedisCaсheFromAD()
 	go app.fillRedis(ctx)
 	if app.cfg.App.Env == "prod" {
 		go app.getHrpTickets(ctx)
 	}
+
+	//FOR TEST!!!!!!!!!!!!!!!!!!!!
+	// app.c.useCase.GetScheduleTasksNotifications()
+	// duration := 30 * time.Second
+	// time.Sleep(duration)
+	// app.c.useCase.GetHRPTickets()
+	//app.c.useCase.GetSoftwareUsersEOL()
+
 	go app.getCalendarTaskNotifikations(ctx)
 	go app.getSoftwareUsersEOL(ctx)
 	go app.restoreExpiredTemporaryGroups(ctx)
