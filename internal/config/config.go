@@ -34,6 +34,7 @@ type ADConfig struct {
 	BindDN               string           `json:"bindDN"`
 	BindPassword         string           `json:"bindpassword"`
 	AdminGLPIGroup       int              `json:"adminGLPIGroup"`
+	GlpiRegionPrefix     string           `json:"glpiRegionPrefix"`
 	MattermostLogChannel string           `json:"mattermostLogChannel"`
 	RmsPort              int              `json:"rmsPort"`
 	InternetGroups       ADInternetGroups `json:"internetGroups"`

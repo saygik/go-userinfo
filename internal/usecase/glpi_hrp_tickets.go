@@ -45,7 +45,6 @@ func (u *UseCase) GetHRPTickets() {
 
 		finded := false
 		//_, channelId, _, _ := u.glpi.GetGroupMattermostChannel(ticket.GroupId)
-		domainMattermostLogChannel := ""
 
 		if len(ticket.Content) < 20 || !strings.Contains(ticket.Content, "Сотрудник:") {
 			u.glpi.SetHRPTicket(ticket.Id)
@@ -75,55 +74,63 @@ func (u *UseCase) GetHRPTickets() {
 		upn := ""
 		u.log.Info("Processing HRP user " + sfio + "...")
 
-		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") || strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3") {
+		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") {
 			u.webClient.AddWebhook(entity.WebhookPayload{Data: hrpUserforHook, WebhookId: strconv.Itoa(ticket.Id)})
-			for _, value := range redisADUsers {
-				var user map[string]any
-				json.Unmarshal([]byte(value), &user)
-				if user["disabled"] == true {
+		}
+
+		//** Поиск пользователя в доменах//
+		for _, value := range redisADUsers {
+			var user map[string]any
+			json.Unmarshal([]byte(value), &user)
+			if user["disabled"] == true {
+				continue
+			}
+			if normalizeRussianString(fmt.Sprintf("%v", user["displayName"])) == normalizeRussianString(sfio) {
+				finded = true
+				// domain := user["domain"].(map[string]any)
+				// domainName := domain["name"].(string)
+				domainName, err := getDomainNameFromUser(user)
+				if err != nil {
+					u.log.Error(fmt.Sprintf("Error getting domain name from user %v: %v", user, err))
 					continue
 				}
-				if normalizeRussianString(fmt.Sprintf("%v", user["displayName"])) == normalizeRussianString(sfio) {
-					finded = true
-					domain := user["domain"].(map[string]any)
-					domainName := domain["name"].(string)
-					domainMattermostLogChannel = u.ad.GetDomainMattermostLogChannel(domainName)
 
-					domainAdminsGLPIId := u.ad.GetDomainAdminsGLPI(domainName)
-					domainAdminsGLPIName, _, _, _ := u.glpi.GetGroupMattermostChannel(domainAdminsGLPIId)
-					u.sendHRPToCalendarAndMattermostChannel(hrpUser, "домен "+domain["name"].(string), ticket, sfio, dateToNotificate, domainAdminsGLPIId)
+				domainAdminsGLPIId := u.ad.GetDomainAdminsGLPI(domainName)
+				domainAdminsGLPIName, _, _, _ := u.glpi.GetGroupMattermostChannel(domainAdminsGLPIId)
+				u.sendHRPToCalendarAndMattermostChannel(hrpUser, "домен "+domainName, ticket, sfio, dateToNotificate, domainAdminsGLPIId)
 
-					upn = fmt.Sprintf("%v", user["userPrincipalName"])
-					sBoxes = ""
-					sBoxes += `<b>Поиск по ФИО:</b><br>	`
-					sBoxes += fmt.Sprintf(`%v найден в домене %v, учетная запись <b>%s</b><br>`, user["displayName"], domain["name"], upn)
-					val, ok = user["company"].(string)
-					if ok {
-						sBoxes += fmt.Sprintf(`<b>Организация:</b> %s<br>`, val)
-					}
-					val, ok = user["title"].(string)
-					if ok {
-						sBoxes += fmt.Sprintf(`<b>Должность:</b> %s<br>`, val)
-					}
-					sBoxes += fmt.Sprintf(`рекомендуется направить заявку группе администраторов этого домена(%s) для окончательной проверки и отключения`, domainAdminsGLPIName)
-
-					u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10, Content: sBoxes})
-
-					// softs, err := u.GetUserSoftwares(upn)
-					// if err == nil && len(softs) > 0 {
-					// 	for _, soft := range softs {
-					// 		_ = soft
-					// 		u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
-					// 			Content: fmt.Sprintf(`<b>Поиск по учетной записи найденного пользователя:</b><br>
-					//           %s найден в списке зарегистрированных пользователей системы <b>%s</b><br>
-					//           рекомендуется направить заявку группе администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
-					//  `, upn, soft.Name, soft.GroupName)})
-
-					// 	}
-					// }
+				upn = fmt.Sprintf("%v", user["userPrincipalName"])
+				sBoxes = ""
+				sBoxes += `<b>Поиск по ФИО:</b><br>	`
+				sBoxes += fmt.Sprintf(`%v найден в домене %s, учетная запись <b>%s</b><br>`, user["displayName"], domainName, upn)
+				val, ok = user["company"].(string)
+				if ok {
+					sBoxes += fmt.Sprintf(`<b>Организация:</b> %s<br>`, val)
 				}
+				val, ok = user["title"].(string)
+				if ok {
+					sBoxes += fmt.Sprintf(`<b>Должность:</b> %s<br>`, val)
+				}
+				sBoxes += fmt.Sprintf(`рекомендуется направить заявку группе администраторов этого домена(%s) для окончательной проверки и отключения`, domainAdminsGLPIName)
+
+				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10, Content: sBoxes})
+
+				// softs, err := u.GetUserSoftwares(upn)
+				// if err == nil && len(softs) > 0 {
+				// 	for _, soft := range softs {
+				// 		_ = soft
+				// 		u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
+				// 			Content: fmt.Sprintf(`<b>Поиск по учетной записи найденного пользователя:</b><br>
+				//           %s найден в списке зарегистрированных пользователей системы <b>%s</b><br>
+				//           рекомендуется направить заявку группе администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
+				//  `, upn, soft.Name, soft.GroupName)})
+
+				// 	}
+				// }
 			}
 		}
+
+		//** Поиск пользователя в системах//
 		softs, err := u.GetUserSoftwaresByFio(sfio)
 		if err == nil && len(softs) > 0 {
 			for _, soft := range softs {
@@ -162,13 +169,15 @@ func (u *UseCase) GetHRPTickets() {
 		//|| strings.HasPrefix(ticket.Company, "БЖД > ИВЦ3")
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") {
 			if !finded {
-
-				if len(domainMattermostLogChannel) > 0 {
-					err = u.matt.SendPostHRP(domainMattermostLogChannel, hrpUser)
-					if err != nil {
-						u.log.Error(fmt.Sprintf("Error sending post for autoresolved ticket %d to Mattermost channel %s to HRP ticket group %d. Error: %v", ticket.Id, domainMattermostLogChannel, ticket.GroupId, err))
-					} else {
-						u.log.Info(fmt.Sprintf(`Post for autoresolved ticket %d to Mattermost channel %s to HRP ticket group %d sended`, ticket.Id, domainMattermostLogChannel, ticket.GroupId))
+				domainMattermostLogChannels := u.ad.GetMattermostLogChannelsByPrefix(ticket.Company)
+				if len(domainMattermostLogChannels) > 0 {
+					for _, domainMattermostLogChannel := range domainMattermostLogChannels {
+						err = u.matt.SendPostHRP(domainMattermostLogChannel, hrpUser)
+						if err != nil {
+							u.log.Error(fmt.Sprintf("Error sending post for autoresolved ticket %d to Mattermost channel %s to HRP ticket group %d. Error: %v", ticket.Id, domainMattermostLogChannel, ticket.GroupId, err))
+						} else {
+							u.log.Info(fmt.Sprintf(`Post for autoresolved ticket %d to Mattermost channel %s to HRP ticket group %d sended`, ticket.Id, domainMattermostLogChannel, ticket.GroupId))
+						}
 					}
 				}
 				u.AddTicketSolution(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
@@ -247,4 +256,39 @@ func normalizeRussianString(s string) string {
 	result = strings.ToLower(strings.TrimSpace(result))
 
 	return result
+}
+
+func getDomainNameFromUser(user map[string]any) (string, error) {
+	// 1. Проверяем user
+	if user == nil {
+		return "", fmt.Errorf("user is nil")
+	}
+
+	// 2. Извлекаем domain безопасно
+	domainValue, ok := user["domain"]
+	if !ok {
+		return "", fmt.Errorf("user[domain] not found")
+	}
+
+	domain, ok := domainValue.(map[string]any)
+	if !ok {
+		return "", fmt.Errorf("user[domain] is not map, got %T", domainValue)
+	}
+
+	// 3. Извлекаем domain name
+	nameValue, ok := domain["name"]
+	if !ok {
+		return "", fmt.Errorf("domain[name] not found")
+	}
+
+	domainName, ok := nameValue.(string)
+	if !ok {
+		return "", fmt.Errorf("domain[name] is not string, got %T", nameValue)
+	}
+
+	if domainName == "" {
+		return "", fmt.Errorf("domain name is empty")
+	}
+
+	return domainName, nil
 }
