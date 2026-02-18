@@ -12,7 +12,12 @@ func (r *Repository) GetSoftware(id int) (software entity.Software, err error) {
 		IFNULL(glpi_locations.completename,'') AS locations, glpi_softwares.groups_id_tech, glpi_softwares.users_id_tech, IFNULL(glpi_manufacturers.name,'') AS manufacture,
 		IFNULL(softadd.moredescriptionfield,'') AS description1,
 		 IFNULL(softadd.servicemanualurlfieldtwo,'') murl, IFNULL(softadd.technicaldescriptionurlfield,'') AS durl, IFNULL(glpi_groups.name,'') as group_name,
-		 IFNULL(glpi_plugin_fields_groupidmattermosts.idmattermostfield,'') AS group_matt_channel, IFNULL(glpi_plugin_fields_groupidmattermosts.iduserinfofield,0) AS group_calendar
+		 COALESCE(glpi_plugin_fields_groupidmattermosts.idmattermostfield,'') AS group_matt_channel,
+		 CASE
+  		WHEN glpi_plugin_fields_groupidmattermosts.iduserinfofield REGEXP '^[0-9]+$'
+  		THEN glpi_plugin_fields_groupidmattermosts.iduserinfofield
+  		ELSE 0
+  		END AS group_calendar
 		from glpi_softwares
 		INNER JOIN glpi_entities ON glpi_softwares.entities_id=glpi_entities.id
 		LEFT JOIN glpi_locations ON glpi_softwares.locations_id=glpi_locations.id
