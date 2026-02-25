@@ -2,11 +2,13 @@ package usecase
 
 import (
 	"fmt"
+
+	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (u *UseCase) SetUserRole(techUser string, user string, id int) error {
+func (u *UseCase) SetUserRole(perms entity.Permissions, user string, id int) error {
 
-	if isSysAdmin := u.IsSysAdmin(techUser); !isSysAdmin {
+	if !perms.IsSysAdmin {
 		return u.Error("у вас нет прав для выполнения операции")
 	}
 	if user == "" {

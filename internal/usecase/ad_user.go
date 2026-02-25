@@ -19,12 +19,6 @@ func (u *UseCase) GetUser(userID string, perms entity.Permissions) (map[string]i
 
 	unmarshalString(userJSON, &user)
 
-	// role := entity.IdName{Id: 5, Name: "Пользователь"}
-	// roles, err := u.repo.GetUserRoles(userID)
-	// if err == nil && len(roles) > 0 {
-	// 	role = roles[0]
-	// }
-	// user["role"] = role
 	user["domain"] = domain
 	// groups, err := u.repo.GetUserGroups(userID)
 	// if err == nil && len(groups) > 0 {

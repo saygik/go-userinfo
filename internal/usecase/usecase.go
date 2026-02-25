@@ -19,8 +19,8 @@ type Repository interface {
 	GetComputerRMS(string) ([]string, error)
 	GetDomainUsersAvatars(string) ([]entity.IdNameAvatar, error)
 	GetUserResourceAccess(string, string) (int, error)
-	GetUserRoles(string) ([]entity.IdName, error)
-	GetUserRole(string) []entity.IdName
+	GetUserRoles(string) ([]entity.IdNameDescription, error)
+	GetUserRole(string) []entity.IdNameDescription
 	SetUserRole(string, int) error
 	GetUserGroups(string) ([]entity.IdName, error)
 	AddUserGroup(string, int) error

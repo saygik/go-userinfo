@@ -27,6 +27,12 @@ type IdNameFio struct {
 	Fio  string `db:"fio" json:"fio"`
 }
 
+type IdNameDescription struct {
+	Id          int    `db:"id" json:"id"`
+	Name        string `db:"name" json:"name"`
+	Description string `db:"description" json:"description"`
+}
+
 type DomainAccess struct {
 	Domain      string `db:"domain" json:"domain"`
 	AccessLevel string `db:"access_level" json:"access_level"`

@@ -2,11 +2,13 @@ package usecase
 
 import (
 	"fmt"
+
+	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (u *UseCase) DelUserGroup(techUser string, user string, id int) error {
+func (u *UseCase) DelUserGroup(perms entity.Permissions, user string, id int) error {
 
-	if isSysAdmin := u.IsSysAdmin(techUser); !isSysAdmin {
+	if !perms.IsSysAdmin {
 		return u.Error("у вас нет прав для выполнения операции")
 	}
 	if user == "" {
@@ -22,9 +24,9 @@ func (u *UseCase) DelUserGroup(techUser string, user string, id int) error {
 	return nil
 }
 
-func (u *UseCase) DelUserRole(techUser string, user string, id int) error {
+func (u *UseCase) DelUserRole(perms entity.Permissions, user string, id int) error {
 
-	if isSysAdmin := u.IsSysAdmin(techUser); !isSysAdmin {
+	if !perms.IsSysAdmin {
 		return u.Error("у вас нет прав для выполнения операции")
 	}
 	if user == "" {
