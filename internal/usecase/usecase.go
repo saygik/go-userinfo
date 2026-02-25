@@ -1,11 +1,17 @@
 package usecase
 
 import (
+	"time"
+
 	"github.com/saygik/go-userinfo/internal/entity"
 	"github.com/sirupsen/logrus"
 )
 
 type Repository interface {
+	GetRoles(string) ([]string, error)
+	GetDomainAccess(upn string) ([]entity.DomainAccess, error) // user_domain_access
+	GetSections(string) ([]string, error)
+
 	GetAppRoles() ([]entity.IdName, error)
 	GetAppGroups() ([]entity.IdName, error)
 	GetAppResources() ([]entity.IdName, error)
@@ -56,6 +62,9 @@ type Repository interface {
 type Redis interface {
 	ClearAllDomainsUsers()
 	AddKeyFieldValue(string, string, []byte) error
+	AddKeyValue(string, interface{}, time.Duration) error
+	GetKeyValue(string) (string, error)
+	GetKeyFieldsValue(string, []string) ([]interface{}, error)
 	GetKeyFieldAll(string) (map[string]string, error)
 	GetKeyFieldValue(string, string) (string, error)
 	DelKeyField(string, string) error

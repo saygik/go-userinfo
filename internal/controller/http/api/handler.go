@@ -19,7 +19,8 @@ type Handler struct {
 }
 
 type UseCase interface {
-	IUTMGetWlist() ([]string, error)
+	LoadUserPermissions(string) (entity.Permissions, error)                                                      //LoadUserPermissions
+	IUTMGetWlist() ([]string, error)                                                                             //IUTMGetWlist
 	IsAppInitialized() bool                                                                                      // Приложение инициализировано
 	ADUserLocked(string) bool                                                                                    // Пользователь заблокирован
 	GetAppRoles(string) ([]entity.IdName, error)                                                                 // Все роли пользователей приложения
@@ -32,23 +33,23 @@ type UseCase interface {
 	GetAppResources(string) ([]entity.IdName, error)                                                             // Все ресурсы приложения
 	Authenticate(entity.LoginForm) (bool, map[string]string, error)                                              // Аутентификация
 	SetUserIp(entity.UserActivityForm) (string, error)                                                           // Установить ip пользователя
-	GetADUsers(string) ([]map[string]interface{}, error)                                                         // Пользователи домена
-	GetADUsersPublicInfo(string) ([]map[string]interface{}, error)                                               // Пользователи домена соклащённая информация
-	GetADComputers(string) ([]map[string]interface{}, error)                                                     // Компьютеры домена
-	GetADComputersVersions(string, string) ([]entity.ComputerVersionCount, error)                                // Кол-во компьютеров домена по версиям ОС
-	GetADComputersOSFamily(string, string) ([]entity.ComputerFamilyCount, error)                                 // Кол-во компьютеров домена по семействам ОС
-	GetADLastComputers(string, string) ([]entity.DomainComputer, error)                                          // Компьютеры домена с последними логинами
-	GetUser(string, string) (map[string]interface{}, error)                                                      // Свойства пользователя домена
+	GetADUsers(entity.Permissions) ([]map[string]interface{}, error)                                             // Пользователи домена
+	GetADUsersPublicInfo(entity.Permissions) ([]map[string]interface{}, error)                                   // Пользователи домена соклащённая информация
+	GetADComputers(entity.Permissions) ([]map[string]interface{}, error)                                         // Компьютеры домена
+	GetADComputersVersions(string, entity.Permissions) ([]entity.ComputerVersionCount, error)                    // Кол-во компьютеров домена по версиям ОС
+	GetADComputersOSFamily(string, entity.Permissions) ([]entity.ComputerFamilyCount, error)                     // Кол-во компьютеров домена по семействам ОС
+	GetADLastComputers(string, entity.Permissions) ([]entity.DomainComputer, error)                              // Компьютеры домена с последними логинами
+	GetUser(string, entity.Permissions) (map[string]interface{}, error)                                          // Свойства пользователя домена
 	UserExist(string) error                                                                                      // Существует ли пользователь в доменах
-	GetCurrentUser(string, string) (map[string]interface{}, error)                                               // Свойства залогиненного пользователя домена
-	GetUserADPropertys(string, string) (map[string]interface{}, error)                                           // Разрешённые сппециалисту свойства пользователя домена
+	GetCurrentUser(string, entity.Permissions) (map[string]interface{}, error)                                   // Свойства залогиненного пользователя домена
+	GetUserADPropertys(string, entity.Permissions) (map[string]interface{}, error)                               // Разрешённые сппециалисту свойства пользователя домена
 	GetUserADPropertysSimple(string) (*entity.SimpleUser, error)                                                 // Упрощенные  свойства пользователя домена
 	GetCurrentUserResources(string) ([]entity.AppResource, error)                                                // Разрешённые ресурсы
 	GetGlpiUser(string) (entity.GLPIUser, error)                                                                 // Пользователь GLPI
 	GetGlpiUserForTechnical(string, string) (*entity.GLPIUser, error)                                            // Пользователь GLPI для технического специалиста
 	GetAdCounts() (int, int, error)                                                                              // Основная статистика доменов (все домены)
 	GetAdCountsDomain(string) (int, int, error)                                                                  // Статистика по одному домену
-	GetDomainList(string) []entity.DomainList                                                                    // Список доменов
+	GetDomainList(entity.Permissions) []entity.DomainList                                                        // Список доменов
 	GetADGroupUsers(string, string) ([]map[string]interface{}, error)                                            // Пользователи группы
 	UserInDomainGroup2(string, string, string) error                                                             // Проверить, находится ли пользователь в группе домена
 	ADUserAddGroup(string, string) error                                                                         // Добавить пользователя в группу
@@ -65,8 +66,8 @@ type UseCase interface {
 	AddOneSoftwareUser(string, entity.SoftUser, string) (map[string]interface{}, error)                          // Добавление пользователя в систему
 	UpdateOneSoftwareUser(entity.SoftUser, string) (entity.SoftUser, error)                                      // Изменение пользователя в систему
 	DelUserSoftware(string) error                                                                                // Удаление системы пользователя
-	GetUserADActivity(string, string) ([]entity.UserActivity, error)                                             // Активность доменов
-	GetUserMailboxPermissions(string, string) ([]entity.MailBoxDelegates, error)                                 // Получение делегированных почтовых ящиков пользователя
+	GetUserADActivity(string, entity.Permissions) ([]entity.UserActivity, error)                                 // Активность доменов
+	GetUserMailboxPermissions(string, entity.Permissions) ([]entity.MailBoxDelegates, error)                     // Получение делегированных почтовых ящиков пользователя
 	SetUserAvatar(string, string, string) error                                                                  // Установить пользователю аватар
 	GetOrgCodes() ([]entity.OrgWithCodes, error)                                                                 // Коды организаций
 	GetMattermostUsers() ([]entity.MattermostUserWithSessions, error)                                            // Все пользователи Mattermost

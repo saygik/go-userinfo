@@ -25,13 +25,6 @@ type ComputerProperties struct {
 	Description     string `json:"description,omitempty"`
 }
 
-// DomainComputer описывает компьютер домена, получаемый из MSSQL.
-// Процедура GetComputerByDomain возвращает поля:
-//   - computer   string
-//   - ip         string
-//   - last_date  string
-//   - domain     string
-//   - days_on    int
 type DomainComputer struct {
 	ID              int            `db:"id" json:"id"`
 	Computer        string         `db:"computer" json:"computer"`

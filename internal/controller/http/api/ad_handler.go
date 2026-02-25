@@ -16,12 +16,13 @@ func (h *Handler) Users(c *gin.Context) {
 		observeRequest(time.Since(start), c.Writer.Status())
 	}()
 
-	userID := ""
-	if userID = getUserID(c); userID == "" {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain users", "error": "Empty domain name"})
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
 		return
 	}
-	users, err := h.uc.GetADUsers(userID)
+
+	users, err := h.uc.GetADUsers(perms)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get all domains users", "error": err.Error()})
 		return
@@ -32,12 +33,12 @@ func (h *Handler) Users(c *gin.Context) {
 }
 
 func (h *Handler) PUsers(c *gin.Context) {
-	userID := ""
-	if userID = getUserID(c); userID == "" {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain users", "error": "Empty domain name"})
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
 		return
 	}
-	users, err := h.uc.GetADUsersPublicInfo(userID)
+	users, err := h.uc.GetADUsersPublicInfo(perms)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get all domains users", "error": err.Error()})
 		return
@@ -73,12 +74,12 @@ func (h *Handler) GetAdCounts(c *gin.Context) {
 // All ADs Computers ...
 func (h *Handler) Computers(c *gin.Context) {
 
-	userID := ""
-	if userID = getUserID(c); userID == "" {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domains computers", "error": "Empty domain name"})
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
 		return
 	}
-	computers, err := h.uc.GetADComputers(userID)
+	computers, err := h.uc.GetADComputers(perms)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Could not get all domains computers", "error": err.Error()})
 		return
@@ -96,13 +97,13 @@ func (h *Handler) ComputersVersions(c *gin.Context) {
 		return
 	}
 
-	userID := ""
-	if userID = getUserID(c); userID == "" {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить пользователя.", "error": "Empty user id"})
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
 		return
 	}
 
-	data, err := h.uc.GetADComputersVersions(domain, userID)
+	data, err := h.uc.GetADComputersVersions(domain, perms)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить версии компьютеров домена", "error": err.Error()})
 		return
@@ -119,13 +120,13 @@ func (h *Handler) ComputersOSFamily(c *gin.Context) {
 		return
 	}
 
-	userID := ""
-	if userID = getUserID(c); userID == "" {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить пользователя.", "error": "Empty user id"})
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
 		return
 	}
 
-	data, err := h.uc.GetADComputersOSFamily(domain, userID)
+	data, err := h.uc.GetADComputersOSFamily(domain, perms)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить статистику по семействам ОС домена", "error": err.Error()})
 		return
@@ -143,13 +144,13 @@ func (h *Handler) LastComputers(c *gin.Context) {
 		return
 	}
 
-	userID := ""
-	if userID = getUserID(c); userID == "" {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить пользователя.", "error": "Empty user id"})
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
 		return
 	}
 
-	computers, err := h.uc.GetADLastComputers(domain, userID)
+	computers, err := h.uc.GetADLastComputers(domain, perms)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить список компьютеров домена", "error": err.Error()})
 		return
@@ -168,13 +169,14 @@ func (h *Handler) User(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNoContent, gin.H{"message": "Invalid username. The name must include the domain in the format: user@domain", "error": ""})
 		return
 	}
-	userID := ""
-	if userID = getUserID(c); userID == "" {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Could not get domain user", "error": "Empty domain name"})
+
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
 		return
 	}
 
-	adUser, adErr := h.uc.GetUserADPropertys(user, userID)
+	adUser, adErr := h.uc.GetUserADPropertys(user, perms)
 	if adErr != nil {
 		c.JSON(http.StatusNoContent, gin.H{"message": "Invalid credentials", "error": adErr.Error()})
 		return
@@ -205,9 +207,13 @@ func (h *Handler) UserSimple(c *gin.Context) {
 
 func (h *Handler) GetUserADActivity(c *gin.Context) {
 	userName := c.Param("username")
-	userTechName := getUserID(c)
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
 
-	activity, err := h.uc.GetUserADActivity(userName, userTechName)
+	activity, err := h.uc.GetUserADActivity(userName, perms)
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка предоставления активности пользователя", "error": err.Error()})
 		return
@@ -217,9 +223,13 @@ func (h *Handler) GetUserADActivity(c *gin.Context) {
 
 func (h *Handler) GetUserMailboxPermissions(c *gin.Context) {
 	userName := c.Param("username")
-	userTechName := getUserID(c)
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
 
-	activity, err := h.uc.GetUserMailboxPermissions(userName, userTechName)
+	activity, err := h.uc.GetUserMailboxPermissions(userName, perms)
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка предоставления делегированных почтовых ящиков для пользователя", "error": err.Error()})
 		return

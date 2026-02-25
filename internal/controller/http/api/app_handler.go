@@ -18,21 +18,44 @@ func getUserID(c *gin.Context) (userID string) {
 	return ""
 }
 
+func (h *Handler) getPerms(c *gin.Context) (entity.Permissions, bool) {
+	permsVal, exists := c.Get("perms")
+	if !exists {
+		return entity.Permissions{}, false
+	}
+
+	perms, ok := permsVal.(entity.Permissions)
+	return perms, ok
+}
+
+// func (h *Handler) getUser(c *gin.Context) (string, bool) {
+//     userVal, exists := c.Get("user")
+//     if !exists {
+//         return "", false
+//     }
+//     user, ok := userVal.(string)
+//     return user, ok
+// }
+
 func (h *Handler) CurrentUser(c *gin.Context) {
 	if !h.uc.IsAppInitialized() {
 		c.JSON(http.StatusAccepted, gin.H{"message": "Приложение не инициализированно"})
 		return
 	}
-	if userID := getUserID(c); userID != "" {
-		adUser, adErr := h.uc.GetCurrentUser(userID, userID)
-		if adErr != nil {
-			c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка получения данных пользователя", "error": adErr.Error()})
-			return
-		}
-		//	jadUser, _ := json.Marshal(adUser)
-
-		c.JSON(http.StatusOK, gin.H{"message": "Пользователь найден", "user": adUser})
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
+		return
 	}
+
+	adUser, adErr := h.uc.GetCurrentUser(perms.User, perms)
+	if adErr != nil {
+		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка получения данных пользователя", "error": adErr.Error()})
+		return
+	}
+	//	jadUser, _ := json.Marshal(adUser)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Пользователь найден", "user": adUser})
 
 }
 
@@ -55,12 +78,18 @@ func (h *Handler) CurrentUserResources(c *gin.Context) {
 }
 
 func (h *Handler) DomainList(c *gin.Context) {
-	userID := ""
-	if userID = getUserID(c); userID == "" {
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
 		return
 	}
-	domainList := h.uc.GetDomainList(userID)
+	// userID := ""
+	// if userID = getUserID(c); userID == "" {
+	// 	c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+	// 	return
+	// }
+	domainList := h.uc.GetDomainList(perms)
 	c.JSON(http.StatusOK, gin.H{"data": domainList})
 }
 

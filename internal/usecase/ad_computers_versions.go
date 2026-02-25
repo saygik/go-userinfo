@@ -1,9 +1,12 @@
 package usecase
 
 import (
+	"encoding/json"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/saygik/go-userinfo/internal/entity"
 )
@@ -11,14 +14,23 @@ import (
 // GetADComputersVersions возвращает количество компьютеров в домене, сгруппированное по паре
 // operatingSystem + operatingSystemVersion.
 // Дополнительно вычисляет operatingSystemVersionHuman (например, 24H2, Server 2012 R2).
-func (u *UseCase) GetADComputersVersions(domain, user string) ([]entity.ComputerVersionCount, error) {
+func (u *UseCase) GetADComputersVersions(domain string, perms entity.Permissions) ([]entity.ComputerVersionCount, error) {
 	if !u.ad.IsDomainExist(domain) {
 		return nil, u.Error("домен " + domain + " отсутствует в системе")
 	}
 
-	access := u.GetAccessToResource(domain, user)
-	if access == -1 {
-		return nil, u.Error("у вас нет прав на просмотр информации по домену " + domain)
+	accessLevel := u.GetAccessLevelForDomain(&perms, domain)
+	if accessLevel == "none" || accessLevel == "user" {
+		return nil, u.Error("нет прав на домен " + domain)
+	}
+
+	// 1. КЭШ Redis (5 минут)
+	cacheKey := fmt.Sprintf("os_versions:%s", domain)
+	if cached, err := u.redis.GetKeyValue(cacheKey); err == nil {
+		var res []entity.ComputerVersionCount
+		if json.Unmarshal([]byte(cached), &res) == nil && len(res) > 0 {
+			return res, nil
+		}
 	}
 
 	comps, err := u.ad.GetDomainComputers(domain)
@@ -101,7 +113,11 @@ func (u *UseCase) GetADComputersVersions(domain, user string) ([]entity.Computer
 		// 4. В крайнем случае — по количеству (по убыванию)
 		return a.Count > b.Count
 	})
-
+	// 6. 🔥 Кэш результата асинхронно
+	go func() {
+		data, _ := json.Marshal(res)
+		u.redis.AddKeyValue(cacheKey, data, 5*time.Minute)
+	}()
 	return res, nil
 }
 

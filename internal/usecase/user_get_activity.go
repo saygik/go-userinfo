@@ -4,7 +4,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (u *UseCase) GetUserADActivity(userName string, userTechName string) ([]entity.UserActivity, error) {
+func (u *UseCase) GetUserADActivity(userName string, perms entity.Permissions) ([]entity.UserActivity, error) {
 
 	if userName == "" {
 		return nil, u.Error("имя пользователя в запросе отсутствует")
@@ -13,14 +13,9 @@ func (u *UseCase) GetUserADActivity(userName string, userTechName string) ([]ent
 		return nil, u.Error("неверное имя пользователя в запросе")
 	}
 
-	if userTechName == "" {
-		return nil, u.Error("сначала войдите в систему")
-	}
-
 	domain := getDomainFromUserName(userName)
-	access := u.GetAccessToResource(domain, userTechName)
-	//	accessToTechnicalInfo := access == 1
-	if !(access == 1) {
+	accessLevel := u.GetAccessLevelForDomain(&perms, domain)
+	if accessLevel == "none" || accessLevel == "user" {
 		return nil, u.Error("у вас нет прав на просмотр этой информации в домене")
 	}
 

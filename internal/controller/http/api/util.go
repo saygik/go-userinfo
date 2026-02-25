@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/saygik/go-userinfo/internal/entity"
 )
 
 var emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
@@ -90,7 +91,15 @@ func (h *Handler) TokenValid(c *gin.Context) {
 		return
 	}
 	user = userInfo.Sub
+	perms, err := h.uc.LoadUserPermissions(user)
+	if err != nil {
+		perms = entity.Permissions{
 
+			AllDomains: false,
+			HomeDomain: "",
+		} // fallback
+	}
+	c.Set("perms", perms)
 	c.Set("user", user)
 
 }

@@ -19,7 +19,6 @@ func (u *UseCase) GetUserADPropertysShort(username string) map[string]interface{
 		delete(user, "distinguishedName")
 		delete(user, "userAccountControl")
 		delete(user, "memberOf")
-		delete(user, "employeeNumber")
 		delete(user, "presence")
 		delete(user, "otherTelephone")
 		user["name"] = username

@@ -6,7 +6,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (u *UseCase) GetUser(userID string, techUser string) (map[string]interface{}, error) {
+func (u *UseCase) GetUser(userID string, perms entity.Permissions) (map[string]interface{}, error) {
 	var user map[string]any
 	domain := getDomainFromUserName(userID)
 	if !u.ad.IsDomainExist(domain) {
@@ -37,7 +37,9 @@ func (u *UseCase) GetUser(userID string, techUser string) (map[string]interface{
 	if err == nil {
 		user["avatar"] = avatar
 	}
-	if isSysAdmin := u.IsSysAdmin(techUser); !(isSysAdmin || userID == techUser) {
+	if !(perms.IsSysAdmin || userID == perms.User) {
+		user["app_role"] = []entity.IdName{}
+		user["app_groups"] = []entity.IdName{}
 		return user, nil
 	}
 	userRoles := u.repo.GetUserRole(userID)

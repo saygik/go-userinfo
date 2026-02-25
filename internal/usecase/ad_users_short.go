@@ -1,10 +1,14 @@
 package usecase
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-func (u *UseCase) GetADUsersPublicInfo(user string) ([]map[string]interface{}, error) {
+	"github.com/saygik/go-userinfo/internal/entity"
+)
 
-	if !u.HasTechnicalRole(user) {
+func (u *UseCase) GetADUsersPublicInfo(perm entity.Permissions) ([]map[string]interface{}, error) {
+
+	if !perm.IsTech {
 		return nil, u.Error("у вас нет прав на просмотр списка пользователей всех доменов")
 	}
 	redisADUsers, err := u.redis.GetKeyFieldAll("allusers")
@@ -15,18 +19,9 @@ func (u *UseCase) GetADUsersPublicInfo(user string) ([]map[string]interface{}, e
 	for _, value := range redisADUsers {
 		var user map[string]interface{}
 		json.Unmarshal([]byte(value), &user)
-		delete(user, "ip")
-		delete(user, "pwdLastSet")
-		delete(user, "proxyAddresses")
-		delete(user, "passwordDontExpire")
-		delete(user, "passwordCantChange")
-		delete(user, "distinguishedName")
-		delete(user, "userAccountControl")
-		delete(user, "memberOf")
-		delete(user, "employeeNumber")
-		delete(user, "presence")
-		delete(user, "url")
-		delete(user, "otherTelephone")
+		for _, field := range sensitiveLongFields {
+			delete(user, field)
+		}
 		user["findedInAD"] = true
 		user["name"] = user["userPrincipalName"]
 		users = append(users, user)

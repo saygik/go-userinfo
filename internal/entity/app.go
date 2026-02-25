@@ -26,3 +26,21 @@ type IdNameFio struct {
 	Name string `db:"name" json:"name"`
 	Fio  string `db:"fio" json:"fio"`
 }
+
+type DomainAccess struct {
+	Domain      string `db:"domain" json:"domain"`
+	AccessLevel string `db:"access_level" json:"access_level"`
+}
+type Permissions struct {
+	User         string          `json:"user"`
+	Roles        []string        `json:"roles"`
+	IsSysAdmin   bool            `json:"is_sysadmin"`
+	IsAdmin      bool            `json:"is_admin"`
+	IsTech       bool            `json:"is_tech"`
+	HomeDomain   string          `json:"home_domain"`
+	AdminDomains map[string]bool `json:"admin_domains"`
+	TechDomains  map[string]bool `json:"tech_domains"`
+	UserDomains  map[string]bool `json:"user_domains"`
+	AllDomains   bool            `json:"all_domains"`
+	Sections     []string        `json:"sections"`
+}
