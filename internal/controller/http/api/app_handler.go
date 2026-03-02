@@ -1,10 +1,6 @@
 package api
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
@@ -188,36 +184,49 @@ func (h *Handler) ComputerRMS(c *gin.Context) {
 }
 
 func (h *Handler) GetLocalAdmins(c *gin.Context) {
-	type adminsReq struct {
-		Administrators []struct {
-			Name string `json:"name"`
-		} `json:"administrators"`
-	}
 
-	bodyBytes, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "Не удалось прочитать body",
-		})
-		return
-	}
-	bodyString := string(bodyBytes)
-	bodyString = strings.ReplaceAll(bodyString, `\"`, `"`)
-	bodyString = strings.ReplaceAll(bodyString, `["{`, `[{`)
-	bodyString = strings.Trim(bodyString, `"`) // Убираем внешние кавычки
-	bodyString = strings.TrimSpace(bodyString)
-
-	var req adminsReq
-	err = json.Unmarshal([]byte(bodyString), &req)
-	if err != nil {
-		c.AbortWithStatusJSON(400, gin.H{
-			"message": "Ошибка парсинга после очистки",
-			"cleaned": bodyString,
-			"error":   err.Error(),
-		})
+	computer := c.Param("computer")
+	if computer == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить имя компьютера.", "error": "Empty computer name"})
 		return
 	}
 
-	// Данные доступны в req.Administrators[].Name
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	adminsStr := c.PostForm("administrators")
+	adminNames := strings.Split(adminsStr, ",")
+
+	var localAdmins []string       // Только имена после "/"
+	var localAdminsDomain []string // Всё остальное
+
+	prefix := "WinNT://BRNV/"
+	for _, admin := range adminNames {
+		cleanAdmin := strings.TrimSpace(admin)
+		if after, ok := strings.CutPrefix(cleanAdmin, prefix); ok {
+			// Есть префикс — ищем "/"
+			if idx := strings.IndexByte(after, '/'); idx != -1 {
+				// localAdmins: всё после "/"
+				localAdmins = append(localAdmins, after[idx+1:])
+			} else {
+				// localAdminsDomain: всё после префикса (без "/")
+				localAdminsDomain = append(localAdminsDomain, after)
+			}
+		} else {
+			// Нет префикса — в localAdminsDomain
+			localAdminsDomain = append(localAdminsDomain, cleanAdmin)
+		}
+	}
+
+	if err := h.uc.ComputerLocalAdminsAudit(computer, localAdminsDomain, true); err != nil {
+		h.log.Info(err)
+	}
+	if err := h.uc.ComputerLocalAdminsAudit(computer, localAdmins, false); err != nil {
+		h.log.Info(err)
+	}
+	// fmt.Printf("✅ LocalAdmins (%d): %v\n", len(localAdmins), localAdmins)
+	// fmt.Printf("✅ LocalAdminsDomain (%d): %v\n", len(localAdminsDomain), localAdminsDomain)
+
+	c.JSON(200, gin.H{
+		"status":              "ok",
+		"local_admins":        localAdmins,
+		"local_admins_domain": localAdminsDomain,
+	})
 }

@@ -8,6 +8,7 @@ import (
 )
 
 type Repository interface {
+	ComputerLocalAdminsAudit(string, []string, bool) error
 	GetDomainAccess(string) ([]entity.DomainAccess, error) // user_domain_access
 	GetSections(string) ([]entity.IdNameDescription, error)
 
