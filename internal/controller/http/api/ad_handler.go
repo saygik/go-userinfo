@@ -526,11 +526,12 @@ func (h *Handler) GetTemporaryGroupChange(c *gin.Context) {
 	change, err := h.uc.GetTemporaryGroupChange(user)
 	if err != nil {
 		// Если запись не найдена, возвращаем 404
-		c.JSON(http.StatusNotFound, gin.H{"error": "Временное изменение не найдено", "message": err.Error()})
+		c.JSON(http.StatusNoContent, gin.H{"message": "Нет записей"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": change})
+
 }
 
 // getDomainFromUserName извлекает домен из имени пользователя (user@domain)

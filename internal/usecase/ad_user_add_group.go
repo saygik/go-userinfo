@@ -239,7 +239,7 @@ func (u *UseCase) saveTemporaryGroupChange(change *entity.TemporaryGroupChange) 
 func (u *UseCase) getTemporaryGroupChange(user string) (*entity.TemporaryGroupChange, error) {
 	data, err := u.redis.GetKeyFieldValue(redisKeyTempGroupChange, user)
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 
 	var change entity.TemporaryGroupChange
