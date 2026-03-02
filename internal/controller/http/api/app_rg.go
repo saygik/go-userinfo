@@ -13,6 +13,7 @@ func (h *Handler) NewAppRouterGroup() *gin.RouterGroup {
 	rg.GET("/domains", h.TokenAuthMiddleware(), h.DomainList)
 	rg.GET("/computer/rms/:domain", h.ComputerRMS)
 	rg.GET("/setip", h.SetIp)
+	rg.POST("/localadmins", h.GetLocalAdmins)
 	rg.GET("/ip", h.Ip)
 	return rg
 }

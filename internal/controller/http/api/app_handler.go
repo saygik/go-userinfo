@@ -1,7 +1,12 @@
 package api
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/saygik/go-userinfo/internal/entity"
@@ -180,4 +185,39 @@ func (h *Handler) ComputerRMS(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, computers)
+}
+
+func (h *Handler) GetLocalAdmins(c *gin.Context) {
+	type adminsReq struct {
+		Administrators []struct {
+			Name string `json:"name"`
+		} `json:"administrators"`
+	}
+
+	bodyBytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "Не удалось прочитать body",
+		})
+		return
+	}
+	bodyString := string(bodyBytes)
+	bodyString = strings.ReplaceAll(bodyString, `\"`, `"`)
+	bodyString = strings.ReplaceAll(bodyString, `["{`, `[{`)
+	bodyString = strings.Trim(bodyString, `"`) // Убираем внешние кавычки
+	bodyString = strings.TrimSpace(bodyString)
+
+	var req adminsReq
+	err = json.Unmarshal([]byte(bodyString), &req)
+	if err != nil {
+		c.AbortWithStatusJSON(400, gin.H{
+			"message": "Ошибка парсинга после очистки",
+			"cleaned": bodyString,
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	// Данные доступны в req.Administrators[].Name
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
