@@ -21,9 +21,12 @@ func (h *Handler) NewADRouterGroup() *gin.RouterGroup {
 	rg.GET("/activity/user/:username", h.TokenAuthMiddleware(), h.GetUserADActivity)
 	rg.GET("/user-mailbox-delegates/:username", h.TokenAuthMiddleware(), h.GetUserMailboxPermissions)
 	rg.PUT("/user/avatar/:username", h.TokenAuthMiddleware(), h.UpdateUserAvatar)
-	rg.PUT("/user/role/:username", h.TokenAuthMiddleware(), h.UpdateUserRole)
-	rg.POST("/user/group/:username", h.TokenAuthMiddleware(), h.AddUserGroup)
-	rg.DELETE("/user/group/:username", h.TokenAuthMiddleware(), h.DelUserGroup)
+
+	rg.POST("/user/section/:username", h.TokenAuthMiddleware(), h.AddUserSection)
+	rg.DELETE("/user/section/:username", h.TokenAuthMiddleware(), h.DelUserSection)
+
+	rg.POST("/user/domain/:username", h.TokenAuthMiddleware(), h.AddUserDomainRole)
+	rg.DELETE("/user/domain/:username", h.TokenAuthMiddleware(), h.DelUserDomainRole)
 	rg.POST("/user/role/:username", h.TokenAuthMiddleware(), h.AddUserRole)
 	rg.DELETE("/user/role/:username", h.TokenAuthMiddleware(), h.DelUserRole)
 	rg.GET("/groupusers/:domain/:group", h.TokenAuthMiddleware(), h.GroupUsers)

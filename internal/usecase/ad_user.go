@@ -2,11 +2,9 @@ package usecase
 
 import (
 	"fmt"
-
-	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (u *UseCase) GetUser(userID string, perms entity.Permissions) (map[string]interface{}, error) {
+func (u *UseCase) GetUser(userID string) (map[string]interface{}, error) {
 	var user map[string]any
 	domain := getDomainFromUserName(userID)
 	if !u.ad.IsDomainExist(domain) {
@@ -16,7 +14,6 @@ func (u *UseCase) GetUser(userID string, perms entity.Permissions) (map[string]i
 	if err != nil {
 		return nil, u.Error(fmt.Sprintf("пользователь %s отсутствует в системе", userID))
 	}
-
 	unmarshalString(userJSON, &user)
 
 	user["domain"] = domain
@@ -31,20 +28,20 @@ func (u *UseCase) GetUser(userID string, perms entity.Permissions) (map[string]i
 	if err == nil {
 		user["avatar"] = avatar
 	}
-	if !(perms.IsSysAdmin || userID == perms.User) {
-		user["app_role"] = []entity.IdName{}
-		user["app_groups"] = []entity.IdName{}
-		return user, nil
-	}
-	userRoles := u.repo.GetUserRole(userID)
-	user["app_role"] = userRoles
+	// if !(perms.IsSysAdmin || userID == perms.User) {
+	// 	user["app_role"] = []entity.IdName{}
+	// 	user["app_groups"] = []entity.IdName{}
+	// 	return user, nil
+	// }
+	// userRoles := u.repo.GetUserRole(userID)
+	// user["app_role"] = userRoles
 
-	groups, err := u.repo.GetUserGroups(userID)
-	if err == nil && len(groups) > 0 {
-		user["app_groups"] = groups
-	} else {
-		user["app_groups"] = []entity.IdName{}
-	}
+	// groups, err := u.repo.GetUserGroups(userID)
+	// if err == nil && len(groups) > 0 {
+	// 	user["app_groups"] = groups
+	// } else {
+	// 	user["app_groups"] = []entity.IdName{}
+	// }
 
 	return user, nil
 }

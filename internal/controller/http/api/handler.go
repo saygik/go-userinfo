@@ -23,13 +23,18 @@ type UseCase interface {
 	IUTMGetWlist() ([]string, error)                                                                             //IUTMGetWlist
 	IsAppInitialized() bool                                                                                      // Приложение инициализировано
 	ADUserLocked(string) bool                                                                                    // Пользователь заблокирован
-	GetAppRoles(string) ([]entity.IdName, error)                                                                 // Все роли пользователей приложения
+	GetAppRoles() ([]entity.IdNameDescription, error)                                                            // Все роли пользователей приложения
+	GetSections(string) ([]entity.IdNameDescription, error)                                                      // Все роли пользователей приложения
+	GetDomainAccess(string) ([]entity.DomainAccess, error)                                                       // Все роли пользователей приложения
+	GetUserRoles(string) ([]entity.IdNameDescription, error)                                                     // Все роли пользователей приложения
+	GetAppSections() ([]entity.IdNameDescription, error)                                                         // Все разделы  приложения
 	SetUserRole(entity.Permissions, string, int) error                                                           // Установить роль пользователя
-	GetAppGroups(string) ([]entity.IdName, error)                                                                // Все группы пользователей приложения
-	DelUserGroup(entity.Permissions, string, int) error                                                          // Удалить группу приложения пользователя
-	AddUserGroup(entity.Permissions, string, int) error                                                          // Добавить группу приложения пользователя
 	DelUserRole(entity.Permissions, string, int) error                                                           // Удалить роль приложения пользователя
-	AddUserRole(entity.Permissions, string, int) error                                                           // Добавить роль приложения пользователя
+	DelUserDomainRole(entity.Permissions, string, string) error                                                  // Удалить роль приложения пользователя
+	DelUserSection(entity.Permissions, string, string) error                                                     // Удалить раздел приложения пользователя
+	AddUserRole(entity.Permissions, string, int) (*entity.IdNameDescription, error)                              // Добавить роль приложения пользователя
+	AddUserDomainRole(entity.Permissions, string, string, string) (*entity.DomainAccess, string, error)          // Добавить роль приложения пользователя
+	AddUserSection(entity.Permissions, string, string) (*entity.IdNameDescription, error)                        // Добавить раздел приложения пользователя
 	GetAppResources(string) ([]entity.IdName, error)                                                             // Все ресурсы приложения
 	Authenticate(entity.LoginForm) (bool, map[string]string, error)                                              // Аутентификация
 	SetUserIp(entity.UserActivityForm) (string, error)                                                           // Установить ip пользователя
@@ -39,9 +44,9 @@ type UseCase interface {
 	GetADComputersVersions(string, entity.Permissions) ([]entity.ComputerVersionCount, error)                    // Кол-во компьютеров домена по версиям ОС
 	GetADComputersOSFamily(string, entity.Permissions) ([]entity.ComputerFamilyCount, error)                     // Кол-во компьютеров домена по семействам ОС
 	GetADLastComputers(string, entity.Permissions) ([]entity.DomainComputer, error)                              // Компьютеры домена с последними логинами
-	GetUser(string, entity.Permissions) (map[string]interface{}, error)                                          // Свойства пользователя домена
+	GetUser(string) (map[string]interface{}, error)                                                              // Свойства пользователя домена
 	UserExist(string) error                                                                                      // Существует ли пользователь в доменах
-	GetCurrentUser(string, entity.Permissions) (map[string]interface{}, error)                                   // Свойства залогиненного пользователя домена
+	GetCurrentUser(entity.Permissions) (map[string]interface{}, error)                                           // Свойства залогиненного пользователя домена
 	GetUserADPropertys(string, entity.Permissions) (map[string]interface{}, error)                               // Разрешённые сппециалисту свойства пользователя домена
 	GetUserADPropertysSimple(string) (*entity.SimpleUser, error)                                                 // Упрощенные  свойства пользователя домена
 	GetCurrentUserResources(string) ([]entity.AppResource, error)                                                // Разрешённые ресурсы
@@ -50,6 +55,7 @@ type UseCase interface {
 	GetAdCounts() (int, int, error)                                                                              // Основная статистика доменов (все домены)
 	GetAdCountsDomain(string) (int, int, error)                                                                  // Статистика по одному домену
 	GetDomainList(entity.Permissions) []entity.DomainList                                                        // Список доменов
+	DomainList() []entity.DomainList                                                                             // Список всех доменов
 	GetADGroupUsers(string, string) ([]map[string]interface{}, error)                                            // Пользователи группы
 	UserInDomainGroup2(string, string, string) error                                                             // Проверить, находится ли пользователь в группе домена
 	ADUserAddGroup(string, string) error                                                                         // Добавить пользователя в группу

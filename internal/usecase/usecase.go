@@ -8,24 +8,27 @@ import (
 )
 
 type Repository interface {
-	GetRoles(string) ([]string, error)
-	GetDomainAccess(upn string) ([]entity.DomainAccess, error) // user_domain_access
-	GetSections(string) ([]string, error)
+	GetDomainAccess(string) ([]entity.DomainAccess, error) // user_domain_access
+	GetSections(string) ([]entity.IdNameDescription, error)
 
-	GetAppRoles() ([]entity.IdName, error)
-	GetAppGroups() ([]entity.IdName, error)
+	GetAppRoles() ([]entity.IdNameDescription, error)
+	GetAppSections() ([]entity.IdNameDescription, error)
+	GetUserRoles(string) ([]entity.IdNameDescription, error)
+
 	GetAppResources() ([]entity.IdName, error)
 	GetDomainUsersIP(string) ([]entity.UserIPComputer, error)
 	GetComputerRMS(string) ([]string, error)
 	GetDomainUsersAvatars(string) ([]entity.IdNameAvatar, error)
 	GetUserResourceAccess(string, string) (int, error)
-	GetUserRoles(string) ([]entity.IdNameDescription, error)
-	GetUserRole(string) []entity.IdNameDescription
+
+	//	GetUserRole(string) []entity.IdNameDescription
 	SetUserRole(string, int) error
 	GetUserGroups(string) ([]entity.IdName, error)
-	AddUserGroup(string, int) error
-	DelUserGroup(string, int) error
-	AddUserRole(string, int) error
+	AddUserRole(string, int) (*entity.IdNameDescription, error)
+	AddUserDomainRole(string, string, string) (*entity.DomainAccess, string, error)
+	DelUserDomainRole(string, string) error
+	AddUserSection(string, string) (*entity.IdNameDescription, error)
+	DelUserSection(string, string) error
 	DelUserRole(string, int) error
 	GetUserAvatar(string) (string, error)
 	GetCurrentUserResources(string) ([]entity.AppResource, error)

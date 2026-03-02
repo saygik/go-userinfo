@@ -13,13 +13,12 @@ func (u *UseCase) LoadUserPermissions(upn string) (entity.Permissions, error) {
 	}
 	// 1. Все домены системы
 	domains := u.ad.DomainList()
-
 	// 2. Роли пользователя
-	roles, err := u.repo.GetRoles(upn)
+	roles, err := u.repo.GetUserRoles(upn)
 	if err == nil {
 		perms.Roles = roles
 		for _, role := range roles {
-			switch role {
+			switch role.Name {
 			case "DomainUser":
 				perms.AllDomains = true
 			case "SysAdmin":
@@ -52,6 +51,7 @@ func (u *UseCase) LoadUserPermissions(upn string) (entity.Permissions, error) {
 			}
 		}
 	}
+	perms.DomainsPermission = u.buildDomainsList(&perms, domains)
 	// 5. Дополнить home_domain
 	if perms.HomeDomain != "" {
 		perms.UserDomains[perms.HomeDomain] = true
@@ -59,6 +59,7 @@ func (u *UseCase) LoadUserPermissions(upn string) (entity.Permissions, error) {
 			perms.TechDomains[perms.HomeDomain] = true
 		}
 	}
+
 	// 6. Расширить права по ролям для ВСЕХ доменов
 	for _, domain := range domains {
 		domainName := domain.Name
@@ -73,35 +74,67 @@ func (u *UseCase) LoadUserPermissions(upn string) (entity.Permissions, error) {
 			perms.AdminDomains[domainName] = true
 		}
 	}
+	perms.Domains = u.buildDomainsList(&perms, domains)
 	// 7. Разделы сайта из user_permissions
 	sections, err := u.repo.GetSections(upn)
 	if err == nil {
-		perms.Sections = appendUnique(perms.Sections, sections...)
+		perms.Sections = sections
 	}
 
 	// 8. Авто-добавление AD разделов
 	if len(perms.AdminDomains) > 0 || len(perms.TechDomains) > 0 || len(perms.UserDomains) > 0 {
-		perms.Sections = appendUnique(perms.Sections, "/ad/users")
+		perms.Sections = appendUniqueIdName(perms.Sections, entity.IdNameDescription{Id: 1, Name: "/ad/users", Description: "Пользователи AD"})
+
 	}
 	if len(perms.TechDomains) > 0 || len(perms.AdminDomains) > 0 {
-		perms.Sections = appendUnique(perms.Sections,
-			"/ad/computers", "/ad/lastcomputers", "/ad")
+		adUsersSection := []entity.IdNameDescription{
+			{Id: 2, Name: "/ad/computers", Description: "Компьютеры AD"},
+			{Id: 3, Name: "/ad/lastcomputers", Description: "Активные компьютеры AD"},
+			{Id: 4, Name: "/ad/stat", Description: "Статистика AD"},
+		}
+		perms.Sections = appendUniqueIdName(perms.Sections, adUsersSection...)
 	}
+
 	return perms, nil
 }
+func appendUniqueIdName(slice []entity.IdNameDescription, items ...entity.IdNameDescription) []entity.IdNameDescription {
+	seen := make(map[string]bool)
 
-func appendUnique(slice []string, items ...string) []string {
-	m := make(map[string]bool)
-	for _, s := range slice {
-		m[s] = true
+	// Существующие
+	for _, item := range slice {
+		seen[item.Name] = true
 	}
-	for _, item := range items {
-		if !m[item] {
+
+	// Новые без дублей
+	for _, item := range items { // 🔥 items это variadic (0+ элементов)
+		if !seen[item.Name] {
 			slice = append(slice, item)
-			m[item] = true
+			seen[item.Name] = true
 		}
 	}
+
 	return slice
+}
+
+func (u *UseCase) buildDomainsList(perms *entity.Permissions, allDomains []entity.DomainList) []entity.IdNameDescription {
+	result := make([]entity.IdNameDescription, 0, len(allDomains))
+	domainCounter := 1 // ID начинается с 1
+
+	for _, domain := range allDomains {
+		maxAccessLevel := u.GetAccessLevelForDomain(perms, domain.Name)
+
+		// 🔥 Максимальный уровень доступа для Description
+		description := maxAccessLevel
+
+		result = append(result, entity.IdNameDescription{
+			Id:          domainCounter,
+			Name:        domain.Name,
+			Description: description,
+		})
+		domainCounter++
+	}
+
+	return result
 }
 
 // func (u *UseCase) LoadUserPermissions(upn string) (entity.Permissions, error) {

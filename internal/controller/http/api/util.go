@@ -120,7 +120,15 @@ func (h *Handler) UserFromToken(c *gin.Context) {
 		return
 	}
 	user = userInfo.Sub
+	perms, err := h.uc.LoadUserPermissions(user)
+	if err != nil {
+		perms = entity.Permissions{
 
+			AllDomains: false,
+			HomeDomain: "",
+		} // fallback
+	}
+	c.Set("perms", perms)
 	//To be called from GetUserID()
 	c.Set("user", user)
 }

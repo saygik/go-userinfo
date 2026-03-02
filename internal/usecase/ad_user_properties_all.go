@@ -10,7 +10,7 @@ func (u *UseCase) GetUserADPropertys(username string, perms entity.Permissions) 
 	if accessLevel == "none" {
 		return nil, u.Error("нет прав на чтение свойств пользователя " + domain)
 	}
-	user, err := u.GetUser(username, perms)
+	user, err := u.GetUser(username)
 	if err != nil {
 		return nil, err
 	}

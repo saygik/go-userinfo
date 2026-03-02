@@ -31,3 +31,7 @@ func (u *UseCase) GetAccessLevelForDomain(perms *entity.Permissions, domainName 
 	}
 	return "none"
 }
+
+func (u *UseCase) DomainList() []entity.DomainList {
+	return u.ad.DomainList()
+}

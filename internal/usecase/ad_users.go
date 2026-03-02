@@ -166,7 +166,7 @@ func (u *UseCase) getUsersCacheKey(perms *entity.Permissions) string {
 	// Сериализуем права для уникального ключа
 	keyParts := []string{"users"}
 	for _, role := range perms.Roles {
-		keyParts = append(keyParts, role)
+		keyParts = append(keyParts, role.Name)
 	}
 	for domain := range perms.AdminDomains {
 		keyParts = append(keyParts, "A:"+domain)

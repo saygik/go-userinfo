@@ -28,15 +28,6 @@ func (h *Handler) getPerms(c *gin.Context) (entity.Permissions, bool) {
 	return perms, ok
 }
 
-// func (h *Handler) getUser(c *gin.Context) (string, bool) {
-//     userVal, exists := c.Get("user")
-//     if !exists {
-//         return "", false
-//     }
-//     user, ok := userVal.(string)
-//     return user, ok
-// }
-
 func (h *Handler) CurrentUser(c *gin.Context) {
 	if !h.uc.IsAppInitialized() {
 		c.JSON(http.StatusAccepted, gin.H{"message": "Приложение не инициализированно"})
@@ -48,7 +39,7 @@ func (h *Handler) CurrentUser(c *gin.Context) {
 		return
 	}
 
-	adUser, adErr := h.uc.GetCurrentUser(perms.User, perms)
+	adUser, adErr := h.uc.GetCurrentUser(perms)
 	if adErr != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка получения данных пользователя", "error": adErr.Error()})
 		return
@@ -140,7 +131,7 @@ func (h *Handler) AppRoles(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
 		return
 	}
-	roles, err := h.uc.GetAppRoles(userID)
+	roles, err := h.uc.GetAppRoles()
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить список ролей приложения", "error": err.Error()})
 		return
@@ -148,20 +139,29 @@ func (h *Handler) AppRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": roles})
 }
 
-func (h *Handler) AppGroups(c *gin.Context) {
+func (h *Handler) AppSections(c *gin.Context) {
 	userID := ""
 	if userID = getUserID(c); userID == "" {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
 		return
 	}
-	groups, err := h.uc.GetAppGroups(userID)
+	roles, err := h.uc.GetAppSections()
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить список групп пользователей приложения", "error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить список ролей приложения", "error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": groups})
+	c.JSON(http.StatusOK, gin.H{"data": roles})
 }
+func (h *Handler) AppDomains(c *gin.Context) {
+	userID := ""
+	if userID = getUserID(c); userID == "" {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	domains := h.uc.DomainList()
 
+	c.JSON(http.StatusOK, gin.H{"data": domains})
+}
 func (h *Handler) ComputerRMS(c *gin.Context) {
 	isApi := h.IsApiRequest(c)
 	if !isApi {

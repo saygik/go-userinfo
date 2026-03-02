@@ -38,15 +38,22 @@ type DomainAccess struct {
 	AccessLevel string `db:"access_level" json:"access_level"`
 }
 type Permissions struct {
-	User         string          `json:"user"`
-	Roles        []string        `json:"roles"`
-	IsSysAdmin   bool            `json:"is_sysadmin"`
-	IsAdmin      bool            `json:"is_admin"`
-	IsTech       bool            `json:"is_tech"`
-	HomeDomain   string          `json:"home_domain"`
-	AdminDomains map[string]bool `json:"admin_domains"`
-	TechDomains  map[string]bool `json:"tech_domains"`
-	UserDomains  map[string]bool `json:"user_domains"`
-	AllDomains   bool            `json:"all_domains"`
-	Sections     []string        `json:"sections"`
+	User              string              `json:"user"`
+	Roles             []IdNameDescription `json:"roles"`
+	Domains           []IdNameDescription `json:"domains"`
+	DomainsPermission []IdNameDescription `json:"domains_permission"`
+	IsSysAdmin        bool                `json:"is_sysadmin"`
+	IsAdmin           bool                `json:"is_admin"`
+	IsTech            bool                `json:"is_tech"`
+	HomeDomain        string              `json:"home_domain"`
+	AdminDomains      map[string]bool     `json:"admin_domains"`
+	TechDomains       map[string]bool     `json:"tech_domains"`
+	UserDomains       map[string]bool     `json:"user_domains"`
+	AllDomains        bool                `json:"all_domains"`
+	Sections          []IdNameDescription `json:"sections"`
+}
+
+type UserRole struct {
+	UserPrincipalName string `db:"user_principal_name" json:"user_principal_name"`
+	RoleID            int    `db:"role_id" json:"role_id"`
 }
