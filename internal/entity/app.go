@@ -57,3 +57,8 @@ type UserRole struct {
 	UserPrincipalName string `db:"user_principal_name" json:"user_principal_name"`
 	RoleID            int    `db:"role_id" json:"role_id"`
 }
+
+type LocalAdmins struct {
+	Computer       string `db:"computer"`
+	Administrators string `db:"administrators"`
+}

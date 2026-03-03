@@ -39,6 +39,21 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 		u.log.Info(fmt.Sprintf("Скопировано %d пользователей из allusers в allusers:stagging для сохранения данных при возможном таймауте", len(existingUsers)))
 	}
 
+	// Получаем локальных и доменных админов
+	compsLocalAdminsDomain, _ := u.ComputerLocalAdminsGet(true) // domain = true
+	compsLocalAdmins, _ := u.ComputerLocalAdminsGet(false)      // domain = false
+
+	// Создаем карту для быстрого поиска
+	domainAdminsMap := make(map[string]string)
+	localAdminsMap := make(map[string]string)
+
+	for _, admin := range compsLocalAdminsDomain {
+		domainAdminsMap[admin.Computer] = admin.Administrators
+	}
+	for _, admin := range compsLocalAdmins {
+		localAdminsMap[admin.Computer] = admin.Administrators
+	}
+
 	var wg sync.WaitGroup
 	for _, one := range adl {
 		wg.Add(1)
@@ -60,6 +75,15 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			comps, _ := u.ad.GetDomainComputers(one.Name)
 			// Добавляем человекочитаемую версию ОС по operatingSystemVersion (например, 24H2)
 			for _, comp := range comps {
+				compName := comp["name"].(string)
+				// Доменные админы
+				if admins, ok := domainAdminsMap[compName]; ok {
+					comp["administrators_domain"] = admins
+				}
+				// Локальные админы
+				if admins, ok := localAdminsMap[compName]; ok {
+					comp["administrators_local"] = admins
+				}
 				if v, ok := comp["operatingSystemVersion"]; ok {
 					if verStr, ok := v.(string); ok {
 						if human := windowsVersionToHuman(verStr); human != "" {

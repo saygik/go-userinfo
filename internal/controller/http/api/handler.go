@@ -20,6 +20,7 @@ type Handler struct {
 
 type UseCase interface {
 	ComputerLocalAdminsAudit(string, []string, bool) error
+	ComputerLocalAdminsGet(bool) ([]entity.LocalAdmins, error)
 	LoadUserPermissions(string) (entity.Permissions, error)                                                      //LoadUserPermissions
 	IUTMGetWlist() ([]string, error)                                                                             //IUTMGetWlist
 	IsAppInitialized() bool                                                                                      // Приложение инициализировано

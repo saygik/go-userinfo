@@ -192,7 +192,25 @@ func (h *Handler) GetLocalAdmins(c *gin.Context) {
 	}
 
 	adminsStr := c.PostForm("administrators")
+	if adminsStr == "" {
+		c.JSON(http.StatusOK, gin.H{
+			"status":              "no administrators",
+			"local_admins":        []string{},
+			"local_admins_domain": []string{},
+		})
+		return
+	}
+
 	adminNames := strings.Split(adminsStr, ",")
+
+	if len(adminNames) == 0 || (len(adminNames) == 1 && adminNames[0] == "") {
+		c.JSON(http.StatusOK, gin.H{
+			"status":              "empty",
+			"local_admins":        []string{},
+			"local_admins_domain": []string{},
+		})
+		return
+	}
 
 	var localAdmins []string       // Только имена после "/"
 	var localAdminsDomain []string // Всё остальное
@@ -221,8 +239,6 @@ func (h *Handler) GetLocalAdmins(c *gin.Context) {
 	if err := h.uc.ComputerLocalAdminsAudit(computer, localAdmins, false); err != nil {
 		h.log.Info(err)
 	}
-	// fmt.Printf("✅ LocalAdmins (%d): %v\n", len(localAdmins), localAdmins)
-	// fmt.Printf("✅ LocalAdminsDomain (%d): %v\n", len(localAdminsDomain), localAdminsDomain)
 
 	c.JSON(200, gin.H{
 		"status":              "ok",

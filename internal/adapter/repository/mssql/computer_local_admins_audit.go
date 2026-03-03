@@ -7,6 +7,7 @@ import (
 	"time"
 
 	_ "github.com/denisenkom/go-mssqldb"
+	"github.com/saygik/go-userinfo/internal/entity"
 )
 
 func (r *Repository) ComputerLocalAdminsAudit(computer string, admins []string, isDomain bool) error {
@@ -46,7 +47,7 @@ func (r *Repository) ComputerLocalAdminsAudit(computer string, admins []string, 
 		if err != nil {
 			return fmt.Errorf("insert changed error: %v", err)
 		}
-		fmt.Printf("✅ Обновлено: %s (domain=%t): %s → %s\n", computer, isDomain, lastRecord.Administrators, adminsJSON)
+		//		fmt.Printf("✅ Обновлено: %s (domain=%t): %s → %s\n", computer, isDomain, lastRecord.Administrators, adminsJSON)
 	}
 
 	return nil
@@ -56,4 +57,31 @@ func (r *Repository) ComputerLocalAdminsAudit(computer string, admins []string, 
 type LastRecord struct {
 	Administrators string    `db:"administrators"`
 	Date           time.Time `db:"date"`
+}
+
+func (r *Repository) ComputerLocalAdminsGet(isDomain bool) (results []entity.LocalAdmins, err error) {
+	query := `
+        WITH LastRecords AS (
+            SELECT *,
+                ROW_NUMBER() OVER (
+                    PARTITION BY [computer], [domain]
+                    ORDER BY [date] DESC
+                ) as rn
+            FROM [dbo].[computerLocalAdminsAudit]
+            WHERE [domain] = $1
+        )
+        SELECT
+            [computer],
+            COALESCE(NULLIF([administrators], ''), '-') as [administrators]
+
+        FROM LastRecords
+        WHERE rn = 1
+        ORDER BY [computer]`
+
+	_, err = r.db.Select(&results, query, isDomain)
+	if err != nil {
+		return nil, fmt.Errorf("ComputerLocalAdminsGet failed: %w", err)
+	}
+
+	return results, nil
 }

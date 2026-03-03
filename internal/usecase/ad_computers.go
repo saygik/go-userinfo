@@ -30,7 +30,9 @@ import (
 // }
 
 func (u *UseCase) GetADComputers(perms entity.Permissions) ([]map[string]interface{}, error) {
-	// Early return
+
+	// comp["administrators_domain"] = admins
+	// comp["administrators_local"] = admins
 	allowedDomains := u.getAllowedDomainsForComputers(&perms)
 	if len(allowedDomains) == 0 {
 		return nil, nil
