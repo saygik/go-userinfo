@@ -42,7 +42,7 @@ func (u *UseCase) GetADComputers(perms entity.Permissions) ([]map[string]interfa
 	if err != nil {
 		return nil, fmt.Errorf("redis HMGet: %w", err)
 	}
-
+	isAdmin := perms.IsAdmin || perms.IsSysAdmin
 	// Параллельный парсинг
 	var result []map[string]any
 	var wg sync.WaitGroup
@@ -58,6 +58,21 @@ func (u *UseCase) GetADComputers(perms entity.Permissions) ([]map[string]interfa
 			defer wg.Done()
 			var computers []map[string]any
 			if json.Unmarshal([]byte(dataStr), &computers) == nil {
+				for i := range computers {
+					comp := &computers[i] // ссылка для изменения
+					if isAdmin {
+						continue
+					}
+					if domain, ok := (*comp)["domain"].(string); ok && perms.AdminDomains[domain] {
+						continue
+					}
+					// Удаляем поля для не-админов
+					delete(*comp, "administrators_domain")
+					delete(*comp, "administrators_local")
+					delete(*comp, "servicePrincipalName")
+					delete(*comp, "ms-Mcs-AdmPwdExpirationTime")
+
+				}
 				mu.Lock()
 				result = append(result, computers...)
 				mu.Unlock()
