@@ -14,6 +14,7 @@ func (h *Handler) NewAppRouterGroup() *gin.RouterGroup {
 	rg.GET("/computer/rms/:domain", h.ComputerRMS)
 	rg.GET("/setip", h.SetIp)
 	rg.POST("/localadmins/:computer", h.GetLocalAdmins)
+	rg.POST("/computer-update-admins/:computer", h.TokenAuthMiddleware(), h.UpdateComputerLocalAdmins)
 	rg.GET("/ip", h.Ip)
 	return rg
 }

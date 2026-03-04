@@ -246,3 +246,42 @@ func (h *Handler) GetLocalAdmins(c *gin.Context) {
 		"local_admins_domain": localAdminsDomain,
 	})
 }
+
+func (h *Handler) UpdateComputerLocalAdmins(c *gin.Context) {
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+
+	computer := c.Param("computer")
+	if computer == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "Невозможно определить имя компьютера.", "error": "Empty computer name"})
+		return
+	}
+
+	type updateForm struct {
+		Domain         string `json:"domain" binding:"required"`
+		Administrators string `json:"administrators" `
+	}
+	var form updateForm
+	if err := c.ShouldBindJSON(&form); err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{
+			"message": "Невозможно прочитать тело запроса",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	if err := h.uc.UpdateComputerLocalAdmins(perms, computer, form.Domain, form.Administrators); err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": "Невозможно сохранить информацию о локальных администраторах компьютера",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "ok",
+	})
+}

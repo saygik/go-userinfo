@@ -10,6 +10,7 @@ import (
 type Repository interface {
 	ComputerLocalAdminsAudit(string, []string, bool) error
 	ComputerLocalAdminsGet(bool) ([]entity.LocalAdmins, error)
+	UpdateComputerLocalAdmins(string, string, string) error
 	GetDomainAccess(string) ([]entity.DomainAccess, error) // user_domain_access
 	GetSections(string) ([]entity.IdNameDescription, error)
 

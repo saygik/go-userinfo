@@ -85,3 +85,15 @@ func (r *Repository) ComputerLocalAdminsGet(isDomain bool) (results []entity.Loc
 
 	return results, nil
 }
+
+// UpdateComputerLocalAdmins добавляет запись о локальных администраторах компьютера с указанием домена и списка администраторов.
+func (r *Repository) UpdateComputerLocalAdmins(computer, domain, administrators string) error {
+	_, err := r.db.Exec(`
+        INSERT INTO [computerLocalAdminsAudit] ([computer], [Date], [domain], [administrators])
+        VALUES (?, GETDATE(), ?, ?)
+    `, computer, domain, administrators)
+	if err != nil {
+		return fmt.Errorf("UpdateComputerLocalAdmins failed: %w", err)
+	}
+	return nil
+}
