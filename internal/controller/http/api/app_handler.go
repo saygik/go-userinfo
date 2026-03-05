@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/saygik/go-userinfo/internal/entity"
+	"github.com/saygik/go-userinfo/internal/state"
 )
 
 // getUserID ...
@@ -284,4 +285,50 @@ func (h *Handler) UpdateComputerLocalAdmins(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "ok",
 	})
+}
+
+// ForceFillRedisCacheFromAD — админский роут для форсированного запуска заполнения Redis из AD.
+// Доступен только для IsSysAdmin.
+func (h *Handler) ForceFillRedisCacheFromAD(c *gin.Context) {
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	if !perms.IsSysAdmin {
+		c.JSON(403, gin.H{"error": "у вас нет прав для выполнения операции"})
+		return
+	}
+
+	if state.IsFillingRedis() {
+		c.JSON(http.StatusConflict, gin.H{"error": "кеш уже обновляется"})
+		return
+	}
+
+	// Запускаем асинхронно, чтобы не держать HTTP-соединение.
+	go func() {
+		if err := h.uc.FillRedisCaсheFromAD(); err != nil {
+			h.log.Error(err)
+		}
+	}()
+
+	c.JSON(http.StatusAccepted, gin.H{"status": "started"})
+}
+func (h *Handler) ForceFillRedisCacheFromADStatus(c *gin.Context) {
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	if !perms.IsSysAdmin {
+		c.JSON(403, gin.H{"error": "у вас нет прав для выполнения операции"})
+		return
+	}
+
+	if !state.IsFillingRedis() {
+		c.JSON(http.StatusOK, gin.H{"status": "not started"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "filling"})
 }
