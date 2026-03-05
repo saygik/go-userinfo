@@ -120,6 +120,9 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 		mu               sync.Mutex
 	)
 
+	domainAdminsMap := make(map[string]string)
+	localAdminsMap := make(map[string]string)
+
 	// MSSQL компьютеры
 	wg.Add(1)
 	go func() {
@@ -151,7 +154,24 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 			unmarshalString(redisData[0].(string), &redisDomainComps)
 		}
 	}()
-
+	if isAdminDomain(perms, domain) {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			compsLocalAdmins, _ := u.ComputerLocalAdminsGet(false) // domain = false
+			for _, admin := range compsLocalAdmins {
+				localAdminsMap[admin.Computer] = admin.Administrators
+			}
+		}()
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			compsLocalAdminsDomain, _ := u.ComputerLocalAdminsGet(true) // domain = true
+			for _, admin := range compsLocalAdminsDomain {
+				domainAdminsMap[admin.Computer] = admin.Administrators
+			}
+		}()
+	}
 	wg.Wait()
 
 	if len(comps) == 0 {
@@ -188,7 +208,7 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 			Mail:        GetStringFromMap(user, "mail"),
 			Telephone:   GetStringFromMap(user, "telephoneNumber"),
 			Computer:    compName,
-			IP:          "", // Заполнится ниже
+			IP:          GetStringFromMap(user, "ip"),
 			LastDate:    GetStringFromMap(user, "ip_date"),
 		}
 
@@ -198,9 +218,9 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 	// 5. 🔥 Привязка O(n) вместо O(n²)
 	for i := range comps {
 		comps[i].ID = i
-
+		compName := comps[i].Computer
 		// 🔥 O(1) поиск пользователей по имени компьютера
-		if users, ok := userByComputer[comps[i].Computer]; ok {
+		if users, ok := userByComputer[compName]; ok {
 			comps[i].Users = users
 
 			// Заполняем IP и дату из первого пользователя
@@ -208,13 +228,25 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 				comps[i].IP = users[0].IP
 			}
 		}
-
+		if isAdminDomain(perms, domain) {
+			if admins, ok := domainAdminsMap[compName]; ok {
+				comps[i].AdministratorsDomain = admins
+			}
+			// Локальные админы
+			if admins, ok := localAdminsMap[compName]; ok {
+				comps[i].AdministratorsLocal = admins
+			}
+		}
 		// 🔥 O(1) AD свойства
-		if props, ok := adCompByName[comps[i].Computer]; ok {
+		if props, ok := adCompByName[compName]; ok {
 			comps[i].OperatingSystem = props.OperatingSystem
 			comps[i].Description = props.Description
 		}
 	}
 
 	return comps, nil
+}
+
+func isAdminDomain(perms entity.Permissions, domain string) bool {
+	return perms.IsAdmin || perms.IsSysAdmin || perms.AdminDomains[domain]
 }

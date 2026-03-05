@@ -26,15 +26,17 @@ type ComputerProperties struct {
 }
 
 type DomainComputer struct {
-	ID              int            `db:"id" json:"id"`
-	Computer        string         `db:"computer" json:"computer"`
-	IP              string         `db:"ip" json:"ip"`
-	LastDate        string         `db:"last_date" json:"last_date"`
-	Domain          string         `db:"domain" json:"domain"`
-	DaysOn          int            `db:"days_on" json:"days_on"`
-	Users           []ComputerUser `json:"users"`
-	OperatingSystem string         `json:"operatingSystem,omitempty"`
-	Description     string         `json:"description,omitempty"`
+	ID                   int            `db:"id" json:"id"`
+	Computer             string         `db:"computer" json:"computer"`
+	IP                   string         `db:"ip" json:"ip"`
+	LastDate             string         `db:"last_date" json:"last_date"`
+	Domain               string         `db:"domain" json:"domain"`
+	DaysOn               int            `db:"days_on" json:"days_on"`
+	Users                []ComputerUser `json:"users"`
+	OperatingSystem      string         `json:"operatingSystem,omitempty"`
+	Description          string         `json:"description,omitempty"`
+	AdministratorsDomain string         `json:"administrators_domain,omitempty"`
+	AdministratorsLocal  string         `json:"administrators_local,omitempty"`
 }
 
 type IdNameAvatar struct {
