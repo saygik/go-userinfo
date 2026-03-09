@@ -216,22 +216,38 @@ func (h *Handler) GetLocalAdmins(c *gin.Context) {
 	var localAdmins []string       // Только имена после "/"
 	var localAdminsDomain []string // Всё остальное
 
-	prefix := "WinNT://BRNV/"
+	prefix := "WinNT://"
 	for _, admin := range adminNames {
 		cleanAdmin := strings.TrimSpace(admin)
 		if after, ok := strings.CutPrefix(cleanAdmin, prefix); ok {
-			// Есть префикс — ищем "/"
-			if idx := strings.IndexByte(after, '/'); idx != -1 {
-				// localAdmins: всё после "/"
-				localAdmins = append(localAdmins, after[idx+1:])
+			parts := strings.Split(after, "/")
+			lastPart := strings.TrimSpace(parts[len(parts)-1])
+			if len(parts) == 2 {
+				if lastPart != "" {
+					localAdminsDomain = append(localAdminsDomain, lastPart)
+				}
+			} else if len(parts) == 3 {
+				if lastPart != "" {
+					localAdminsDomain = append(localAdminsDomain, lastPart)
+				}
 			} else {
-				// localAdminsDomain: всё после префикса (без "/")
 				localAdminsDomain = append(localAdminsDomain, after)
 			}
 		} else {
-			// Нет префикса — в localAdminsDomain
-			localAdminsDomain = append(localAdminsDomain, cleanAdmin)
+			localAdmins = append(localAdmins, cleanAdmin)
 		}
+
+		// 	if idx := strings.IndexByte(after, '/'); idx != -1 {
+		// 		// localAdmins: всё после "/"
+		// 		localAdmins = append(localAdmins, after[idx+1:])
+		// 	} else {
+		// 		// localAdminsDomain: всё после префикса (без "/")
+		// 		localAdminsDomain = append(localAdminsDomain, after)
+		// 	}
+		// } else {
+		// 	// Нет префикса — в localAdminsDomain
+		// 	localAdminsDomain = append(localAdminsDomain, cleanAdmin)
+		// }
 	}
 
 	if err := h.uc.ComputerLocalAdminsAudit(computer, localAdminsDomain, true); err != nil {
