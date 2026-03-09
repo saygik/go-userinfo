@@ -228,13 +228,9 @@ func (h *Handler) GetLocalAdmins(c *gin.Context) {
 				}
 			} else if len(parts) == 3 {
 				if lastPart != "" {
-					localAdminsDomain = append(localAdminsDomain, lastPart)
+					localAdmins = append(localAdmins, lastPart)
 				}
-			} else {
-				localAdminsDomain = append(localAdminsDomain, after)
 			}
-		} else {
-			localAdmins = append(localAdmins, cleanAdmin)
 		}
 
 		// 	if idx := strings.IndexByte(after, '/'); idx != -1 {
