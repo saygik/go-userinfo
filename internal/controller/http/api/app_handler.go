@@ -231,7 +231,7 @@ func (h *Handler) GetLocalAdmins(c *gin.Context) {
 					localAdmins = append(localAdmins, lastPart)
 				}
 			} else {
-				localAdmins = append(localAdmins, cleanAdmin)
+				localAdminsDomain = append(localAdminsDomain, cleanAdmin)
 			}
 		}
 
