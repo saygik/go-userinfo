@@ -230,6 +230,8 @@ func (h *Handler) GetLocalAdmins(c *gin.Context) {
 				if lastPart != "" {
 					localAdmins = append(localAdmins, lastPart)
 				}
+			} else {
+				localAdmins = append(localAdmins, cleanAdmin)
 			}
 		}
 
