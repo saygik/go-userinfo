@@ -8,17 +8,31 @@ import (
 
 func (r *Repository) GetTicketNetworkEquipment(ticketID string) (obj []entity.GLPI_Object, err error) {
 	var proc = fmt.Sprintf(`
-		SELECT  glpi_networkequipments.name AS 'name',
-		CONCAT (IFNULL(glpi_networkequipmenttypes.name,""), " ",IFNULL(glpi_manufacturers.name,""), " ",IFNULL(glpi_networkequipmentmodels.name,"") )  AS fullname,
-		IFNULL(glpi_groups.name, "") AS 'group',
-		IFNULL(glpi_locations.name, "") AS place
-		FROM (SELECT * FROM glpi_items_tickets WHERE itemtype='NetworkEquipment' and tickets_id=%s) it
-		LEFT JOIN glpi_networkequipments    ON it.items_id=glpi_networkequipments.id
-		LEFT JOIN glpi_groups ON glpi_networkequipments.groups_id_tech=glpi_groups.id
-		LEFT JOIN glpi_locations ON glpi_networkequipments.locations_id=glpi_locations.id
-		LEFT JOIN glpi_networkequipmenttypes ON glpi_networkequipments.networkequipmenttypes_id=glpi_networkequipmenttypes.id
-		LEFT JOIN glpi_manufacturers ON glpi_networkequipments.manufacturers_id=glpi_manufacturers.id
-		LEFT JOIN glpi_networkequipmentmodels ON glpi_networkequipments.networkequipmentmodels_id=glpi_networkequipmentmodels.id
+			SELECT
+				ne.name AS name,
+				CONCAT(
+					IFNULL(net.name, ''), ' ',
+					IFNULL(m.name, ''), ' ',
+					IFNULL(nem.name, '')
+				) AS fullname,
+				COALESCE(GROUP_CONCAT(DISTINCT g.name SEPARATOR ', '), '') AS 'group',
+				IFNULL(l.name, '') AS place
+			FROM (
+				SELECT * FROM glpi_items_tickets
+				WHERE itemtype = 'NetworkEquipment' AND tickets_id = %s
+			) it
+			LEFT JOIN glpi_networkequipments ne ON it.items_id = ne.id
+			LEFT JOIN glpi_groups_items gi ON ne.id = gi.items_id
+				AND gi.itemtype = 'NetworkEquipment'
+				AND gi.type = 2
+			LEFT JOIN glpi_groups g ON gi.groups_id = g.id
+			LEFT JOIN glpi_locations l ON ne.locations_id = l.id
+			LEFT JOIN glpi_networkequipmenttypes net ON ne.networkequipmenttypes_id = net.id
+			LEFT JOIN glpi_manufacturers m ON ne.manufacturers_id = m.id
+			LEFT JOIN glpi_networkequipmentmodels nem ON ne.networkequipmentmodels_id = nem.id
+			WHERE ne.is_deleted = 0
+			GROUP BY ne.id, ne.name, l.name, net.name, m.name, nem.name
+			ORDER BY ne.name
 	`, ticketID)
 	_, err = r.db.Select(&obj, proc)
 	if err != nil {
@@ -28,13 +42,24 @@ func (r *Repository) GetTicketNetworkEquipment(ticketID string) (obj []entity.GL
 }
 func (r *Repository) GetTicketSoft(ticketID string) (obj []entity.GLPI_Object, err error) {
 	var proc = fmt.Sprintf(`
-		SELECT  glpi_softwares.name AS 'name',
-		IFNULL(glpi_groups.name, "") AS 'group',
-		'' AS fullname, IFNULL(glpi_locations.name, "") as place
-		FROM (SELECT * FROM glpi_items_tickets WHERE itemtype='Software' and tickets_id=%s) it
-		LEFT JOIN glpi_softwares   ON it.items_id=glpi_softwares.id
-		LEFT JOIN glpi_groups ON glpi_softwares.groups_id_tech=glpi_groups.id
-		LEFT JOIN glpi_locations ON glpi_softwares.locations_id=glpi_locations.id
+		SELECT
+			s.name AS name,
+			COALESCE(GROUP_CONCAT(DISTINCT g.name SEPARATOR ', '), '') AS 'group',
+			'' AS fullname,
+			IFNULL(l.name, '') AS place
+		FROM (
+			SELECT * FROM glpi_items_tickets
+			WHERE itemtype = 'Software' AND tickets_id = %s
+		) it
+		LEFT JOIN glpi_softwares s ON it.items_id = s.id
+		LEFT JOIN glpi_groups_items gi ON s.id = gi.items_id
+			AND gi.itemtype = 'Software'
+			AND gi.type = 2
+		LEFT JOIN glpi_groups g ON gi.groups_id = g.id
+		LEFT JOIN glpi_locations l ON s.locations_id = l.id
+		WHERE s.is_deleted = 0
+		GROUP BY s.id, s.name, l.name
+		ORDER BY s.name
 	`, ticketID)
 	_, err = r.db.Select(&obj, proc)
 	if err != nil {
@@ -45,17 +70,31 @@ func (r *Repository) GetTicketSoft(ticketID string) (obj []entity.GLPI_Object, e
 
 func (r *Repository) GetTicketServers(ticketID string) (obj []entity.GLPI_Object, err error) {
 	var proc = fmt.Sprintf(`
-		SELECT  glpi_computers.name AS 'name',
-		IFNULL(glpi_groups.name, "") AS 'group',
-		CONCAT (IFNULL(glpi_computertypes.name,""), " ",IFNULL(glpi_manufacturers.name,""), " ",IFNULL(glpi_computermodels.name,""))  AS fullname,
-		IFNULL(glpi_locations.name, "") as place
-		FROM (SELECT * FROM glpi_items_tickets WHERE itemtype='Computer' and tickets_id=%s) it
-		LEFT JOIN glpi_computers   ON it.items_id=glpi_computers.id
-		LEFT JOIN glpi_groups ON glpi_computers.groups_id_tech=glpi_groups.id
-		LEFT JOIN glpi_locations ON glpi_computers.locations_id=glpi_locations.id
-		LEFT JOIN glpi_computertypes ON glpi_computers.computertypes_id=glpi_computertypes.id
-		LEFT JOIN glpi_manufacturers ON glpi_computers.manufacturers_id=glpi_manufacturers.id
-		LEFT JOIN glpi_computermodels ON glpi_computers.computermodels_id=glpi_computermodels.id
+		SELECT
+			c.name AS name,
+			COALESCE(GROUP_CONCAT(DISTINCT g.name SEPARATOR ', '), '') AS 'group',
+			CONCAT(
+				IFNULL(ct.name, ''), ' ',
+				IFNULL(m.name, ''), ' ',
+				IFNULL(cm.name, '')
+			) AS fullname,
+			IFNULL(l.name, '') AS place
+		FROM (
+			SELECT * FROM glpi_items_tickets
+			WHERE itemtype = 'Computer' AND tickets_id = %s
+		) it
+		LEFT JOIN glpi_computers c ON it.items_id = c.id
+		LEFT JOIN glpi_groups_items gi ON c.id = gi.items_id
+			AND gi.itemtype = 'Computer'
+			AND gi.type = 2
+		LEFT JOIN glpi_groups g ON gi.groups_id = g.id
+		LEFT JOIN glpi_locations l ON c.locations_id = l.id
+		LEFT JOIN glpi_computertypes ct ON c.computertypes_id = ct.id
+		LEFT JOIN glpi_manufacturers m ON c.manufacturers_id = m.id
+		LEFT JOIN glpi_computermodels cm ON c.computermodels_id = cm.id
+		WHERE c.is_deleted = 0
+		GROUP BY c.id, c.name, l.name, ct.name, m.name, cm.name
+		ORDER BY c.name
 	`, ticketID)
 	_, err = r.db.Select(&obj, proc)
 	if err != nil {

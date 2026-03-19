@@ -7,13 +7,13 @@ import (
 // Create ticket comment...
 func (u *UseCase) AddTicketComment(form entity.NewCommentForm) error {
 
-	if len(form.User) > 0 {
-		token, err := u.glpi.GetUserApiTokenByName(form.User)
-		if err != nil {
-			return u.Error("ошибка создания комментария заявки GLPI: у пользователя нет api токена")
-		}
-		form.Token = token.Name
-	}
+	// if len(form.User) > 0 {
+	// 	token, err := u.glpi.GetUserApiTokenByName(form.User)
+	// 	if err != nil {
+	// 		return u.Error("ошибка создания комментария заявки GLPI: у пользователя нет api токена")
+	// 	}
+	// 	form.Token = token.Name
+	// }
 
 	formP := entity.NewCommentInputForm{Input: form}
 	commentID, err := u.glpiApi.CreateComment(formP)

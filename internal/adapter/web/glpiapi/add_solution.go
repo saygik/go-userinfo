@@ -27,6 +27,6 @@ func (r *Repository) CreateSolution(form entity.NewCommentInputForm) (commentId 
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(form)
 
-	return r.AddItem("itilsolution/", token, payloadBuf, "Невозможно создать решение GLPI")
+	return r.AddItem("ITILSolution", token, payloadBuf, "Невозможно создать решение GLPI")
 
 }

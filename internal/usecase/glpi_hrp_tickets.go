@@ -18,7 +18,7 @@ func (u *UseCase) GetHRPTickets() {
 	// tickets := []entity.GLPI_Ticket{}
 	// tickets = append(tickets, entity.GLPI_Ticket{Id: 206238, Content: "Сотрудник: Казаков Юрий Геннадьевич(35407148)"})
 	//* TEST ***************************************
-	tickets, err := u.glpi.GetHRPTickets()
+	tickets, err := u.glpi.GetHRPTicketsTest()
 	_ = tickets
 
 	if err != nil || len(tickets) < 1 {
@@ -55,18 +55,18 @@ func (u *UseCase) GetHRPTickets() {
 			u.glpi.SetHRPTicket(ticket.Id)
 			continue
 		}
-		sfios := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Сотрудник:")+20:], "&lt;")
-		sDolg := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Штатная должность:")+35:], "&lt;")
-		sMero := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Проведено мероприятие:")+44:], "&lt;")
-		sPred := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "ОЕ:")+6:], "&lt;")
+		sfios := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Сотрудник:")+20:], "<")
+		sDolg := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Штатная должность:")+35:], "<")
+		sMero := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Проведено мероприятие:")+44:], "<")
+		sPred := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "ОЕ:")+6:], "<")
 
-		sPred1 := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "БЕ:")+6:], "&lt;")
+		sPred1 := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "БЕ:")+6:], "<")
 		sCompany := sPred1
-		if len(sPred) > 0 && sPred != "lt;br&gt;" {
+		if len(sPred) > 0 && sPred != "<br>" {
 			sCompany = sPred1 + ", " + sPred
 		}
 
-		sDate := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Дата ограничения действия учетной записи:")+78:], "&lt;")
+		sDate := getHRPAttributeFromText(ticket.Content[strings.Index(ticket.Content, "Дата ограничения действия учетной записи:")+78:], "<")
 		dateToNotificate := parseTicketDate(sDate)
 
 		hrpUser := entity.HRPUser{Id: ticket.Id, FIO: sfios, Dolg: sDolg, Mero: sMero, Company: sCompany, Date: sDate}
@@ -97,7 +97,7 @@ func (u *UseCase) GetHRPTickets() {
 
 				domainAdminsGLPIId := u.ad.GetDomainAdminsGLPI(domainName)
 				domainAdminsGLPIName, _, _, _ := u.glpi.GetGroupMattermostChannel(domainAdminsGLPIId)
-				u.sendHRPToCalendarAndMattermostChannel(hrpUser, "домен "+domainName, ticket, sfio, dateToNotificate, domainAdminsGLPIId)
+				u.sendHRPToCalendarAndMattermostChannel(hrpUser, "домен "+domainName, ticket, sfio, dateToNotificate, []int64{int64(domainAdminsGLPIId)})
 
 				upn = fmt.Sprintf("%v", user["userPrincipalName"])
 				sBoxes = ""
@@ -137,13 +137,14 @@ func (u *UseCase) GetHRPTickets() {
 				_ = soft
 				finded = true
 
-				u.sendHRPToCalendarAndMattermostChannel(hrpUser, soft.Name, ticket, sfio, dateToNotificate, int(soft.Groups_id_tech))
+				u.sendHRPToCalendarAndMattermostChannel(hrpUser, soft.Name, ticket, sfio, dateToNotificate, soft.Groups_id_tech)
+				//*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!	у нас тут массив групп, поэтому берем первую группу
 
 				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
 					Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
 					          <b>%s</b> найден в списке зарегистрированных пользователей системы <b>%s</b><br>
-					          рекомендуется направить заявку группе администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
-					 `, sfio, soft.Name, soft.GroupName)})
+					          рекомендуется направить заявку группам администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
+					 `, sfio, soft.Name, soft.GroupNames_s)})
 
 			}
 		}
@@ -205,36 +206,38 @@ func (u *UseCase) sendHRPToCalendarAndMattermostChannel(
 	ticket entity.GLPI_Ticket,
 	sfio string,
 	dateToNotificate string,
-	groupId int,
+	groupIds []int64,
 ) {
-	adminsName, channelId, calId, _ := u.glpi.GetGroupMattermostChannel(groupId)
-	//* TEST ***************************************
+	for _, groupId := range groupIds {
+		adminsName, channelId, calId, _ := u.glpi.GetGroupMattermostChannel(int(groupId))
+		//* TEST ***************************************
 
-	sheduleTaskId := 0
-	if dateToNotificate != "" && calId > 0 {
-		content := parseHTML(ticket.Content)
-		testtask := entity.ScheduleTask{
-			Id:             0,
-			Idc:            calId,
-			Tip:            3,
-			Status:         2,
-			Title:          fmt.Sprintf(`Отключение в системе %s пользователя %s`, softName, sfio),
-			Start:          dateToNotificate,
-			End:            "",
-			Upn:            "",
-			AllDay:         true,
-			SendMattermost: true,
-			Comment:        "Произвести отключение пользователя по заявке https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(ticket.Id) + "\r\n" + content,
+		sheduleTaskId := 0
+		if dateToNotificate != "" && calId > 0 {
+			content := parseHTML(ticket.Content)
+			testtask := entity.ScheduleTask{
+				Id:             0,
+				Idc:            calId,
+				Tip:            3,
+				Status:         2,
+				Title:          fmt.Sprintf(`Отключение в системе %s пользователя %s`, softName, sfio),
+				Start:          dateToNotificate,
+				End:            "",
+				Upn:            "",
+				AllDay:         true,
+				SendMattermost: true,
+				Comment:        "Произвести отключение пользователя по заявке https://support.rw/front/ticket.form.php?id=" + strconv.Itoa(ticket.Id) + "\r\n" + content,
+			}
+			sheduleTask, err := u.AddScheduleTask(testtask)
+			if err == nil {
+				sheduleTaskId = sheduleTask.Id
+			}
 		}
-		sheduleTask, err := u.AddScheduleTask(testtask)
-		if err == nil {
-			sheduleTaskId = sheduleTask.Id
-		}
-	}
-	if len(channelId) > 0 {
-		err := u.matt.SendPostHRPSoft(channelId, hrpUser, softName, sheduleTaskId)
-		if err != nil {
-			u.log.Error(fmt.Sprintf("Error sending post for  ticket %d to Mattermost channel %s to  glpi group %s. Error: %v", ticket.Id, channelId, adminsName, err))
+		if len(channelId) > 0 {
+			err := u.matt.SendPostHRPSoft(channelId, hrpUser, softName, sheduleTaskId)
+			if err != nil {
+				u.log.Error(fmt.Sprintf("Error sending post for  ticket %d to Mattermost channel %s to  glpi group %s. Error: %v", ticket.Id, channelId, adminsName, err))
+			}
 		}
 	}
 }

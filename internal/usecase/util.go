@@ -195,9 +195,15 @@ func convertInterfaceToString(val interface{}) string {
 func parseHTML(s string) string {
 	res := s
 	res = strings.Replace(res, "&lt;span&gt;", "", -1)
+	res = strings.Replace(res, "<span>", "", -1)
 	res = strings.Replace(res, "&lt;/span&gt;", "", -1)
+	res = strings.Replace(res, "</span>", "", -1)
 	res = strings.Replace(res, "&lt;br&gt;", "\r\n", -1)
+	res = strings.Replace(res, "<br>", "\r\n", -1)
+	res = strings.Replace(res, "</br>", "\r\n", -1)
 	res = strings.Replace(res, "&lt;br /&gt;", "\r\n", -1)
+	res = strings.Replace(res, "<p>", "", -1)
+	res = strings.Replace(res, "</p>", "", -1)
 	res = strings.Replace(res, "&lt;p&gt;", "", -1)
 	res = strings.Replace(res, "&lt;/p&gt;", "", -1)
 

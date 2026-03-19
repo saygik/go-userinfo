@@ -26,6 +26,6 @@ func (r *Repository) CreateComment(form entity.NewCommentInputForm) (commentId i
 	payloadBuf := new(bytes.Buffer)
 	json.NewEncoder(payloadBuf).Encode(form)
 
-	return r.AddItem("itilfollowup/", token, payloadBuf, "Невозможно создать комментарий GLPI")
+	return r.AddItem("TicketFollowup", token, payloadBuf, "Невозможно создать комментарий GLPI")
 
 }

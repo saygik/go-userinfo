@@ -5,9 +5,22 @@ import (
 )
 
 func (r *Repository) GetSoftwaresAdmins() (admins []entity.SoftwareAdmins, err error) {
-	sql := `SELECT  glpi_groups_users.groups_id AS 'id', glpi_users.name AS 'name' FROM glpi_groups_users
-		 LEFT JOIN glpi_users ON glpi_users.id=glpi_groups_users.users_id
-		 WHERE glpi_groups_users.groups_id IN (SELECT DISTINCT glpi_softwares.groups_id_tech FROM glpi_softwares)`
+	sql := `
+	SELECT DISTINCT
+    gu.groups_id AS id,
+    u.name AS name
+FROM glpi_groups_users gu
+LEFT JOIN glpi_users u ON u.id = gu.users_id
+WHERE gu.groups_id IN (
+    SELECT DISTINCT gi.groups_id
+    FROM glpi_groups_items gi
+    WHERE gi.itemtype = 'Software'
+      AND gi.type = 2
+      AND gi.items_id IN (SELECT id FROM glpi_softwares)
+      AND gi.items_id =833
+)
+ORDER BY id;
+	`
 	_, err = r.db.Select(&admins, sql)
 	return admins, err
 }

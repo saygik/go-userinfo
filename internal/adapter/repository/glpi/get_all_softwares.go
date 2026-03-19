@@ -1,22 +1,74 @@
 package glpi
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
 func (r *Repository) GetAllSoftwares() (softwares []entity.Software, err error) {
-	sql := `SELECT glpi_softwares.id, glpi_softwares.name, glpi_softwares.comment, IFNULL(glpi_entities.completename,'') AS ename, glpi_softwares.is_recursive,
-		IFNULL(glpi_locations.completename,'') AS locations, glpi_softwares.groups_id_tech, glpi_softwares.users_id_tech, IFNULL(glpi_manufacturers.name,'') AS manufacture,
-		IFNULL(softadd.moredescriptionfield,'') AS description1,
-		 IFNULL(softadd.servicemanualurlfieldtwo,'') murl, IFNULL(softadd.technicaldescriptionurlfield,'') AS durl, IFNULL(glpi_groups.name,'') as group_name
-		from glpi_softwares
-		INNER JOIN glpi_entities ON glpi_softwares.entities_id=glpi_entities.id
-		LEFT JOIN glpi_locations ON glpi_softwares.locations_id=glpi_locations.id
-		LEFT JOIN glpi_manufacturers ON glpi_softwares.manufacturers_id=glpi_manufacturers.id
-		LEFT JOIN glpi_plugin_fields_softwareadditionals softadd ON glpi_softwares.id=softadd.items_id
-		LEFT JOIN glpi_groups ON glpi_softwares.groups_id_tech=glpi_groups.id
-		WHERE glpi_softwares.is_deleted=0`
+	sql := `
+       SELECT
+            s.id, s.name, s.comment, IFNULL(e.completename,'') AS ename,
+            s.is_recursive, IFNULL(l.completename,'') AS locations,
+            s.users_id_tech, IFNULL(m.name,'') AS manufacture,
+            IFNULL(softadd.moredescriptionfield,'') AS description1,
+            IFNULL(softadd.servicemanualurlfield,'') AS murl,
+            IFNULL(softadd.iconurlfield,'') AS durl,
+            COALESCE(GROUP_CONCAT(DISTINCT gi.groups_id), '') AS groups_id_tech_s,
+            COALESCE(GROUP_CONCAT(DISTINCT g.name SEPARATOR ', '), '') AS group_names_s
+        FROM glpi_softwares s
+        INNER JOIN glpi_entities e ON s.entities_id = e.id
+        LEFT JOIN glpi_locations l ON s.locations_id = l.id
+        LEFT JOIN glpi_manufacturers m ON s.manufacturers_id = m.id
+        LEFT JOIN glpi_plugin_fields_softwareadditionals softadd ON s.id = softadd.items_id
+        LEFT JOIN glpi_groups_items gi ON s.id = gi.items_id
+            AND gi.itemtype = 'Software' AND gi.type = 2
+        LEFT JOIN glpi_groups g ON gi.groups_id = g.id
+        WHERE s.is_deleted = 0
+        GROUP BY s.id, s.name, s.comment, e.completename, s.is_recursive,
+                 l.completename, s.users_id_tech, m.name, softadd.moredescriptionfield,
+                 softadd.servicemanualurlfield, softadd.iconurlfield
+        ORDER BY s.name
+    `
+
 	_, err = r.db.Select(&softwares, sql)
 
+	// 🔥 Парсим строковые поля в массивы
+	for i := range softwares {
+		softwares[i].Groups_id_tech = parseGroupIDs(softwares[i].Groups_id_tech_s)
+		softwares[i].GroupNames = parseGroupNames(softwares[i].GroupNames_s)
+	}
+
 	return softwares, err
+}
+
+// Парсит "1,2,5" → []int64{1,2,5}
+func parseGroupIDs(idsStr string) []int64 {
+	if idsStr == "" || idsStr == "NULL" {
+		return []int64{}
+	}
+
+	idStrings := strings.Split(idsStr, ",")
+	groupIDs := make([]int64, 0, len(idStrings))
+
+	for _, idStr := range idStrings {
+		idStr = strings.TrimSpace(idStr)
+		if id, err := strconv.ParseInt(idStr, 10, 64); err == nil {
+			groupIDs = append(groupIDs, id)
+		}
+	}
+	return groupIDs
+}
+
+// Парсит "Group1, Group2" → []string{"Group1", "Group2"}
+func parseGroupNames(namesStr string) []string {
+	if namesStr == "" || namesStr == "NULL" {
+		return []string{}
+	}
+
+	return strings.FieldsFunc(namesStr, func(r rune) bool {
+		return r == ','
+	})
 }

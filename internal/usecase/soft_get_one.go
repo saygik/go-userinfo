@@ -26,7 +26,8 @@ func (u *UseCase) GetSoftware(ids string) (entity.Software, error) {
 	softAdmins := []map[string]interface{}{}
 
 	for _, admin := range admins {
-		if software.Groups_id_tech == admin.Id {
+		if software.HasTechGroup(admin.Id) {
+
 			adUser := u.GetUserADPropertysShort(admin.Name)
 			softAdmins = append(softAdmins, adUser)
 		}
