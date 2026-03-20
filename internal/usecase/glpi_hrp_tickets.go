@@ -144,7 +144,7 @@ func (u *UseCase) GetHRPTickets() {
 					Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
 					          <b>%s</b> найден в списке зарегистрированных пользователей системы <b>%s</b><br>
 					          рекомендуется направить заявку группам администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
-					 `, sfio, soft.Name, soft.GroupNames)})
+					 `, sfio, soft.Name, soft.GroupNames())})
 
 			}
 		}
