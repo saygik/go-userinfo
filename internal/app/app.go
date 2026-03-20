@@ -59,9 +59,9 @@ func New(ctx context.Context) (*App, error) {
 
 	//FOR TEST!!!!!!!!!!!!!!!!!!!!
 	//app.c.useCase.GetScheduleTasksNotifications()
-	duration := 30 * time.Second
-	time.Sleep(duration)
-	app.c.useCase.GetHRPTickets()
+	// duration := 30 * time.Second
+	// time.Sleep(duration)
+	// app.c.useCase.GetHRPTickets()
 	//	app.c.useCase.GetSoftwareUsersEOL()
 
 	go app.getCalendarTaskNotifikations(ctx)

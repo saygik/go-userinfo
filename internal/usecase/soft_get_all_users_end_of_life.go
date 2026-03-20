@@ -29,21 +29,23 @@ func (u *UseCase) GetSoftwareUsersEOL() ([]map[string]interface{}, error) {
 Примите меры для перерегистрации в системе или пропустите это письмо, если данная система вас не интересует.`,
 					user.Login, user.Fio, soft.Name, parseDate(user.EndDate)))
 		}
-		if soft.GroupCalendar > 0 {
-			testtask := entity.ScheduleTask{
-				Id:             0,
-				Idc:            soft.GroupCalendar,
-				Tip:            3,
-				Status:         2,
-				Title:          fmt.Sprintf(`Срок действия учетной записи истёк для пользователя %s`, user.Fio),
-				Start:          user.EndDate,
-				End:            "",
-				Upn:            "",
-				AllDay:         true,
-				SendMattermost: true,
-				Comment:        fmt.Sprintf(`Срок действия учетной записи % s пользователя %s для системы %s истёк. Произведите отключение.`, user.Login, user.Fio, soft.Name),
+		for _, group := range soft.Groups {
+			if group.GroupCalendar > 0 {
+				testtask := entity.ScheduleTask{
+					Id:             0,
+					Idc:            group.GroupCalendar,
+					Tip:            3,
+					Status:         2,
+					Title:          fmt.Sprintf(`Срок действия учетной записи истёк для пользователя %s`, user.Fio),
+					Start:          user.EndDate,
+					End:            "",
+					Upn:            "",
+					AllDay:         true,
+					SendMattermost: true,
+					Comment:        fmt.Sprintf(`Срок действия учетной записи % s пользователя %s для системы %s истёк. Произведите отключение.`, user.Login, user.Fio, soft.Name),
+				}
+				_, _ = u.AddScheduleTask(testtask)
 			}
-			_, _ = u.AddScheduleTask(testtask)
 		}
 		u.repo.SetOneUserSoftwareSendedToCalendar(user.Id)
 

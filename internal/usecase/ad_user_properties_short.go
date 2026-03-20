@@ -21,6 +21,12 @@ func (u *UseCase) GetUserADPropertysShort(username string) map[string]interface{
 		delete(user, "memberOf")
 		delete(user, "presence")
 		delete(user, "otherTelephone")
+		delete(user, "objectGUID")
+		delete(user, "objectSid")
+		delete(user, "rms_installed")
+		delete(user, "msDS-User-Account-Control-Computed")
+		delete(user, "rms_port")
+		delete(user, "lastLogonTimestamp")
 		user["name"] = username
 		user["findedInAD"] = true
 		return user

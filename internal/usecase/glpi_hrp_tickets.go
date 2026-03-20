@@ -97,7 +97,7 @@ func (u *UseCase) GetHRPTickets() {
 
 				domainAdminsGLPIId := u.ad.GetDomainAdminsGLPI(domainName)
 				domainAdminsGLPIName, _, _, _ := u.glpi.GetGroupMattermostChannel(domainAdminsGLPIId)
-				u.sendHRPToCalendarAndMattermostChannel(hrpUser, "домен "+domainName, ticket, sfio, dateToNotificate, []int64{int64(domainAdminsGLPIId)})
+				u.sendHRPToCalendarAndMattermostChannel(hrpUser, "домен "+domainName, ticket, sfio, dateToNotificate, []entity.SoftwareGroup{{Id: int64(domainAdminsGLPIId)}})
 
 				upn = fmt.Sprintf("%v", user["userPrincipalName"])
 				sBoxes = ""
@@ -137,14 +137,14 @@ func (u *UseCase) GetHRPTickets() {
 				_ = soft
 				finded = true
 
-				u.sendHRPToCalendarAndMattermostChannel(hrpUser, soft.Name, ticket, sfio, dateToNotificate, soft.Groups_id_tech)
+				u.sendHRPToCalendarAndMattermostChannel(hrpUser, soft.Name, ticket, sfio, dateToNotificate, soft.Groups)
 				//*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!	у нас тут массив групп, поэтому берем первую группу
 
 				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
 					Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
 					          <b>%s</b> найден в списке зарегистрированных пользователей системы <b>%s</b><br>
 					          рекомендуется направить заявку группам администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
-					 `, sfio, soft.Name, soft.GroupNames_s)})
+					 `, sfio, soft.Name, soft.GroupNames)})
 
 			}
 		}
@@ -206,10 +206,10 @@ func (u *UseCase) sendHRPToCalendarAndMattermostChannel(
 	ticket entity.GLPI_Ticket,
 	sfio string,
 	dateToNotificate string,
-	groupIds []int64,
+	groups []entity.SoftwareGroup,
 ) {
-	for _, groupId := range groupIds {
-		adminsName, channelId, calId, _ := u.glpi.GetGroupMattermostChannel(int(groupId))
+	for _, group := range groups {
+		adminsName, channelId, calId, _ := u.glpi.GetGroupMattermostChannel(int(group.Id))
 		//* TEST ***************************************
 
 		sheduleTaskId := 0

@@ -19,7 +19,7 @@ func (u *UseCase) GetSoftware(ids string) (entity.Software, error) {
 	}
 
 	// список администраторов систем
-	admins, _ := u.glpi.GetSoftwaresAdmins()
+	admins, err := u.glpi.GetSoftwareAdmins(id)
 	if err != nil {
 		return software, u.Error("невозможно получить список администраторов систем из GLPI")
 	}

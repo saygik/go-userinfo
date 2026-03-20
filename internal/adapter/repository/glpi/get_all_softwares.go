@@ -1,74 +1,73 @@
 package glpi
 
 import (
-	"strconv"
-	"strings"
-
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
 func (r *Repository) GetAllSoftwares() (softwares []entity.Software, err error) {
-	sql := `
-       SELECT
-            s.id, s.name, s.comment, IFNULL(e.completename,'') AS ename,
+	// Первый запрос: базовая информация о ПО (без групп)
+	sql1 := `
+        SELECT
+            s.id, s.name, s.comment, COALESCE(e.completename,'') AS ename,
             s.is_recursive, IFNULL(l.completename,'') AS locations,
-            s.users_id_tech, IFNULL(m.name,'') AS manufacture,
+            IFNULL(m.name,'') AS manufacture,
             IFNULL(softadd.moredescriptionfield,'') AS description1,
             IFNULL(softadd.servicemanualurlfield,'') AS murl,
-            IFNULL(softadd.iconurlfield,'') AS durl,
-            COALESCE(GROUP_CONCAT(DISTINCT gi.groups_id), '') AS groups_id_tech_s,
-            COALESCE(GROUP_CONCAT(DISTINCT g.name SEPARATOR ', '), '') AS group_names_s
+            IFNULL(softadd.iconurlfield,'') AS durl
         FROM glpi_softwares s
         INNER JOIN glpi_entities e ON s.entities_id = e.id
         LEFT JOIN glpi_locations l ON s.locations_id = l.id
         LEFT JOIN glpi_manufacturers m ON s.manufacturers_id = m.id
         LEFT JOIN glpi_plugin_fields_softwareadditionals softadd ON s.id = softadd.items_id
-        LEFT JOIN glpi_groups_items gi ON s.id = gi.items_id
+        WHERE s.is_deleted = 0
+        ORDER BY s.name`
+
+	_, err = r.db.Select(&softwares, sql1)
+	if err != nil {
+		return nil, err
+	}
+
+	// Второй запрос: все группы для всех ПО (с подзапросом)
+	sql2 := `
+        SELECT
+            s.id AS software_id,
+            g.id,
+            g.name,
+            COALESCE(gmm.idmattermostfield, '') AS group_matt_channel,
+            CASE
+                WHEN gmm.iduserinfofield REGEXP '^[0-9]+$'
+                THEN CAST(gmm.iduserinfofield AS UNSIGNED)
+                ELSE 0
+            END AS group_calendar
+        FROM glpi_softwares s
+        INNER JOIN glpi_groups_items gi ON s.id = gi.items_id
             AND gi.itemtype = 'Software' AND gi.type = 2
         LEFT JOIN glpi_groups g ON gi.groups_id = g.id
+        LEFT JOIN glpi_plugin_fields_groupidmattermosts gmm ON g.id = gmm.items_id
         WHERE s.is_deleted = 0
-        GROUP BY s.id, s.name, s.comment, e.completename, s.is_recursive,
-                 l.completename, s.users_id_tech, m.name, softadd.moredescriptionfield,
-                 softadd.servicemanualurlfield, softadd.iconurlfield
-        ORDER BY s.name
-    `
+        ORDER BY s.id, g.name`
 
-	_, err = r.db.Select(&softwares, sql)
+	type SoftwareGroupWithID struct {
+		SoftwareID int64 `db:"software_id"`
+		entity.SoftwareGroup
+	}
 
-	// 🔥 Парсим строковые поля в массивы
+	var allGroups []SoftwareGroupWithID
+	_, err = r.db.Select(&allGroups, sql2)
+	if err != nil {
+		return nil, err
+	}
+
+	// Группируем группы по software_id
+	groupMap := make(map[int64][]entity.SoftwareGroup)
+	for _, sg := range allGroups {
+		groupMap[sg.SoftwareID] = append(groupMap[sg.SoftwareID], sg.SoftwareGroup)
+	}
+
+	// Присваиваем группы к ПО
 	for i := range softwares {
-		softwares[i].Groups_id_tech = parseGroupIDs(softwares[i].Groups_id_tech_s)
-		softwares[i].GroupNames = parseGroupNames(softwares[i].GroupNames_s)
+		softwares[i].Groups = groupMap[softwares[i].Id]
 	}
 
-	return softwares, err
-}
-
-// Парсит "1,2,5" → []int64{1,2,5}
-func parseGroupIDs(idsStr string) []int64 {
-	if idsStr == "" || idsStr == "NULL" {
-		return []int64{}
-	}
-
-	idStrings := strings.Split(idsStr, ",")
-	groupIDs := make([]int64, 0, len(idStrings))
-
-	for _, idStr := range idStrings {
-		idStr = strings.TrimSpace(idStr)
-		if id, err := strconv.ParseInt(idStr, 10, 64); err == nil {
-			groupIDs = append(groupIDs, id)
-		}
-	}
-	return groupIDs
-}
-
-// Парсит "Group1, Group2" → []string{"Group1", "Group2"}
-func parseGroupNames(namesStr string) []string {
-	if namesStr == "" || namesStr == "NULL" {
-		return []string{}
-	}
-
-	return strings.FieldsFunc(namesStr, func(r rune) bool {
-		return r == ','
-	})
+	return softwares, nil
 }
