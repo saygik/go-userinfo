@@ -20,7 +20,7 @@ type Repository interface {
 
 	GetAppResources() ([]entity.IdName, error)
 	GetDomainUsersIP(string) ([]entity.UserIPComputer, error)
-	GetComputerRMS(string) ([]string, error)
+	GetComputerRMS(string) ([]entity.ComputerRMS, error)
 	GetDomainUsersAvatars(string) ([]entity.IdNameAvatar, error)
 	GetUserResourceAccess(string, string) (int, error)
 

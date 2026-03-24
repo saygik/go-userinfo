@@ -1,5 +1,9 @@
 package entity
 
+type ComputerRMS struct {
+	Computer string `db:"computer"`
+	IP       string `db:"ip"`
+}
 type UserIPComputer struct {
 	Login    string `db:"login" json:"login"`
 	Ip       string `db:"ip" json:"ip"`

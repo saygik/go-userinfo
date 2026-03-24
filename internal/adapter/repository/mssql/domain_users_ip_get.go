@@ -14,7 +14,14 @@ func (r *Repository) GetDomainUsersAvatars(domain string) (users []entity.IdName
 	return users, err
 }
 
-func (r *Repository) GetComputerRMS(domain string) (computers []string, err error) {
-	_, err = r.db.Select(&computers, "GetComputerRMS $1", domain)
+func (r *Repository) GetComputerRMS(domain string) ([]entity.ComputerRMS, error) {
+	var computers []entity.ComputerRMS
+	query := `
+        SELECT computer, ip
+        FROM [Adman].[dbo].[UserIP]
+        WHERE login LIKE '%' + $1 + '%' AND rms = 1
+        GROUP BY computer, ip
+    `
+	_, err := r.db.Select(&computers, query, domain)
 	return computers, err
 }
