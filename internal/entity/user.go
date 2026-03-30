@@ -42,6 +42,7 @@ type DomainComputer struct {
 	Description          string         `json:"description,omitempty"`
 	AdministratorsDomain string         `json:"administrators_domain,omitempty"`
 	AdministratorsLocal  string         `json:"administrators_local,omitempty"`
+	Tickets              []IdName       `json:"tickets,omitempty"`
 }
 
 type IdNameAvatar struct {
