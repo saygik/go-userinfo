@@ -1,6 +1,8 @@
 package glpi
 
 import (
+	"strings"
+
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
@@ -80,7 +82,8 @@ func (r *Repository) GetComputersTickets() (ticketsByComp map[string][]entity.Id
 	} else {
 		ticketsByComp = make(map[string][]entity.IdName, len(tickets))
 		for _, t := range tickets {
-			ticketsByComp[t.Computer] = append(ticketsByComp[t.Computer], entity.IdName{
+			compName := strings.ToUpper(t.Computer)
+			ticketsByComp[compName] = append(ticketsByComp[compName], entity.IdName{
 				Id:   t.Id,
 				Name: t.Name,
 			})

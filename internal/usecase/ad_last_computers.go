@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"encoding/json"
+	"strings"
 	"sync"
 
 	"github.com/saygik/go-userinfo/internal/entity"
@@ -161,7 +162,7 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 			defer wg.Done()
 			compsLocalAdmins, _ := u.ComputerLocalAdminsGet(false) // domain = false
 			for _, admin := range compsLocalAdmins {
-				localAdminsMap[admin.Computer] = admin.Administrators
+				localAdminsMap[strings.ToUpper(admin.Computer)] = admin.Administrators
 			}
 		}()
 		wg.Add(1)
@@ -169,7 +170,7 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 			defer wg.Done()
 			compsLocalAdminsDomain, _ := u.ComputerLocalAdminsGet(true) // domain = true
 			for _, admin := range compsLocalAdminsDomain {
-				domainAdminsMap[admin.Computer] = admin.Administrators
+				domainAdminsMap[strings.ToUpper(admin.Computer)] = admin.Administrators
 			}
 		}()
 		wg.Add(1)
@@ -192,7 +193,7 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 	// Индексация AD компьютеров O(n)
 	for _, c := range redisDomainComps {
 		if name, ok := c["cn"].(string); ok {
-			adCompByName[name] = entity.ComputerProperties{
+			adCompByName[strings.ToUpper(name)] = entity.ComputerProperties{
 				OperatingSystem: GetStringFromMap(c, "operatingSystem"),
 				Description:     GetStringFromMap(c, "description"),
 			}
@@ -205,7 +206,7 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 		if !ok || compName == "" {
 			continue
 		}
-
+		compName = strings.ToUpper(compName)
 		compUser := entity.ComputerUser{
 			UPN:         GetStringFromMap(user, "userPrincipalName"),
 			DisplayName: GetStringFromMap(user, "displayName"),
@@ -225,7 +226,8 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 	// 5. 🔥 Привязка O(n) вместо O(n²)
 	for i := range comps {
 		comps[i].ID = i
-		compName := comps[i].Computer
+		compName := strings.ToUpper(comps[i].Computer)
+
 		// 🔥 O(1) поиск пользователей по имени компьютера
 		if users, ok := userByComputer[compName]; ok {
 			comps[i].Users = users
