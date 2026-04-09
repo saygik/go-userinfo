@@ -127,6 +127,7 @@ type GLPI interface {
 	GetTicketSolutions(string) ([]entity.GLPI_Work, error)
 	GetTicketSoft(string) ([]entity.GLPI_Object, error)
 	GetTicketServers(string) ([]entity.GLPI_Object, error)
+	GetTicketStorages(string) ([]entity.GLPI_Object, error)
 	GetTicketNetworkEquipment(string) ([]entity.GLPI_Object, error)
 	GetTicketProblems(string) ([]entity.GLPI_Problem, error)
 	GetProblemWorks(string) ([]entity.GLPI_Work, error)

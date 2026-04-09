@@ -70,31 +70,52 @@ func (r *Repository) GetTicketSoft(ticketID string) (obj []entity.GLPI_Object, e
 
 func (r *Repository) GetTicketServers(ticketID string) (obj []entity.GLPI_Object, err error) {
 	var proc = fmt.Sprintf(`
-		SELECT
-			c.name AS name,
+			SELECT
+			s.name AS name,
 			COALESCE(GROUP_CONCAT(DISTINCT g.name SEPARATOR ', '), '') AS 'group',
-			CONCAT(
-				IFNULL(ct.name, ''), ' ',
-				IFNULL(m.name, ''), ' ',
-				IFNULL(cm.name, '')
-			) AS fullname,
+			s.comment AS fullname,
 			IFNULL(l.name, '') AS place
 		FROM (
 			SELECT * FROM glpi_items_tickets
-			WHERE itemtype = 'Computer' AND tickets_id = %s
+			WHERE itemtype = 'Glpi\\CustomAsset\\ServersAsset' AND tickets_id = %s
 		) it
-		LEFT JOIN glpi_computers c ON it.items_id = c.id
-		LEFT JOIN glpi_groups_items gi ON c.id = gi.items_id
-			AND gi.itemtype = 'Computer'
+		LEFT JOIN glpi_assets_assets s ON it.items_id = s.id
+		LEFT JOIN glpi_groups_items gi ON s.id = gi.items_id
+			AND gi.itemtype = 'Glpi\\CustomAsset\\ServersAsset'
 			AND gi.type = 2
 		LEFT JOIN glpi_groups g ON gi.groups_id = g.id
-		LEFT JOIN glpi_locations l ON c.locations_id = l.id
-		LEFT JOIN glpi_computertypes ct ON c.computertypes_id = ct.id
-		LEFT JOIN glpi_manufacturers m ON c.manufacturers_id = m.id
-		LEFT JOIN glpi_computermodels cm ON c.computermodels_id = cm.id
-		WHERE c.is_deleted = 0
-		GROUP BY c.id, c.name, l.name, ct.name, m.name, cm.name
-		ORDER BY c.name
+		LEFT JOIN glpi_locations l ON s.locations_id = l.id
+		WHERE s.is_deleted = 0
+		GROUP BY s.id, s.name, l.name
+		ORDER BY s.name
+	`, ticketID)
+	_, err = r.db.Select(&obj, proc)
+	if err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+func (r *Repository) GetTicketStorages(ticketID string) (obj []entity.GLPI_Object, err error) {
+	var proc = fmt.Sprintf(`
+			SELECT
+			s.name AS name,
+			COALESCE(GROUP_CONCAT(DISTINCT g.name SEPARATOR ', '), '') AS 'group',
+			s.comment AS fullname,
+			IFNULL(l.name, '') AS place
+		FROM (
+			SELECT * FROM glpi_items_tickets
+			WHERE itemtype = 'Glpi\\CustomAsset\\StoragesAsset' AND tickets_id = %s
+		) it
+		LEFT JOIN glpi_assets_assets s ON it.items_id = s.id
+		LEFT JOIN glpi_groups_items gi ON s.id = gi.items_id
+			AND gi.itemtype = 'Glpi\\CustomAsset\\StoragesAsset'
+			AND gi.type = 2
+		LEFT JOIN glpi_groups g ON gi.groups_id = g.id
+		LEFT JOIN glpi_locations l ON s.locations_id = l.id
+		WHERE s.is_deleted = 0
+		GROUP BY s.id, s.name, l.name
+		ORDER BY s.name
 	`, ticketID)
 	_, err = r.db.Select(&obj, proc)
 	if err != nil {

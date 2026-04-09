@@ -264,6 +264,7 @@ type GLPI_Ticket_Report struct {
 type GLPI_Objects struct {
 	Softwares        []GLPI_Object `json:"softwares"`
 	Servers          []GLPI_Object `json:"servers"`
+	Storages         []GLPI_Object `json:"storages"`
 	NetworkEquipment []GLPI_Object `json:"network_equipment"`
 }
 type GLPI_Object struct {

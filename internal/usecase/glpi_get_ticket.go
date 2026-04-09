@@ -301,6 +301,7 @@ func (u *UseCase) GetGLPITicketReport(id string, user string) (*entity.GLPI_Tick
 	ticket.Objects.NetworkEquipment, _ = u.glpi.GetTicketNetworkEquipment(id)
 	ticket.Objects.Servers, _ = u.glpi.GetTicketServers(id)
 	ticket.Objects.Softwares, _ = u.glpi.GetTicketSoft(id)
+	ticket.Objects.Storages, _ = u.glpi.GetTicketStorages(id)
 	access := isAccessToTicket(userRequesterInGLPI, ticket)
 	if !access {
 		return &ti, u.Error("ваши профили GLPI не дают доступа к этой заявке")
