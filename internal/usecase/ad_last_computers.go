@@ -124,7 +124,7 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 	domainAdminsMap := make(map[string]string)
 	localAdminsMap := make(map[string]string)
 	computersTickets := make(map[string][]entity.IdName)
-
+	computersAgents := make(map[string]entity.GLPI_Computer_Agent)
 	// MSSQL компьютеры
 	wg.Add(1)
 	go func() {
@@ -178,6 +178,11 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 			defer wg.Done()
 			computersTickets, _ = u.glpi.GetComputersTickets()
 
+		}()
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			computersAgents, _ = u.glpi.GetComputersAgents(domain)
 		}()
 	}
 	wg.Wait()
@@ -250,6 +255,9 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 		if props, ok := adCompByName[compName]; ok {
 			comps[i].OperatingSystem = props.OperatingSystem
 			comps[i].Description = props.Description
+		}
+		if agent, ok := computersAgents[compName]; ok {
+			comps[i].Agent = &agent
 		}
 		if ts, ok := computersTickets[compName]; ok {
 			comps[i].Tickets = ts

@@ -272,3 +272,12 @@ type GLPI_Object struct {
 	Group    string `db:"group" json:"group"`
 	Place    string `db:"place" json:"place"`
 }
+
+type GLPI_Computer_Agent struct {
+	Id          int    `db:"id" json:"id"`
+	Name        string `db:"name" json:"name"`
+	Ip          string `db:"ip" json:"ip"`
+	Domain      string `db:"domain" json:"domain"`
+	LastContact string `db:"last_contact" json:"last_contact"`
+	Version     string `db:"version" json:"version"`
+}
