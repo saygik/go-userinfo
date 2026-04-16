@@ -150,8 +150,17 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 					if strings.Contains(arch, "=АРХИВ") {
 						user["archive"] = true
 					}
+
+					userMail, ok := user["mail"].(string)
+					if ok {
+						if strings.ContainsAny(userMail, " \t\n\r") {
+							// Неверный email - содержит пробелы внутри
+							user["errors"] = "Ошибка в email: содержит пробелы или табуляцию"
+						}
+					}
+
 					userGroups := []string{}
-					userGroups, ok := user["memberOf"].([]string)
+					userGroups, ok = user["memberOf"].([]string)
 					if ok {
 						userGroups = user["memberOf"].([]string)
 					}

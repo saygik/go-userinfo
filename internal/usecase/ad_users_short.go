@@ -16,9 +16,13 @@ func (u *UseCase) GetADUsersPublicInfo(perm entity.Permissions) ([]map[string]in
 		return nil, err
 	}
 	var users []map[string]interface{}
+
 	for _, value := range redisADUsers {
 		var user map[string]interface{}
 		json.Unmarshal([]byte(value), &user)
+		if disabled, exists := user["disabled"]; exists && disabled == true {
+			continue
+		}
 		for _, field := range sensitiveLongFields {
 			delete(user, field)
 		}

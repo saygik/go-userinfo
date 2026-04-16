@@ -18,6 +18,9 @@ var sensitiveFields = []string{
 var sensitiveLongFields = []string{
 	"ip", "pwdLastSet", "proxyAddresses", "passwordDontExpire",
 	"passwordCantChange", "distinguishedName", "userAccountControl", "memberOf", "presence", "url", "otherTelephone",
+	"rms_port", "whenCreated", "whenChanged", "objectGUID", "objectSid", "userWorkstations", "lockoutTime", "msDS-User-Account-Control-Computed",
+	"lastLogonTimestamp", "lockoutTime", "ip_date", "rms_installed", "computer", "msRTCSIP-PrimaryUserAddress", "url", "internetwl", "internet",
+	"internettech", "archive", "sap_disabled", "avatar",
 }
 
 // func (u *UseCase) GetADUsers(perms entity.Permissions) ([]map[string]interface{}, error) {
