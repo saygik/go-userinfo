@@ -8,7 +8,7 @@ func (r *Repository) GetAllSoftwares() (softwares []entity.Software, err error) 
 	// Первый запрос: базовая информация о ПО (без групп)
 	sql1 := `
         SELECT
-            s.id, s.name, s.comment, COALESCE(e.completename,'') AS ename,
+            s.id, s.name, COALESCE(s.comment,'') AS comment , COALESCE(e.completename,'') AS ename,
             s.is_recursive, IFNULL(l.completename,'') AS locations,
             IFNULL(m.name,'') AS manufacture,
             IFNULL(softadd.moredescriptionfield,'') AS description1,
@@ -19,6 +19,7 @@ func (r *Repository) GetAllSoftwares() (softwares []entity.Software, err error) 
         LEFT JOIN glpi_locations l ON s.locations_id = l.id
         LEFT JOIN glpi_manufacturers m ON s.manufacturers_id = m.id
         LEFT JOIN glpi_plugin_fields_softwareadditionals softadd ON s.id = softadd.items_id
+         INNER JOIN glpi_groups_items gi ON s.id = gi.items_id AND gi.itemtype = 'Software' AND gi.type = 2
         WHERE s.is_deleted = 0
         ORDER BY s.name`
 
