@@ -14,7 +14,7 @@ func (r *Repository) GetSoftware(id int) (software entity.Software, err error) {
             s.name,
             COALESCE(e.completename, '') AS ename,
             '' AS login,
-            s.comment,
+            COALESCE(s.comment, '') AS comment,
             IFNULL(l.completename, '') AS locations,
             IFNULL(m.name, '') AS manufacture,
             IFNULL(softadd.moredescriptionfield, '') AS description1,

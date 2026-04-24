@@ -102,6 +102,7 @@ type AD interface {
 type GLPI interface {
 	GetComputersTickets() (map[string][]entity.IdName, error)
 	GetComputersAgents(string) (map[string]entity.GLPI_Computer_Agent, error)
+	GetComputersTags(string) (map[string]string, error)
 	GetUserByName(string) (entity.GLPIUser, error)
 	GetUserById(int) (entity.GLPIUser, error)
 	GetUserProfiles(int) ([]entity.GLPIUserProfile, error)

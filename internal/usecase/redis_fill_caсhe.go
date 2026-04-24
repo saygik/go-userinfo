@@ -58,6 +58,7 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 	for _, one := range adl {
 		wg.Add(1)
 		go func(one entity.DomainList) {
+
 			enabledUsersCount, disabledUsersCount, lockedUsersCount := 0, 0, 0
 			fullInternetUsersCount, whiteListInternetUsersCount, techInternetUsersCount := 0, 0, 0
 			start := time.Now()
@@ -73,6 +74,7 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 
 			users, err := u.ad.GetDomainUsers(one.Name)
 			comps, _ := u.ad.GetDomainComputers(one.Name)
+			tagsMap, _ := u.glpi.GetComputersTags(one.Name)
 			// Добавляем человекочитаемую версию ОС по operatingSystemVersion (например, 24H2)
 			for _, comp := range comps {
 				compName := comp["name"].(string)
@@ -188,6 +190,9 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 								user["computer"] = ip.Computer
 								user["ip_date"] = ip.IpDate
 								user["rms_installed"] = ip.Rms
+								if tags, ok := tagsMap[ip.Computer]; ok {
+									user["computer_glpi_tags"] = tags
+								}
 							}
 						}
 					}
