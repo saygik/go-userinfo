@@ -75,6 +75,7 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			users, err := u.ad.GetDomainUsers(one.Name)
 			comps, _ := u.ad.GetDomainComputers(one.Name)
 			tagsMap, _ := u.glpi.GetComputersTags(one.Name)
+			computersOs := make(map[string]string)
 			// Добавляем человекочитаемую версию ОС по operatingSystemVersion (например, 24H2)
 			for _, comp := range comps {
 				compName := comp["name"].(string)
@@ -85,6 +86,12 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 				// Локальные админы
 				if admins, ok := localAdminsMap[compName]; ok {
 					comp["administrators_local"] = admins
+				}
+				//											computersOs[strings.ToUpper(compName)] = comp["operatingSystem"].(string)
+				if v, ok := comp["operatingSystem"]; ok {
+					if verStr, ok := v.(string); ok {
+						computersOs[strings.ToUpper(compName)] = verStr
+					}
 				}
 				if v, ok := comp["operatingSystemVersion"]; ok {
 					if verStr, ok := v.(string); ok {
@@ -192,6 +199,9 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 								user["rms_installed"] = ip.Rms
 								if tags, ok := tagsMap[ip.Computer]; ok {
 									user["computer_glpi_tags"] = tags
+								}
+								if os, ok := computersOs[strings.ToUpper(ip.Computer)]; ok {
+									user["computer_os"] = os
 								}
 							}
 						}
