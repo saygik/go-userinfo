@@ -60,6 +60,12 @@ func (u *UseCase) GetADComputers(perms entity.Permissions) ([]map[string]interfa
 			if json.Unmarshal([]byte(dataStr), &computers) == nil {
 				for i := range computers {
 					comp := &computers[i] // ссылка для изменения
+					if windowsVersion, ok := (*comp)["operatingSystemVersion"].(string); ok {
+						humanVersion := windowsVersionToHumanWithSupport(windowsVersion)
+						(*comp)["supported"] = humanVersion.Supported
+					} else {
+						(*comp)["supported"] = false
+					}
 					if isAdmin {
 						continue
 					}

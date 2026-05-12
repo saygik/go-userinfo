@@ -76,6 +76,8 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			comps, _ := u.ad.GetDomainComputers(one.Name)
 			tagsMap, _ := u.glpi.GetComputersTags(one.Name)
 			computersOs := make(map[string]string)
+			computersOsVersion := make(map[string]WindowsVersionInfo)
+
 			// Добавляем человекочитаемую версию ОС по operatingSystemVersion (например, 24H2)
 			for _, comp := range comps {
 				compName := comp["name"].(string)
@@ -95,8 +97,9 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 				}
 				if v, ok := comp["operatingSystemVersion"]; ok {
 					if verStr, ok := v.(string); ok {
-						if human := windowsVersionToHuman(verStr); human != "" {
-							comp["operatingSystemVersionHuman"] = human
+						if human := windowsVersionToHumanWithSupport(verStr); human.Version != "" {
+							comp["operatingSystemVersionHuman"] = human.Version
+							computersOsVersion[strings.ToUpper(compName)] = human
 						}
 					}
 				}
@@ -202,6 +205,9 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 								}
 								if os, ok := computersOs[strings.ToUpper(ip.Computer)]; ok {
 									user["computer_os"] = os
+								}
+								if cosv, ok := computersOsVersion[strings.ToUpper(ip.Computer)]; ok {
+									user["computer_os_version"] = cosv
 								}
 							}
 						}

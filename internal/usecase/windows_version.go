@@ -5,6 +5,11 @@ import (
 	"strings"
 )
 
+type WindowsVersionInfo struct {
+	Version   string `json:"version"`
+	Supported bool   `json:"supported"`
+}
+
 // соответствие build-номера Windows маркетинговому имени версии
 var windowsBuildToHuman = map[int]string{
 	26200: "25H2",
@@ -74,4 +79,51 @@ func windowsVersionToHuman(osVersion string) string {
 	}
 
 	return ""
+}
+
+func windowsVersionToHumanWithSupport(osVersion string) WindowsVersionInfo {
+	buildStr := versionNumber(osVersion)
+	build, err := strconv.Atoi(buildStr)
+	if err != nil {
+		return WindowsVersionInfo{Version: "", Supported: false}
+	}
+
+	version := ""
+	if human, ok := windowsBuildToHuman[build]; ok {
+		version = human
+	}
+
+	// Список неподдерживаемых билдов
+	unsupportedBuilds := map[int]bool{
+		19041: true, // 2004
+		19042: true, // 2004
+		19043: true, // 2004
+		18363: true, // 1909
+		18362: true, // 1903
+		17763: true, // 1809
+		17134: true, // 1803
+		16299: true, // 1709
+		15063: true, // 1703
+		14393: true, // 1607
+		10586: true, // 1511
+		10240: true, // 1507
+		7601:  true, // 7 SP1
+		7600:  true, // 7 SP1
+		9600:  true, // Server 2012 R2
+		6003:  true, // Server 2008
+		3790:  true, // Server 2003
+		2195:  true, // Server 2000
+	}
+
+	supported := !unsupportedBuilds[build]
+
+	// Дополнительно проверяем, что версия известна
+	if version == "" {
+		supported = false
+	}
+
+	return WindowsVersionInfo{
+		Version:   version,
+		Supported: supported,
+	}
 }
