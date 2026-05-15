@@ -75,6 +75,7 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			users, err := u.ad.GetDomainUsers(one.Name)
 			comps, _ := u.ad.GetDomainComputers(one.Name)
 			tagsMap, _ := u.glpi.GetComputersTags(one.Name)
+			arhsMap, _ := u.glpi.GetComputersArhs(one.Name)
 			computersOs := make(map[string]string)
 			computersOsVersion := make(map[string]WindowsVersionInfo)
 
@@ -196,17 +197,21 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 					if len(ips) > 0 {
 						for _, ip := range ips {
 							if isStringObjsEqual(user["userPrincipalName"], ip.Login) {
+								comp := strings.ToUpper(ip.Computer)
 								user["ip"] = ip.Ip
 								user["computer"] = ip.Computer
 								user["ip_date"] = ip.IpDate
 								user["rms_installed"] = ip.Rms
-								if tags, ok := tagsMap[ip.Computer]; ok {
+								if tags, ok := tagsMap[comp]; ok {
 									user["computer_glpi_tags"] = tags
 								}
-								if os, ok := computersOs[strings.ToUpper(ip.Computer)]; ok {
+								if tags, ok := arhsMap[comp]; ok {
+									user["computer_arh"] = tags
+								}
+								if os, ok := computersOs[comp]; ok {
 									user["computer_os"] = os
 								}
-								if cosv, ok := computersOsVersion[strings.ToUpper(ip.Computer)]; ok {
+								if cosv, ok := computersOsVersion[comp]; ok {
 									user["computer_os_version"] = cosv
 								}
 							}

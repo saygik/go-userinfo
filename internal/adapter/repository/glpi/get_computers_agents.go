@@ -59,3 +59,34 @@ GROUP BY c.name`, domain)
 	}
 	return tagsMap, err
 }
+func (r *Repository) GetComputersArhs(domain string) (map[string]string, error) {
+	arhsMap := make(map[string]string)
+	computersArhs := []struct {
+		Name string `db:"name"`
+		Arh  string `db:"arh"`
+	}{}
+	sql := fmt.Sprintf(`
+		SELECT
+			c.name AS name,
+			osa.name AS arh
+		FROM glpi_computers c
+		INNER JOIN glpi_items_operatingsystems ios
+			ON ios.items_id = c.id
+			AND ios.itemtype = 'Computer'
+		INNER JOIN glpi_operatingsystems os
+			ON os.id = ios.operatingsystems_id
+		INNER JOIN glpi_operatingsystemarchitectures osa
+			ON osa.id = ios.operatingsystemarchitectures_id
+		LEFT JOIN glpi_domains_items di ON c.id = di.items_id AND di.itemtype = 'Computer'
+		LEFT JOIN glpi_domains d ON d.id = di.domains_id
+		WHERE c.is_deleted = 0 AND d.name = '%s'
+		ORDER BY c.name`, domain)
+	_, err := r.db.Select(&computersArhs, sql)
+	if err != nil {
+		return nil, err
+	}
+	for _, computer := range computersArhs {
+		arhsMap[strings.ToUpper(computer.Name)] = computer.Arh
+	}
+	return arhsMap, err
+}
