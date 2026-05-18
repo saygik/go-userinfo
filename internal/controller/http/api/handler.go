@@ -25,6 +25,9 @@ type UseCase interface {
 	FillRedisCaсheFromAD() error
 	LoadUserPermissions(string) (entity.Permissions, error)                                                      //LoadUserPermissions
 	IUTMGetWlist() ([]string, error)                                                                             //IUTMGetWlist
+	IUTMGetWlist2() ([]string, error)                                                                            //IUTMGetWlist
+	IUTMGetBlist() ([]string, error)                                                                             //IUTMGetBWlist
+	IUTMGetAllLists() ([]entity.UrlInfo, error)                                                                  //IUTMGetAllLists
 	IsAppInitialized() bool                                                                                      // Приложение инициализировано
 	ADUserLocked(string) bool                                                                                    // Пользователь заблокирован
 	GetAppRoles() ([]entity.IdNameDescription, error)                                                            // Все роли пользователей приложения

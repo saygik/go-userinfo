@@ -6,3 +6,8 @@ type OrgWithCodes struct {
 	Tname string `db:"tname" json:"tname"`
 	Key   string `db:"key" json:"code"`
 }
+
+type UrlInfo struct {
+	Name string `json:"name"`
+	Url  string `json:"url"`
+}
