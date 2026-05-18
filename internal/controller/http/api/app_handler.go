@@ -346,3 +346,24 @@ func (h *Handler) ForceFillRedisCacheFromADStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"status": "filling"})
 }
+
+func (h *Handler) ForceFillRedisCacheIUTM(c *gin.Context) {
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(403, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	if !perms.IsSysAdmin {
+		c.JSON(403, gin.H{"error": "у вас нет прав для выполнения операции"})
+		return
+	}
+
+	// Запускаем асинхронно, чтобы не держать HTTP-соединение.
+	go func() {
+		if err := h.uc.FillRedisCaсheFromIUTM(); err != nil {
+			h.log.Error(err)
+		}
+	}()
+
+	c.JSON(http.StatusAccepted, gin.H{"status": "started"})
+}

@@ -23,6 +23,7 @@ type UseCase interface {
 	ComputerLocalAdminsGet(bool) ([]entity.LocalAdmins, error)
 	UpdateComputerLocalAdmins(entity.Permissions, string, string, string) error
 	FillRedisCaсheFromAD() error
+	FillRedisCaсheFromIUTM() error
 	LoadUserPermissions(string) (entity.Permissions, error)                                                      //LoadUserPermissions
 	IUTMGetWlist() ([]string, error)                                                                             //IUTMGetWlist
 	IUTMGetWlist2() ([]string, error)                                                                            //IUTMGetWlist

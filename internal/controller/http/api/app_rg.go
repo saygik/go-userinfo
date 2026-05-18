@@ -17,6 +17,8 @@ func (h *Handler) NewAppRouterGroup() *gin.RouterGroup {
 	rg.POST("/computer-update-admins/:computer", h.TokenAuthMiddleware(), h.UpdateComputerLocalAdmins)
 	rg.POST("/admin/adcache/update", h.TokenAuthMiddleware(), h.ForceFillRedisCacheFromAD)
 	rg.GET("/admin/adcache/status", h.TokenAuthMiddleware(), h.ForceFillRedisCacheFromADStatus)
+	rg.POST("/admin/iutmcache/update", h.TokenAuthMiddleware(), h.ForceFillRedisCacheIUTM)
+
 	rg.GET("/ip", h.Ip)
 	return rg
 }
