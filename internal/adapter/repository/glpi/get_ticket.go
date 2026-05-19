@@ -56,7 +56,8 @@ func (r *Repository) GetTicketReport(id string) (ticket entity.GLPI_Ticket_Repor
 	         IFNULL(JSON_EXTRACT(ancestors_cache, '$.*'),JSON_ARRAY(0)) AS 'orgs',
 	         glpi_tickets.id, glpi_tickets.content, glpi_tickets.name, glpi_tickets.status, impact,
 			  glpi_entities.id as eid,
-			 glpi_entities.completename as org, IFNULL(fail_category,"") as fail_category, IFNULL(fail_category_comment,"") as fail_category_comment, glpi_requesttypes.name as requesttype,
+			 glpi_entities.completename as org, IFNULL(fail_category,"") as fail_category, IFNULL(fail_category_comment,"") as fail_category_comment,
+			 IFNULL(glpi_requesttypes.name,"-") as requesttype,
 			 IFNULL(dufoursixfield,0) AS du, IFNULL(mdfield,0) AS mds,
 			CASE
 				WHEN type=1
