@@ -6,18 +6,16 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (u *UseCase) IUTMGetWlist() ([]string, error) {
+func (u *UseCase) IUTMGetList(list string) ([]string, error) {
 	var r []string
-
-	redisLists, err := u.redis.GetKeyFieldValue("utm", "wlist")
+	redisLists, err := u.redis.GetKeyFieldValue("utm", list) //"wlist"
 	if err != nil {
 		return nil, err
 	}
-
 	json.Unmarshal([]byte(redisLists), &r)
-
 	return r, nil
 }
+
 func (u *UseCase) IUTMGetWlist2() ([]string, error) {
 	var r []string
 
@@ -52,8 +50,8 @@ func (u *UseCase) IUTMGetAllLists() ([]entity.UrlInfo, error) {
 		Name string
 	}{
 		{Key: "wlist", Name: "Белый список ЦЗИ"},
-		{Key: "wlist2", Name: "Белый список НОД2"},
 		{Key: "blist", Name: "Черный список ЦЗИ"},
+		{Key: "wlist2", Name: "Белый список НОД2"},
 	}
 
 	for _, list := range lists {

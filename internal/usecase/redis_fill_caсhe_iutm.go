@@ -9,7 +9,8 @@ func (u *UseCase) FillRedisCaсheFromIUTM() error {
 	categories := u.iutm.List()
 	var blackList []string
 	var whiteList []string
-	var whiteList2 []string // если нужен третий список, уточните название
+	var whiteList2 []string
+	var whiteListIVC []string
 
 	for _, cat := range categories {
 		switch cat.Name {
@@ -19,6 +20,8 @@ func (u *UseCase) FillRedisCaсheFromIUTM() error {
 			whiteList = cat.Urls
 		case "Белый Список":
 			whiteList2 = cat.Urls
+		case "Белый список ИВЦ":
+			whiteListIVC = cat.Urls
 			// case "ThirdList": // раскомментируйте и укажите нужное имя категории
 			//     thirdList = cat.Urls
 		}
@@ -28,11 +31,13 @@ func (u *UseCase) FillRedisCaсheFromIUTM() error {
 	sort.Strings(blackList)
 	sort.Strings(whiteList)
 	sort.Strings(whiteList2)
+	sort.Strings(whiteListIVC)
 
 	// Очистка старых ключей
 	u.redis.DelKeyField("utm", "blist")
 	u.redis.DelKeyField("utm", "wlist")
 	u.redis.DelKeyField("utm", "wlist2")
+	u.redis.DelKeyField("utm", "wlistivc")
 	// u.redis.DelKeyField("utm", "tlist") // для третьего списка
 
 	// Сохранение в Redis
@@ -47,6 +52,8 @@ func (u *UseCase) FillRedisCaсheFromIUTM() error {
 	if jsonList, err := json.Marshal(whiteList2); err == nil && len(whiteList2) > 0 {
 		u.redis.AddKeyFieldValue("utm", "wlist2", jsonList)
 	}
-
+	if jsonList, err := json.Marshal(whiteListIVC); err == nil && len(whiteListIVC) > 0 {
+		u.redis.AddKeyFieldValue("utm", "wlistivc", jsonList)
+	}
 	return nil
 }
