@@ -176,7 +176,7 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			computersTickets, _ = u.glpi.GetComputersTickets()
+			computersTickets, _ = u.glpi.GetComputersTickets(domain)
 
 		}()
 		wg.Add(1)

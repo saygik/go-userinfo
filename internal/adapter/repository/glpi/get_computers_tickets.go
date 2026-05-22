@@ -1,6 +1,7 @@
 package glpi
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/saygik/go-userinfo/internal/entity"
@@ -62,20 +63,31 @@ import (
 // }
 
 // 5.5 📦 Загружаем тикеты по компьютерам
-func (r *Repository) GetComputersTickets() (ticketsByComp map[string][]entity.IdName, err error) {
+func (r *Repository) GetComputersTickets(domain string) (ticketsByComp map[string][]entity.IdName, err error) {
 	var tickets []struct {
 		Computer string `db:"computer"`
 		Id       int    `db:"id"`
 		Name     string `db:"name"`
 	}
+	if domain == "" {
+		return map[string][]entity.IdName{}, nil
+	}
+	sql := fmt.Sprintf(
+		`SELECT c.name AS computer, ti.id, ti.name
+			FROM glpi_items_tickets it
+			LEFT JOIN glpi_tickets ti ON ti.id = it.tickets_id
+			LEFT JOIN glpi_computers c ON c.id = it.items_id
+			INNER JOIN glpi_domains_items di
+				ON di.itemtype = 'Computer'
+			AND di.items_id = c.id
+			INNER JOIN glpi_domains d
+				ON d.id = di.domains_id
+			WHERE it.itemtype = 'Computer'
+			AND ti.requesttypes_id != 13
+			AND d.name = '%s'`,
+		domain)
+	_, err = r.db.Select(&tickets, sql)
 
-	_, err = r.db.Select(&tickets, `
-        SELECT c.name AS computer, ti.id, ti.name
-        FROM glpi_items_tickets it
-        LEFT JOIN glpi_tickets ti ON ti.id = it.tickets_id
-        LEFT JOIN glpi_computers c ON c.id = it.items_id
-        WHERE it.itemtype = 'Computer' AND ti.requesttypes_id != 13
-    `)
 	if err != nil {
 		// логгировать, но не возвращать из функции ошибку, если тикеты не критичны
 		return ticketsByComp, err
