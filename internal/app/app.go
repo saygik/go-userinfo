@@ -2,6 +2,10 @@ package app
 
 import (
 	"context"
+	"crypto/tls"
+	"fmt"
+	"net/http"
+	"os"
 	"time"
 
 	"github.com/saygik/go-userinfo/internal/config"
@@ -16,13 +20,26 @@ type App struct {
 }
 
 func New(ctx context.Context) (*App, error) {
+
 	app := &App{}
+	if _, err := os.Stat("config.json"); os.IsNotExist(err) {
+		return nil, fmt.Errorf("Config file not found: config.json")
+	}
 	cfg, err := config.NewConfig("config.json")
 	if err != nil {
 		return nil, err
 	}
 	app.cfg = cfg
 	app.initLogger(cfg.App.Env)
+	if cfg.App.Env == "local" {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		// Делаем его глобальным для всего приложения
+		http.DefaultTransport = tr
+		http.DefaultClient = &http.Client{Transport: tr}
+
+	}
 	app.log.Info("------------------Starting programm-------------")
 	msSQLConnect, err := app.newMsSQLConnect(cfg.Repository.Mssql)
 	if err != nil {

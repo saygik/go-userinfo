@@ -2,8 +2,10 @@ package config
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/hashicorp/vault-client-go"
@@ -125,7 +127,7 @@ func vaultConfig(conf Config) (*Config, error) {
 	cfg := &Config{}
 
 	ctx := context.Background()
-	cl, err := initVaultClient()
+	cl, err := initVaultClient(conf.App.Env == "local")
 	if err != nil {
 		return cfg, err
 	}
@@ -235,12 +237,32 @@ func vaultConfig(conf Config) (*Config, error) {
 	return cfg, nil
 }
 
-func initVaultClient() (*vault.Client, error) {
-	// prepare a client with the given base address
-	client, err := vault.New(
+func initVaultClient(debug bool) (*vault.Client, error) {
+	opts := []vault.ClientOption{
 		vault.WithAddress("https://vault.brnv.rw:8200/"),
-		vault.WithRequestTimeout(10*time.Second),
-	)
+		vault.WithRequestTimeout(10 * time.Second),
+	}
+
+	if debug {
+		// Режим дебага - добавляем кастомный HTTP клиент
+		httpClient := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+					MinVersion:         tls.VersionTLS12,
+				},
+				ForceAttemptHTTP2:     false,
+				MaxIdleConns:          100,
+				IdleConnTimeout:       90 * time.Second,
+				TLSHandshakeTimeout:   10 * time.Second,
+				ExpectContinueTimeout: 1 * time.Second,
+			},
+			Timeout: 30 * time.Second,
+		}
+		opts = append(opts, vault.WithHTTPClient(httpClient))
+	}
+
+	client, err := vault.New(opts...)
 	if err != nil {
 		return nil, err
 	}
