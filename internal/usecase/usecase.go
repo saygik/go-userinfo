@@ -110,6 +110,7 @@ type GLPI interface {
 	GetUserGroups(int) ([]entity.IdName, error)
 	GetAllSoftwares() ([]entity.Software, error)
 	GetSoftware(int) (entity.Software, error)
+	GetSoftwareJournal(int) ([]entity.SoftwareJournal, error)
 	GetTicketsNonClosed() ([]entity.GLPI_Ticket, error)
 	GetTicketsNonClosedFromIniciator(int) ([]entity.GLPI_Ticket, error)
 	GetSoftwaresAdmins() ([]entity.SoftwareAdmins, error)

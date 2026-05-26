@@ -26,6 +26,19 @@ type Software struct {
 	Groups       []SoftwareGroup          `json:"groups"`
 }
 
+type SoftwareJournal struct {
+	Id             string `db:"id" json:"id"`
+	Url            string `db:"url" json:"url"`
+	DocType        string `db:"doc_type" json:"doc_type"`
+	ItemId         int64  `db:"item_id" json:"item_id"`
+	Name           string `db:"name" json:"name"`
+	Content        string `db:"content" json:"content"`
+	Date           string `db:"date_creation" json:"date_creation"`
+	RequestType    string `db:"request_type" json:"request_type"`
+	FailCategory   string `db:"fail_category" json:"fail_category"`
+	FailCategoryId string `db:"fail_category_id" json:"fail_category_id"`
+}
+
 //Clients      int64                    `db:"clients" json:"clients"`
 //	Users_id_tech int64  `db:"users_id_tech" json:"users_id_tech"`
 //	Extauth       int64  `db:"extauth" json:"ext_auth"`

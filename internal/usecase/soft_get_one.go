@@ -42,3 +42,19 @@ func (u *UseCase) GetSoftware(ids string) (entity.Software, error) {
 	return software, nil
 
 }
+
+func (u *UseCase) GetSoftwareJournal(ids string) (*[]entity.SoftwareJournal, error) {
+
+	id, err := strconv.Atoi(ids)
+	if err != nil {
+		return nil, u.Error("неправильный id системы")
+	}
+
+	items, err := u.glpi.GetSoftwareJournal(id)
+	if err != nil {
+		return &items, u.Error("невозможно получить систему из GLPI")
+	}
+
+	return &items, nil
+
+}

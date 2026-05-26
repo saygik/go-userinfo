@@ -60,3 +60,59 @@ func (r *Repository) GetSoftware(id int) (software entity.Software, err error) {
 
 	return software, nil
 }
+
+func (r *Repository) GetSoftwareJournal(id int) (items []entity.SoftwareJournal, err error) {
+	// Первый запрос: базовая информация о ПО
+	sql1 := fmt.Sprintf(`SELECT
+                CONCAT('C-', c.id) AS id,
+                CONCAT('https://support.rw/front/change.form.php?id=', c.id) AS url,
+                'изменение' AS doc_type,
+                c.id AS item_id,
+                c.name,
+                c.content,
+                c.date AS date_creation,
+                'работа' AS request_type,
+                '-' AS fail_category,
+                0 AS fail_category_id                
+                FROM glpi_changes c
+                INNER JOIN glpi_changes_items ci
+                ON ci.changes_id = c.id
+                WHERE ci.itemtype = 'Software'
+                AND c.is_deleted = 0
+                AND ci.items_id = %d
+
+                UNION ALL
+
+                SELECT
+                CONCAT('T-', t.id) AS id,
+                CONCAT('https://support.rw/front/ticket.form.php?id=', t.id) AS url,
+                'заявка' AS doc_type,
+                t.id AS item_id,
+                t.name,
+                t.content,
+                t.date AS date_creation,
+                CASE
+                    WHEN t.type = 1 THEN 'инцидент'
+                    WHEN t.type = 2 THEN 'запрос'
+                    ELSE 'Неизвестно'
+                END AS request_type,
+                IFNULL(fc.name, '-') AS fail_category,
+                IFNULL(fc.id,0) AS fail_category_id
+                FROM glpi_tickets t
+                INNER JOIN glpi_items_tickets it
+                ON it.tickets_id = t.id
+                LEFT JOIN glpi_plugin_fields_ticketfailures tf
+                ON tf.items_id = t.id
+                LEFT JOIN glpi_plugin_fields_failcategoryfielddropdowns fc
+                ON fc.id = tf.plugin_fields_failcategoryfielddropdowns_id
+                WHERE it.itemtype = 'Software'
+                AND t.is_deleted = 0
+                AND it.items_id = %d
+                ORDER BY date_creation DESC`, id, id)
+
+	_, err = r.db.Select(&items, sql1)
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
+}

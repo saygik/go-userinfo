@@ -83,6 +83,21 @@ func (h *Handler) GetSoftware(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": software})
 }
 
+func (h *Handler) GetSoftwareJournal(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить id сиситемы в запросе"})
+		return
+	}
+	software, err := h.uc.GetSoftwareJournal(id)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": "невозможно получить систему", "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, software)
+}
+
 func (h *Handler) GetSoftwareUsers(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
