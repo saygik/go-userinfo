@@ -206,6 +206,7 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 				OperatingSystem: GetStringFromMap(c, "operatingSystem"),
 				Description:     GetStringFromMap(c, "description"),
 				DNSHostName:     GetStringFromMap(c, "dNSHostName"),
+				Arh:             GetStringFromMap(c, "computer_arh"),
 				LongName:        longName,
 			}
 		}
@@ -262,6 +263,7 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 
 		if props, ok := adCompByName[compName]; ok {
 			comps[i].OperatingSystem = props.OperatingSystem
+			comps[i].Arh = props.Arh
 			comps[i].Description = props.Description
 			comps[i].DNSHostName = strings.ToUpper(props.DNSHostName)
 			comps[i].LongName = props.LongName

@@ -114,6 +114,9 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 						}
 					}
 				}
+				if arh, ok := arhsMap[strings.ToUpper(compName)]; ok {
+					comp["computer_arh"] = arh
+				}
 			}
 			rmsPort := u.ad.GetDomainRMSPort(one.Name)
 			u.log.Info("Получение данных домена " + one.Name + " завершено. Обработка данных...")

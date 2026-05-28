@@ -27,6 +27,7 @@ type ComputerUser struct {
 }
 type ComputerProperties struct {
 	OperatingSystem string `json:"operatingSystem,omitempty"`
+	Arh             string `json:"computer_arh,omitempty"`
 	Description     string `json:"description,omitempty"`
 	DNSHostName     string `db:"dNSHostName" json:"dNSHostName"`
 	LongName        bool   `db:"longName" json:"longName"`
@@ -43,6 +44,7 @@ type DomainComputer struct {
 	DaysOn               int                  `db:"days_on" json:"days_on"`
 	Users                []ComputerUser       `json:"users"`
 	OperatingSystem      string               `json:"operatingSystem,omitempty"`
+	Arh                  string               `json:"computer_arh,omitempty"`
 	Description          string               `json:"description,omitempty"`
 	AdministratorsDomain string               `json:"administrators_domain,omitempty"`
 	AdministratorsLocal  string               `json:"administrators_local,omitempty"`
