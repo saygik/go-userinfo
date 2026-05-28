@@ -263,7 +263,7 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 		if props, ok := adCompByName[compName]; ok {
 			comps[i].OperatingSystem = props.OperatingSystem
 			comps[i].Description = props.Description
-			comps[i].DNSHostName = props.DNSHostName
+			comps[i].DNSHostName = strings.ToUpper(props.DNSHostName)
 			comps[i].LongName = props.LongName
 			dNSHostName = strings.ToUpper(props.DNSHostName)
 
