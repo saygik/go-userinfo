@@ -12,7 +12,8 @@ type WindowsVersionInfo struct {
 
 // соответствие build-номера Windows маркетинговому имени версии
 var windowsBuildToHuman = map[int]string{
-	26200: "25H2",
+	28000: "26H1", // Windows 11
+	26200: "25H2", // Windows 11
 	26100: "24H2", // Windows 11 24H2
 	22631: "23H2", // Windows 11 23H2
 	22621: "22H2", // Windows 11 22H2
