@@ -82,6 +82,16 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			// Добавляем человекочитаемую версию ОС по operatingSystemVersion (например, 24H2)
 			for _, comp := range comps {
 				compName := comp["name"].(string)
+				// Обработка dNSHostName
+				if dnsHost, ok := comp["dNSHostName"].(string); ok && dnsHost != "" {
+					// Изменяем значение dNSHostName: оставляем только часть до точки
+					if before, _, ok := strings.Cut(dnsHost, "."); ok {
+						comp["dNSHostName"] = before
+					}
+
+					// Проверяем совпадает ли dNSHostName (после обрезки) с compName
+					comp["longName"] = !strings.EqualFold(comp["dNSHostName"].(string), compName)
+				}
 				// Доменные админы
 				if admins, ok := domainAdminsMap[compName]; ok {
 					comp["administrators_domain"] = admins

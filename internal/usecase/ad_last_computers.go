@@ -198,9 +198,15 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 	// Индексация AD компьютеров O(n)
 	for _, c := range redisDomainComps {
 		if name, ok := c["cn"].(string); ok {
+			longName := false
+			if ln, ok := c["longName"].(bool); ok {
+				longName = ln
+			}
 			adCompByName[strings.ToUpper(name)] = entity.ComputerProperties{
 				OperatingSystem: GetStringFromMap(c, "operatingSystem"),
 				Description:     GetStringFromMap(c, "description"),
+				DNSHostName:     GetStringFromMap(c, "dNSHostName"),
+				LongName:        longName,
 			}
 		}
 	}
@@ -252,11 +258,17 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 			}
 		}
 		// 🔥 O(1) AD свойства
+		dNSHostName := compName
+
 		if props, ok := adCompByName[compName]; ok {
 			comps[i].OperatingSystem = props.OperatingSystem
 			comps[i].Description = props.Description
+			comps[i].DNSHostName = props.DNSHostName
+			comps[i].LongName = props.LongName
+			dNSHostName = strings.ToUpper(props.DNSHostName)
+
 		}
-		if agent, ok := computersAgents[compName]; ok {
+		if agent, ok := computersAgents[dNSHostName]; ok {
 			comps[i].Agent = &agent
 		}
 		if ts, ok := computersTickets[compName]; ok {

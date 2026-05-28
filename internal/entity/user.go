@@ -28,11 +28,15 @@ type ComputerUser struct {
 type ComputerProperties struct {
 	OperatingSystem string `json:"operatingSystem,omitempty"`
 	Description     string `json:"description,omitempty"`
+	DNSHostName     string `db:"dNSHostName" json:"dNSHostName"`
+	LongName        bool   `db:"longName" json:"longName"`
 }
 
 type DomainComputer struct {
 	ID                   int                  `db:"id" json:"id"`
 	Computer             string               `db:"computer" json:"computer"`
+	DNSHostName          string               `db:"dNSHostName" json:"dNSHostName"`
+	LongName             bool                 `db:"longName" json:"longName"`
 	IP                   string               `db:"ip" json:"ip"`
 	LastDate             string               `db:"last_date" json:"last_date"`
 	Domain               string               `db:"domain" json:"domain"`
