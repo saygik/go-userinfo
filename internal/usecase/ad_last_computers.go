@@ -197,7 +197,8 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 
 	// Индексация AD компьютеров O(n)
 	for _, c := range redisDomainComps {
-		if name, ok := c["cn"].(string); ok {
+		if name, ok := c["sAMAccountName"].(string); ok {
+			name = strings.TrimSuffix(name, "$")
 			longName := false
 			if ln, ok := c["longName"].(bool); ok {
 				longName = ln
