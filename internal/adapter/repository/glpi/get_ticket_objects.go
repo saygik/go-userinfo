@@ -73,7 +73,7 @@ func (r *Repository) GetTicketServers(ticketID string) (obj []entity.GLPI_Object
 			SELECT
 			s.name AS name,
 			COALESCE(GROUP_CONCAT(DISTINCT g.name SEPARATOR ', '), '') AS 'group',
-			s.comment AS fullname,
+			IFNULL(s.comment, '')  AS fullname,
 			IFNULL(l.name, '') AS place
 		FROM (
 			SELECT * FROM glpi_items_tickets
