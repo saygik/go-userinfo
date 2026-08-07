@@ -20,7 +20,7 @@ func (u *UseCase) GetHRPTickets() {
 	// tickets := []entity.GLPI_Ticket{}
 	// tickets = append(tickets, entity.GLPI_Ticket{Id: 206238, Content: "Сотрудник: Казаков Юрий Геннадьевич(35407148)"})
 	//* TEST ***************************************
-	tickets, err := u.glpi.GetHRPTicketsTest()
+	tickets, err := u.glpi.GetHRPTickets()
 	//	tickets, err := u.glpi.GetHRPTickets()
 	_ = tickets
 
