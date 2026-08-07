@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 
+	"github.com/agnivade/levenshtein"
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
@@ -18,7 +20,8 @@ func (u *UseCase) GetHRPTickets() {
 	// tickets := []entity.GLPI_Ticket{}
 	// tickets = append(tickets, entity.GLPI_Ticket{Id: 206238, Content: "Сотрудник: Казаков Юрий Геннадьевич(35407148)"})
 	//* TEST ***************************************
-	tickets, err := u.glpi.GetHRPTickets()
+	tickets, err := u.glpi.GetHRPTicketsTest()
+	//	tickets, err := u.glpi.GetHRPTickets()
 	_ = tickets
 
 	if err != nil || len(tickets) < 1 {
@@ -85,7 +88,13 @@ func (u *UseCase) GetHRPTickets() {
 			if user["disabled"] == true {
 				continue
 			}
-			if normalizeRussianString(fmt.Sprintf("%v", user["displayName"])) == normalizeRussianString(sfio) {
+			systemUser := fmt.Sprintf("%v", user["displayName"])
+			if systemUser == "" {
+				continue
+			}
+			match, log := FuzzyMatchFIO(systemUser, sfio, 2)
+			if match {
+				//println(log)
 				finded = true
 				// domain := user["domain"].(map[string]any)
 				// domainName := domain["name"].(string)
@@ -94,15 +103,17 @@ func (u *UseCase) GetHRPTickets() {
 					u.log.Error(fmt.Sprintf("Error getting domain name from user %v: %v", user, err))
 					continue
 				}
-
+				systemName := fmt.Sprintf("домен %s", domainName)
+				logMessage := fmt.Sprintf("%s [%s]", systemUser, log)
 				domainAdminsGLPIId := u.ad.GetDomainAdminsGLPI(domainName)
 				domainAdminsGLPIName, _, _, _ := u.glpi.GetGroupMattermostChannel(domainAdminsGLPIId)
-				u.sendHRPToCalendarAndMattermostChannel(hrpUser, "домен "+domainName, ticket, sfio, dateToNotificate, []entity.SoftwareGroup{{Id: int64(domainAdminsGLPIId)}})
+				u.sendHRPToCalendarAndMattermostChannel(hrpUser, systemName, ticket, sfio, logMessage, dateToNotificate, []entity.SoftwareGroup{{Id: int64(domainAdminsGLPIId)}})
 
 				upn = fmt.Sprintf("%v", user["userPrincipalName"])
 				sBoxes = ""
 				sBoxes += `<b>Поиск по ФИО:</b><br>	`
-				sBoxes += fmt.Sprintf(`%v найден в домене %s, учетная запись <b>%s</b><br>`, user["displayName"], domainName, upn)
+				sBoxes += fmt.Sprintf(`%s найден в домене %s, учетная запись <b>%s</b><br>`, hrpUser.FIO, domainName, upn)
+				sBoxes += fmt.Sprintf(`%s<br>`, logMessage)
 				val, ok = user["company"].(string)
 				if ok {
 					sBoxes += fmt.Sprintf(`<b>Организация:</b> %s<br>`, val)
@@ -131,23 +142,40 @@ func (u *UseCase) GetHRPTickets() {
 		}
 
 		//** Поиск пользователя в системах//
-		softs, err := u.GetUserSoftwaresByFio(sfio)
-		if err == nil && len(softs) > 0 {
-			for _, soft := range softs {
-				_ = soft
-				finded = true
+		softsUsers, err := u.GetSoftwaresUsers()
+		if err == nil && len(softsUsers) > 0 {
+			for _, softUser := range softsUsers {
+				match, log := FuzzyMatchFIO(softUser.Fio, sfio, 2)
+				if match {
+					systemName := softUser.SoftName
 
-				u.sendHRPToCalendarAndMattermostChannel(hrpUser, soft.Name, ticket, sfio, dateToNotificate, soft.Groups)
-				//*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!	у нас тут массив групп, поэтому берем первую группу
-
-				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
-					Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
-					          <b>%s</b> найден в списке зарегистрированных пользователей системы <b>%s</b><br>
+					logMessage := fmt.Sprintf("%s [%s]", softUser.Fio, log)
+					finded = true
+					u.sendHRPToCalendarAndMattermostChannel(hrpUser, systemName, ticket, sfio, logMessage, dateToNotificate, softUser.Groups)
+					u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
+						Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
+					          %s найден в списке зарегистрированных пользователей системы <b>%s</b><br>
+							  %s<br>
 					          рекомендуется направить заявку группам администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
-					 `, sfio, soft.Name, soft.GroupNames())})
-
+					 `, sfio, systemName, logMessage, softUser.GroupNames)})
+				}
 			}
 		}
+		// softs, err := u.GetUserSoftwaresByFio(sfio)
+		// if err == nil && len(softs) > 0 {
+		// 	for _, soft := range softs {
+		// 		_ = soft
+		// 		finded = true
+		// 		u.sendHRPToCalendarAndMattermostChannel(hrpUser, soft.Name, ticket, sfio, "", dateToNotificate, soft.Groups)
+
+		// 		u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
+		// 			Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
+		// 			          <b>%s</b> найден в списке зарегистрированных пользователей системы <b>%s</b><br>
+		// 			          рекомендуется направить заявку группам администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
+		// 			 `, sfio, soft.Name, soft.GroupNames())})
+
+		// 	}
+		// }
 
 		sBoxes = ""
 		if strings.HasPrefix(ticket.Company, "БЖД > ИВЦ2") {
@@ -205,6 +233,7 @@ func (u *UseCase) sendHRPToCalendarAndMattermostChannel(
 	softName string,
 	ticket entity.GLPI_Ticket,
 	sfio string,
+	logMessage string,
 	dateToNotificate string,
 	groups []entity.SoftwareGroup,
 ) {
@@ -234,7 +263,7 @@ func (u *UseCase) sendHRPToCalendarAndMattermostChannel(
 			}
 		}
 		if len(channelId) > 0 {
-			err := u.matt.SendPostHRPSoft(channelId, hrpUser, softName, sheduleTaskId)
+			err := u.matt.SendPostHRPSoft(channelId, hrpUser, softName, logMessage, sheduleTaskId)
 			if err != nil {
 				u.log.Error(fmt.Sprintf("Error sending post for  ticket %d to Mattermost channel %s to  glpi group %s. Error: %v", ticket.Id, channelId, adminsName, err))
 			}
@@ -242,23 +271,113 @@ func (u *UseCase) sendHRPToCalendarAndMattermostChannel(
 	}
 }
 
-// normalizeRussianString нормализует русские символы для корректного сравнения
-func normalizeRussianString(s string) string {
-	// Заменяем проблемные символы на их нормализованные варианты
-	replacements := map[string]string{
-		"ё": "е", "Ё": "Е",
-		"й": "и", "Й": "И",
+// normalizeFIO приводит строку к единому виду:
+// - нижний регистр,
+// - замена ё→е, й→и,
+// - удаление ь и ъ,
+// - удаление всех небуквенных символов (кроме пробелов),
+// - схлопывание множественных пробелов.
+func normalizeFIO(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+
+	repl := map[string]string{
+		"ё": "е",
+		"й": "и",
+		"ь": "",
+		"ъ": "",
+	}
+	for old, new := range repl {
+		s = strings.ReplaceAll(s, old, new)
 	}
 
-	result := s
-	for old, new := range replacements {
-		result = strings.ReplaceAll(result, old, new)
+	var builder strings.Builder
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsSpace(r) {
+			builder.WriteRune(r)
+		}
+	}
+	s = builder.String()
+
+	fields := strings.Fields(s)
+	return strings.Join(fields, " ")
+}
+
+// FuzzyMatchFIO сравнивает две строки ФИО с учётом возможных опечаток.
+// Возвращает:
+//   - match: true, если суммарное расстояние Левенштейна по частям (Ф, И, О) не превышает threshold;
+//   - logMsg: строка с деталями сравнения (полезна для аудита и исправления ошибок).
+//
+// Если совпадение точное (расстояние 0), logMsg будет пустой.
+func FuzzyMatchFIO(a, b string, threshold int) (match bool, logMsg string) {
+	normA := normalizeFIO(a)
+	normB := normalizeFIO(b)
+
+	// Если одна строка содержит другую (например, "Иванов" и "Иванов Петр") – считаем точным совпадением
+	if strings.Contains(normA, normB) || strings.Contains(normB, normA) {
+		if a == b {
+			return true, "точное совпадение!"
+		} else {
+			return true, "точное совпадение (с нормализацией!)"
+		}
 	}
 
-	// Убираем лишние пробелы и приводим к нижнему регистру
-	result = strings.ToLower(strings.TrimSpace(result))
+	partsA := strings.Fields(normA)
+	partsB := strings.Fields(normB)
 
-	return result
+	// Если какая-то строка пуста – нет совпадения
+	if len(partsA) == 0 || len(partsB) == 0 {
+		return false, ""
+	}
+
+	// Сравниваем части попарно, начиная с первой.
+	// Если количество частей разное, лишние части считаем как их длину.
+	minLen := len(partsA)
+	if len(partsB) < minLen {
+		minLen = len(partsB)
+	}
+
+	totalDist := 0
+
+	for i := 0; i < minLen; i++ {
+		dist := levenshtein.ComputeDistance(partsA[i], partsB[i])
+		totalDist += dist
+
+		if totalDist > threshold {
+			return false, "" // превысили порог, лог не нужен
+		}
+	}
+
+	// Учитываем лишние части
+	if len(partsA) > len(partsB) {
+		for i := minLen; i < len(partsA); i++ {
+			extraLen := len(partsA[i])
+			totalDist += extraLen
+
+			if totalDist > threshold {
+				return false, ""
+			}
+		}
+	} else if len(partsB) > len(partsA) {
+		for i := minLen; i < len(partsB); i++ {
+			extraLen := len(partsB[i])
+			totalDist += extraLen
+			if totalDist > threshold {
+				return false, ""
+			}
+		}
+	}
+
+	if totalDist == 0 {
+		return true, "точное совпадение!" // точное совпадение
+	}
+
+	if totalDist <= threshold {
+		// Неполное совпадение – формируем лог
+		logMsg = "НЕПОЛНОЕ СОВПАДЕНИЕ!"
+		return true, logMsg
+	}
+
+	return false, ""
 }
 
 func getDomainNameFromUser(user map[string]any) (string, error) {

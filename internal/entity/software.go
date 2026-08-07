@@ -94,4 +94,6 @@ type SoftUser struct {
 	Editor      string                 `db:"editor" json:"editor"`
 	LastChanges string                 `db:"last_changes" json:"last_changes"`
 	Propertys   map[string]interface{} `json:"props"`
+	Groups      []SoftwareGroup        `json:"groups"`
+	GroupNames  string                 `json:"group_names"`
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, softName string, idTaskCalNotification int) (err error) {
+func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, softName string, log string, idTaskCalNotification int) (err error) {
 
 	var actions []*model.PostAction
 
@@ -72,7 +72,7 @@ func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, s
 		"attachments": []*model.SlackAttachment{
 			{
 				AuthorName: "Пользователь найден в системе",
-				Text: "##### " + softName + "\n" + "*Дата мероприятия: " + hrpUser.Date + "*\n" +
+				Text: "##### " + softName + "\n" + log + "\n\n" + "*Дата мероприятия: " + hrpUser.Date + "*\n" +
 					"**ФИО: **" + hrpUser.FIO + ", **Должность: **" + hrpUser.Dolg + ", **Мероприятие: **" + hrpUser.Mero + calNotification,
 				Color:     "#FF2200",
 				Title:     "Заявка на отключение учетных данных сотрудника №" + strconv.Itoa(hrpUser.Id),

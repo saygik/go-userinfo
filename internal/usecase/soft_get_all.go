@@ -55,6 +55,8 @@ func (u *UseCase) GetSoftwaresUsers() ([]entity.SoftUser, error) {
 		for _, soft := range softwares {
 			if soft.Id == int64(softUser.IdSoft) {
 				softwaresUsers[i].SoftName = soft.Name
+				softwaresUsers[i].Groups = soft.Groups
+				softwaresUsers[i].GroupNames = soft.GroupNames()
 			}
 		}
 	}

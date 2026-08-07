@@ -168,7 +168,7 @@ type Mattermost interface {
 	IntegrationAllowedHosts() []string
 	SendPostHRP(string, entity.HRPUser) (err error)
 	SendPost(string, string, string, string, string, string, bool) (err error)
-	SendPostHRPSoft(string, entity.HRPUser, string, int) (err error)
+	SendPostHRPSoft(string, entity.HRPUser, string, string, int) (err error)
 	SendPostSimple(string, string) error
 	ReplyPost(string, string, string) error
 }
