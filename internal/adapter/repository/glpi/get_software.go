@@ -71,6 +71,15 @@ func (r *Repository) GetSoftwareJournal(id int) (items []entity.SoftwareJournal,
                 c.name,
                 c.content,
                 c.date AS date_creation,
+                IFNULL(c.solvedate, '') AS date_resolved,
+                CASE
+                        WHEN c.solvedate IS NULL THEN ''
+                        ELSE TIMESTAMPDIFF(
+                            MINUTE,
+                            c.date,
+                            c.solvedate
+                        )
+                    END AS execution_time,                
                 'работа' AS request_type,
                 '-' AS fail_category,
                 0 AS fail_category_id                
@@ -91,6 +100,15 @@ func (r *Repository) GetSoftwareJournal(id int) (items []entity.SoftwareJournal,
                 t.name,
                 t.content,
                 t.date AS date_creation,
+                IFNULL(t.solvedate, '') AS date_resolved,
+                CASE
+                    WHEN t.solvedate IS NULL THEN ''
+                    ELSE TIMESTAMPDIFF(
+                        MINUTE,
+                        t.date,
+                        t.solvedate
+                    )
+                END AS execution_time,                
                 CASE
                     WHEN t.type = 1 THEN 'инцидент'
                     WHEN t.type = 2 THEN 'запрос'

@@ -34,6 +34,8 @@ type SoftwareJournal struct {
 	Name           string `db:"name" json:"name"`
 	Content        string `db:"content" json:"content"`
 	Date           string `db:"date_creation" json:"date_creation"`
+	DateResolved   string `db:"date_resolved" json:"date_resolved"`
+	ExecutionTime  string `db:"execution_time" json:"execution_time"`
 	RequestType    string `db:"request_type" json:"request_type"`
 	FailCategory   string `db:"fail_category" json:"fail_category"`
 	FailCategoryId string `db:"fail_category_id" json:"fail_category_id"`
