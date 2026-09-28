@@ -85,6 +85,7 @@ type AD interface {
 	DomainList() []entity.DomainList
 	GetDomainAdminsGLPI(string) int
 	GetDomainMattermostLogChannel(string) string
+	GetDomainGLPIOrganization(string) string
 	GetMattermostLogChannelsByPrefix(string) []string
 	GetDomainRMSPort(string) int
 	GetDomainUsers(string) ([]map[string]any, error)
@@ -101,6 +102,7 @@ type AD interface {
 
 type GLPI interface {
 	GetComputersTickets(string) (map[string][]entity.IdName, error)
+	GetAllRMSSoftwares(string) ([]entity.ComputerRMS, error)
 	GetComputersAgents(string) (map[string]entity.GLPI_Computer_Agent, error)
 	GetComputersTags(string) (map[string]string, error)
 	GetComputersArhs(string) (map[string]string, error)

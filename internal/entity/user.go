@@ -2,8 +2,11 @@ package entity
 
 type ComputerRMS struct {
 	Computer string `db:"computer"  json:"computer"`
+	Date     string `db:"date"  json:"date"`
 	IP       string `db:"ip"  json:"ip"`
 	RMS      bool   `db:"rms"  json:"rms"`
+	Version  string `db:"version"  json:"version"`
+	SoftDate string `db:"softdate"  json:"softdate"`
 }
 type UserIPComputer struct {
 	Login    string `db:"login" json:"login"`

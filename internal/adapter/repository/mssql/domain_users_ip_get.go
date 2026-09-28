@@ -27,7 +27,7 @@ func (r *Repository) GetComputerRMS(domain string) ([]entity.ComputerRMS, error)
             FROM [Adman].[dbo].[UserIP]
             WHERE login LIKE $1
         )
-        SELECT computer, ip, rms
+        SELECT computer, ip, rms,date
         FROM LastRecords
         WHERE rn = 1
     `

@@ -18,6 +18,13 @@ func (r *Repository) GetDomainMattermostLogChannel(domain string) string {
 		return ""
 	}
 }
+func (r *Repository) GetDomainGLPIOrganization(domain string) string {
+	if val, ok := r.adconfigs[domain]; ok {
+		return val.GlpiRegionPrefix
+	} else {
+		return ""
+	}
+}
 
 func (r *Repository) GetMattermostLogChannelsByPrefix(inputPath string) []string {
 
