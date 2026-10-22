@@ -124,11 +124,13 @@ type UseCase interface {
 }
 
 type OAuth2 interface {
-	AuthCodeURL(string) string
+	AuthCodeURL(string, string) string
+	CodeChallenge(string) string
 	LogOutURL() string
-	Exchange(string) (*entity.Token, *entity.UserInfo, error)
+	Exchange(string, string) (*entity.Token, *entity.UserInfo, error)
 	IntrospectOAuth2Token(string, bool) (*entity.UserInfo, error)
 	ExchangeRefreshToAccessToken(string) (*entity.Token, error)
+	Revoke(string) error
 	GetRedirectUrl() string
 	Refresh(string) (entity.Token, error)
 }

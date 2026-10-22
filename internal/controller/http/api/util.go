@@ -86,7 +86,7 @@ func (h *Handler) TokenValid(c *gin.Context) {
 	user := ""
 
 	userInfo, err := h.oAuth2Authentik.IntrospectOAuth2Token(token, isApi)
-	if err != nil {
+	if err != nil || userInfo == nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "token is not active"})
 		return
 	}
@@ -116,7 +116,7 @@ func (h *Handler) UserFromToken(c *gin.Context) {
 	user := ""
 
 	userInfo, err := h.oAuth2Authentik.IntrospectOAuth2Token(token, isApi)
-	if err != nil {
+	if err != nil || userInfo == nil {
 		return
 	}
 	user = userInfo.Sub
