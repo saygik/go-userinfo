@@ -140,8 +140,10 @@ func osFamilyRank(osName string) int {
 		return 60
 	case strings.Contains(s, "windows xp"):
 		return 70
-	case strings.Contains(s, "server 2022"):
+	case strings.Contains(s, "server 2025"):
 		return 110
+	case strings.Contains(s, "server 2022"):
+		return 115
 	case strings.Contains(s, "server 2019"):
 		return 120
 	case strings.Contains(s, "server 2016"):
@@ -177,6 +179,8 @@ func osFamilyName(osName string) string {
 		return "Windows Vista"
 	case strings.Contains(s, "windows xp"):
 		return "Windows XP"
+	case strings.Contains(s, "server 2025"):
+		return "Windows Server 2025"
 	case strings.Contains(s, "server 2022"):
 		return "Windows Server 2022"
 	case strings.Contains(s, "server 2019"):

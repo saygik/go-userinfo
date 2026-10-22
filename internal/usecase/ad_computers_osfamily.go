@@ -22,12 +22,12 @@ func (u *UseCase) GetADComputersOSFamily(domain string, perms entity.Permissions
 	}
 	// 1. КЭШ Redis (5 минут)
 	cacheKey := fmt.Sprintf("os_family:%s", domain)
-	if cached, err := u.redis.GetKeyValue(cacheKey); err == nil {
-		var res []entity.ComputerFamilyCount
-		if json.Unmarshal([]byte(cached), &res) == nil && len(res) > 0 {
-			return res, nil
-		}
-	}
+	// if cached, err := u.redis.GetKeyValue(cacheKey); err == nil {
+	// 	var res []entity.ComputerFamilyCount
+	// 	if json.Unmarshal([]byte(cached), &res) == nil && len(res) > 0 {
+	// 		return res, nil
+	// 	}
+	// }
 
 	comps, err := u.ad.GetDomainComputers(domain)
 	if err != nil {
