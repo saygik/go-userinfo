@@ -3,12 +3,14 @@ package api
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/saygik/go-userinfo/internal/entity"
 )
 
 const (
@@ -158,10 +160,16 @@ func (h *Handler) RefreshOauth2Authentik(c *gin.Context) {
 
 	newToken, err := h.oAuth2Authentik.ExchangeRefreshToAccessToken(refreshToken)
 	if err != nil {
-		h.log.Warnf("authentik: обновление токена: %v", err)
-		// Битый или отозванный токен не должен оставаться в браузере.
-		h.clearAuthCookies(c)
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "Сессия истекла, требуется повторный вход"})
+		// Токен действительно мёртв (истёк/отозван) - завершаем сессию.
+		if errors.Is(err, entity.ErrRefreshTokenRejected) {
+			h.log.Warnf("authentik: refresh-токен отклонён: %v", err)
+			h.clearAuthCookies(c)
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Сессия истекла, требуется повторный вход"})
+			return
+		}
+		// Провайдер недоступен (сеть, 5xx): cookie не трогаем, сессия ещё жива.
+		h.log.Errorf("authentik: обновление токена: %v", err)
+		c.JSON(http.StatusServiceUnavailable, gin.H{"message": "Сервис авторизации недоступен, попробуйте позже"})
 		return
 	}
 

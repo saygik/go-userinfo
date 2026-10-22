@@ -115,13 +115,13 @@ func (o OAuth2) Exchange(code, codeVerifier string) (*entity.Token, *entity.User
 // Если провайдер не ротирует refresh-токен, возвращается прежний.
 func (o OAuth2) Refresh(refreshToken string) (entity.Token, error) {
 	if refreshToken == "" {
-		return entity.Token{}, errors.New("empty refresh token")
+		return entity.Token{}, fmt.Errorf("%w: empty refresh token", entity.ErrRefreshTokenRejected)
 	}
 
 	ctx := context.Background()
 	newToken, err := o.oAuth2Config.TokenSource(ctx, &oauth2.Token{RefreshToken: refreshToken}).Token()
 	if err != nil {
-		return entity.Token{}, err
+		return entity.Token{}, classifyRefreshError(err)
 	}
 
 	token := entity.Token{
@@ -145,6 +145,26 @@ func (o OAuth2) ExchangeRefreshToAccessToken(refreshToken string) (*entity.Token
 		return nil, err
 	}
 	return &token, nil
+}
+
+// classifyRefreshError отличает «токен отвергнут» (нужен повторный вход)
+// от временных проблем провайдера (сеть, 5xx): во втором случае сессию
+// пользователя завершать нельзя.
+func classifyRefreshError(err error) error {
+	var retrieveErr *oauth2.RetrieveError
+	if errors.As(err, &retrieveErr) {
+		switch retrieveErr.ErrorCode {
+		case "invalid_grant", "invalid_token":
+			return fmt.Errorf("%w: %s", entity.ErrRefreshTokenRejected, err)
+		}
+		if retrieveErr.Response != nil {
+			code := retrieveErr.Response.StatusCode
+			if code == http.StatusBadRequest || code == http.StatusUnauthorized {
+				return fmt.Errorf("%w: %s", entity.ErrRefreshTokenRejected, err)
+			}
+		}
+	}
+	return err
 }
 
 // IntrospectOAuth2Token проверяет подпись, издателя и формат access-токена.
