@@ -108,7 +108,8 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 				}
 				if v, ok := comp["operatingSystemVersion"]; ok {
 					if verStr, ok := v.(string); ok {
-						if human := windowsVersionToHumanWithSupport(verStr); human.Version != "" {
+						osName, _ := comp["operatingSystem"].(string)
+						if human := windowsVersionToHumanWithSupport(osName, verStr); human.Version != "" {
 							comp["operatingSystemVersionHuman"] = human.Version
 							computersOsVersion[strings.ToUpper(compName)] = human
 						}

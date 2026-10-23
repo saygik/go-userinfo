@@ -60,7 +60,10 @@ func isTrustedOrigin(origin, requestHost string) bool {
 	if originHost == host {
 		return true
 	}
-	if isLocalHost(originHost) && isLocalHost(host) {
+	// Клиент для разработки может работать на localhost и обращаться к API
+	// на другом хосте (например, к https://userinfoapi.brnv.rw). Это безопасно:
+	// cookie SameSite=Lax на cross-site XHR всё равно не отправляются.
+	if isLocalHost(originHost) {
 		return true
 	}
 

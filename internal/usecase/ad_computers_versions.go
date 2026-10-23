@@ -52,7 +52,7 @@ func (u *UseCase) GetADComputersVersions(domain string, perms entity.Permissions
 			continue
 		}
 		osName, _ := c["operatingSystem"].(string)
-		human := windowsVersionToHuman(raw)
+		human := windowsVersionToHuman(osName, raw)
 		counts[key{os: osName, raw: raw, human: human}]++
 	}
 
@@ -61,7 +61,8 @@ func (u *UseCase) GetADComputersVersions(domain string, perms entity.Permissions
 		family := osFamilyName(k.os)
 		versionName := versionNumber(k.raw)
 		if versionName != "" {
-			// Проверяем LTSC/LTSB и заменяем
+			// LTSC/LTSB - это названия клиентских редакций Windows,
+			// для серверных ОС (например, 26100 = Server 2025) они не подходят.
 			ltscNames := map[string]string{
 				"10240": "LTSB 2015",
 				"14393": "LTSB 2016",
@@ -69,7 +70,7 @@ func (u *UseCase) GetADComputersVersions(domain string, perms entity.Permissions
 				"19044": "LTSC 2021",
 				"26100": "LTSC 2024",
 			}
-			if name, ok := ltscNames[versionName]; ok {
+			if name, ok := ltscNames[versionName]; ok && !isServerOSName(k.os) {
 				versionName = name + " (" + versionName + ")"
 			} else {
 				versionName = "(" + versionName + ")"
@@ -121,10 +122,16 @@ func (u *UseCase) GetADComputersVersions(domain string, perms entity.Permissions
 	return res, nil
 }
 
+// normalizeOSName приводит название ОС к виду для сравнения:
+// нижний регистр и одиночные пробелы (AD иногда отдаёт двойные пробелы).
+func normalizeOSName(osName string) string {
+	return strings.Join(strings.Fields(strings.ToLower(osName)), " ")
+}
+
 // osFamilyRank задаёт порядок семейств ОС, чтобы однотипные ОС шли рядом.
 // Меньшее значение — выше в списке.
 func osFamilyRank(osName string) int {
-	s := strings.ToLower(osName)
+	s := normalizeOSName(osName)
 	switch {
 	case strings.Contains(s, "windows 11"):
 		return 10
@@ -163,7 +170,7 @@ func osFamilyRank(osName string) int {
 
 // osFamilyName возвращает человекочитаемое название семейства ОС для блока (Windows 11, Windows 10, Windows 7, Windows Server 2012 и т.д.).
 func osFamilyName(osName string) string {
-	s := strings.ToLower(osName)
+	s := normalizeOSName(osName)
 	switch {
 	case strings.Contains(s, "windows 11"):
 		return "Windows 11"
@@ -197,9 +204,20 @@ func osFamilyName(osName string) string {
 		return "Windows Server 2008"
 	case strings.Contains(s, "server 2003"):
 		return "Windows Server 2003"
-	case strings.Contains(s, "server 2000"):
+	case strings.Contains(s, "2000 Server"):
 		return "Windows Server 2000"
+	case strings.Contains(s, "ESXI"):
+		return "ESXI Server"
+
 	default:
+		// Незнакомые версии не должны молча пропадать из статистики
+		// (так, например, выпадал Windows Server 2025).
+		if strings.Contains(s, "server") {
+			return "Server (другая версия)"
+		}
+		if strings.Contains(s, "windows") {
+			return "Windows (другая версия)"
+		}
 		return ""
 	}
 }

@@ -61,7 +61,8 @@ func (u *UseCase) GetADComputers(perms entity.Permissions) ([]map[string]interfa
 				for i := range computers {
 					comp := &computers[i] // ссылка для изменения
 					if windowsVersion, ok := (*comp)["operatingSystemVersion"].(string); ok {
-						humanVersion := windowsVersionToHumanWithSupport(windowsVersion)
+						osName, _ := (*comp)["operatingSystem"].(string)
+						humanVersion := windowsVersionToHumanWithSupport(osName, windowsVersion)
 						(*comp)["supported"] = humanVersion.Supported
 					} else {
 						(*comp)["supported"] = false
