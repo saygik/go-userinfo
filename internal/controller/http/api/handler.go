@@ -2,7 +2,7 @@ package api
 
 import (
 	"net/http"
-	"runtime"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/saygik/go-userinfo/internal/entity"
@@ -145,24 +145,25 @@ func NewHandler(router *gin.Engine, uc UseCase, log *logrus.Logger, oAuth2Authen
 		oAuth2Authentik: oAuth2Authentik,
 	}
 
-	h.rtr.Static("/public", "./public")
-	router.Static("/css", "./public/css")
-	router.Static("/js", "./public/js")
-	h.rtr.LoadHTMLGlob("./public/html/*")
+	// h.rtr.Static("/public", "./public")
+	// router.Static("/css", "./public/css")
+	// router.Static("/js", "./public/js")
+	// h.rtr.LoadHTMLGlob("./public/html/*")
 
-	h.rtr.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.html", gin.H{
-			"ginFindUserAPI": "v2.01",
-			"goVersion":      runtime.Version(),
-		})
-	})
-	h.rtr.GET("/f", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "login.html", gin.H{
-			"goVersion":      runtime.Version(),
-			"LoginChallenge": "LoginChallenge",
-		})
-	})
+	// h.rtr.GET("/", func(c *gin.Context) {
+	// 	c.HTML(http.StatusOK, "index.html", gin.H{
+	// 		"ginFindUserAPI": "v2.01",
+	// 		"goVersion":      runtime.Version(),
+	// 	})
+	// })
+	// h.rtr.GET("/f", func(c *gin.Context) {
+	// 	c.HTML(http.StatusOK, "login.html", gin.H{
+	// 		"goVersion":      runtime.Version(),
+	// 		"LoginChallenge": "LoginChallenge",
+	// 	})
+	// })
 	h.rg = h.rtr.Group("/api")
+	h.rg.GET("/health", h.Health)
 	h.NewOAuth2RouterGroup()
 
 	h.NewADRouterGroup()
@@ -182,6 +183,16 @@ func (h *Handler) NoRoute(c *gin.Context) {
 	c.JSON(404, gin.H{"Code": "404", "Message": "Not Found"})
 	c.Abort()
 
+}
+func (h *Handler) Health(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "ok",
+		"service": "go-userinfo",
+		"version": buildInfo.Version,
+		"commit":  buildInfo.Commit,
+		"built":   buildInfo.Built,
+		"time":    time.Now().UTC().Format(time.RFC3339),
+	})
 }
 
 // TokenAuthMiddleware ...
