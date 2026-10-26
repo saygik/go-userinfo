@@ -92,7 +92,7 @@ func (u *UseCase) GetHRPTickets() {
 			if systemUser == "" {
 				continue
 			}
-			match, log := FuzzyMatchFIO(systemUser, sfio, 2)
+			match, log := FuzzyMatchFIO(systemUser, sfio, 1)
 			if match {
 				//println(log)
 				finded = true
@@ -145,7 +145,7 @@ func (u *UseCase) GetHRPTickets() {
 		softsUsers, err := u.GetSoftwaresUsers()
 		if err == nil && len(softsUsers) > 0 {
 			for _, softUser := range softsUsers {
-				match, log := FuzzyMatchFIO(softUser.Fio, sfio, 2)
+				match, log := FuzzyMatchFIO(softUser.Fio, sfio, 1)
 				if match {
 					systemName := softUser.SoftName
 
