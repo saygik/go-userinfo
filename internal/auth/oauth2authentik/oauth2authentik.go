@@ -4,12 +4,15 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/coreos/go-oidc"
@@ -23,9 +26,23 @@ type OAuth2 struct {
 	oAuth2Config  oauth2.Config
 	oidcProvider  *oidc.Provider
 	verifier      *oidc.IDTokenVerifier
+	mainIssuer    string
+	verifiers     *issuerVerifierCache
 	logoutUrl     string
 	revocationURL string
 }
+
+// issuerVerifierCache хранит verifier'ы других приложений того же Authentik
+// (например, Grafana). В Authentik у каждого приложения свой issuer и свой JWKS,
+// поэтому одним verifier'ом токены разных приложений проверить нельзя.
+type issuerVerifierCache struct {
+	mu sync.RWMutex
+	m  map[string]*oidc.IDTokenVerifier
+}
+
+const authentikAppsPath = "/application/o/"
+
+var issuerSlugRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]*$`)
 
 func New(oAuth2Config oauth2.Config, oidcProvider *oidc.Provider, logoutUrl string) *OAuth2 {
 
@@ -38,6 +55,7 @@ func New(oAuth2Config oauth2.Config, oidcProvider *oidc.Provider, logoutUrl stri
 	})
 
 	var providerClaims struct {
+		Issuer             string `json:"issuer"`
 		RevocationEndpoint string `json:"revocation_endpoint"`
 	}
 	_ = oidcProvider.Claims(&providerClaims)
@@ -46,6 +64,8 @@ func New(oAuth2Config oauth2.Config, oidcProvider *oidc.Provider, logoutUrl stri
 		oAuth2Config:  oAuth2Config,
 		oidcProvider:  oidcProvider,
 		verifier:      verifier,
+		mainIssuer:    providerClaims.Issuer,
+		verifiers:     &issuerVerifierCache{m: map[string]*oidc.IDTokenVerifier{providerClaims.Issuer: verifier}},
 		logoutUrl:     logoutUrl,
 		revocationURL: providerClaims.RevocationEndpoint,
 	}
@@ -177,7 +197,10 @@ func (o OAuth2) IntrospectOAuth2Token(rawToken string, isApi bool) (*entity.User
 		return nil, errors.New("oidc provider is not configured")
 	}
 
-	idToken, err := o.verifier.Verify(context.Background(), rawToken)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	idToken, err := o.verifyToken(ctx, rawToken)
 	if err != nil {
 		return nil, fmt.Errorf("token is not valid: %w", err)
 	}
@@ -200,6 +223,109 @@ func (o OAuth2) IntrospectOAuth2Token(rawToken string, isApi bool) (*entity.User
 	}
 
 	return &user, nil
+}
+
+// verifyToken проверяет токен основным приложением, а если он выдан другим
+// приложением того же Authentik (например, Grafana) - verifier'ом этого приложения.
+func (o OAuth2) verifyToken(ctx context.Context, rawToken string) (*oidc.IDToken, error) {
+	idToken, err := o.verifier.Verify(ctx, rawToken)
+	if err == nil {
+		return idToken, nil
+	}
+
+	issuer := tokenIssuer(rawToken)
+	if !o.isTrustedIssuer(issuer) {
+		return nil, err
+	}
+
+	verifier, verr := o.verifierForIssuer(ctx, issuer)
+	if verr != nil {
+		return nil, err
+	}
+	return verifier.Verify(ctx, rawToken)
+}
+
+// verifierForIssuer возвращает (и кэширует) verifier для приложения Authentik.
+func (o OAuth2) verifierForIssuer(ctx context.Context, issuer string) (*oidc.IDTokenVerifier, error) {
+	if o.verifiers != nil {
+		o.verifiers.mu.RLock()
+		verifier, ok := o.verifiers.m[issuer]
+		o.verifiers.mu.RUnlock()
+		if ok {
+			return verifier, nil
+		}
+	}
+
+	provider, err := oidc.NewProvider(ctx, issuer)
+	if err != nil {
+		return nil, err
+	}
+	verifier := provider.Verifier(&oidc.Config{
+		ClientID:          o.oAuth2Config.ClientID,
+		SkipClientIDCheck: true,
+		SkipExpiryCheck:   true,
+	})
+
+	if o.verifiers != nil {
+		o.verifiers.mu.Lock()
+		o.verifiers.m[issuer] = verifier
+		o.verifiers.mu.Unlock()
+	}
+	return verifier, nil
+}
+
+// isTrustedIssuer разрешает issuer'ы основного приложения и других приложений
+// того же экземпляра Authentik (тот же scheme+host, путь /application/o/<slug>/).
+func (o OAuth2) isTrustedIssuer(issuer string) bool {
+	if issuer == "" || o.mainIssuer == "" {
+		return false
+	}
+	if issuer == o.mainIssuer {
+		return true
+	}
+
+	mainURL, err := url.Parse(o.mainIssuer)
+	if err != nil {
+		return false
+	}
+	u, err := url.Parse(issuer)
+	if err != nil {
+		return false
+	}
+	if u.Scheme != mainURL.Scheme || !strings.EqualFold(u.Host, mainURL.Host) {
+		return false
+	}
+	if u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+		return false
+	}
+	if !strings.HasPrefix(u.Path, authentikAppsPath) {
+		return false
+	}
+	slug := strings.TrimSuffix(strings.TrimPrefix(u.Path, authentikAppsPath), "/")
+	if slug == "" || strings.Contains(slug, "/") {
+		return false
+	}
+	return issuerSlugRe.MatchString(slug)
+}
+
+// tokenIssuer достаёт iss из payload непроверенного JWT. Используется только
+// для выбора verifier'а, сам токен всё равно проверяется по JWKS и issuer.
+func tokenIssuer(rawToken string) string {
+	parts := strings.Split(rawToken, ".")
+	if len(parts) != 3 {
+		return ""
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return ""
+	}
+	var claims struct {
+		Issuer string `json:"iss"`
+	}
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return ""
+	}
+	return claims.Issuer
 }
 
 // Revoke отзывает refresh-токен в Authentik (RFC 7009).

@@ -163,6 +163,8 @@ func osFamilyRank(osName string) int {
 		return 160
 	case strings.Contains(s, "server 2000"):
 		return 170
+	case strings.Contains(s, "esxi"):
+		return 180
 	default:
 		return 1000
 	}
@@ -204,9 +206,9 @@ func osFamilyName(osName string) string {
 		return "Windows Server 2008"
 	case strings.Contains(s, "server 2003"):
 		return "Windows Server 2003"
-	case strings.Contains(s, "2000 Server"):
+	case strings.Contains(s, "2000 server"):
 		return "Windows Server 2000"
-	case strings.Contains(s, "ESXI"):
+	case strings.Contains(s, "esxi"):
 		return "ESXI Server"
 
 	default:

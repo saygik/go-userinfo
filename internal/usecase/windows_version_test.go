@@ -57,8 +57,10 @@ func TestOSFamilyName(t *testing.T) {
 		{"Windows Server 2022 Standard", "Windows Server 2022"},
 		{"Windows Server 2012 R2 Standard", "Windows Server 2012 R2"},
 		// Незнакомая версия не должна исчезать из статистики
-		{"Windows Server 2028 Standard", "Windows Server (другая версия)"},
+		{"Windows Server 2028 Standard", "Server (другая версия)"},
 		{"Windows 12 Pro", "Windows (другая версия)"},
+		{"Windows 2000 Server", "Windows Server 2000"},
+		{"VMware ESXi 8.0", "ESXI Server"},
 		{"Linux", ""},
 		{"", ""},
 	}

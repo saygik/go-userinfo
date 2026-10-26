@@ -1,9 +1,9 @@
 package api
 
 import (
+	"crypto/subtle"
 	"net/http"
 	"regexp"
-	"slices"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -66,11 +66,21 @@ func (h *Handler) ExtractToken(r *http.Request) string {
 
 func (h *Handler) IsApiRequest(c *gin.Context) bool {
 	apiToken := c.Request.Header.Get("X-Api-Key")
-	isApi := false
-	if slices.Contains(h.allowedApi, apiToken) {
-		isApi = true
+	// Пустой ключ не должен совпадать с пустой строкой в конфиге.
+	if apiToken == "" {
+		return false
 	}
-	return isApi
+	// Сравнение в постоянном времени, чтобы по времени ответа нельзя было
+	// подобрать ключ посимвольно.
+	for _, allowed := range h.allowedApi {
+		if allowed == "" {
+			continue
+		}
+		if subtle.ConstantTimeCompare([]byte(apiToken), []byte(allowed)) == 1 {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *Handler) TokenValid(c *gin.Context) {
