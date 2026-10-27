@@ -82,7 +82,40 @@ type SoftwareForm struct {
 	User string `form:"user" json:"user"`
 }
 
-const SoftUserMainPermissionName = "Основные полномочия"
+const (
+	SoftUserMainPermissionName    = "Основные полномочия"
+	SoftUserAccountStatusActive   = "active"
+	SoftUserAccountStatusDisabled = "disabled"
+	SoftUserAccountStatusBlocked  = "blocked"
+	SoftUserAccountStatusDeleted  = "deleted"
+)
+
+// NormalizeSoftUserAccountStatus приводит неизвестный/пустой статус к active.
+func NormalizeSoftUserAccountStatus(status string) string {
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case SoftUserAccountStatusDisabled:
+		return SoftUserAccountStatusDisabled
+	case SoftUserAccountStatusBlocked:
+		return SoftUserAccountStatusBlocked
+	case SoftUserAccountStatusDeleted:
+		return SoftUserAccountStatusDeleted
+	default:
+		return SoftUserAccountStatusActive
+	}
+}
+
+// SoftUserAccountState — состояние самой учётной записи в конкретной системе.
+// Хранится отдельно от полномочий и от статуса учётной записи в AD.
+type SoftUserAccountState struct {
+	Id              int64  `db:"id" json:"id,omitempty"`
+	IdUserSoft      int64  `db:"id_user_software" json:"id_user_software,omitempty"`
+	Status          string `db:"status" json:"status"`
+	StatusChangedAt string `db:"status_changed_at" json:"status_changed_at,omitempty"`
+	StatusChangedBy string `db:"status_changed_by" json:"status_changed_by,omitempty"`
+	StatusReason    string `db:"status_reason" json:"status_reason,omitempty"`
+	Source          string `db:"source" json:"source,omitempty"`
+	LastSyncAt      string `db:"last_sync_at" json:"last_sync_at,omitempty"`
+}
 
 // SoftUserPermission — отдельное полномочие пользователя на систему.
 // У каждого полномочия свой срок действия и признак отправленного оповещения.
@@ -108,19 +141,20 @@ type SoftUserPermissionEOL struct {
 }
 
 type SoftUser struct {
-	Id          int64                  `db:"id" json:"id"`
-	IdSoft      int                    `db:"id_soft" json:"id_soft"`
-	SoftName    string                 `db:"soft_name" json:"soft_name,omitempty"`
-	Name        string                 `db:"user_name" json:"name"`
-	Login       string                 `db:"user_login" json:"login,omitempty"`
-	Comment     string                 `db:"user_comment" json:"comment,omitempty"`
-	Fio         string                 `db:"fio" json:"fio,omitempty"`
-	External    bool                   `db:"external" json:"external"`
-	Mail        string                 `db:"mail" json:"mail,omitempty"`
-	Editor      string                 `db:"editor" json:"editor"`
-	LastChanges string                 `db:"last_changes" json:"last_changes"`
-	Permissions []SoftUserPermission   `db:"-" json:"permissions"`
-	Propertys   map[string]interface{} `json:"props"`
-	Groups      []SoftwareGroup        `json:"groups"`
-	GroupNames  string                 `json:"group_names"`
+	Id           int64                  `db:"id" json:"id"`
+	IdSoft       int                    `db:"id_soft" json:"id_soft"`
+	SoftName     string                 `db:"soft_name" json:"soft_name,omitempty"`
+	Name         string                 `db:"user_name" json:"name"`
+	Login        string                 `db:"user_login" json:"login,omitempty"`
+	Comment      string                 `db:"user_comment" json:"comment,omitempty"`
+	Fio          string                 `db:"fio" json:"fio,omitempty"`
+	External     bool                   `db:"external" json:"external"`
+	Mail         string                 `db:"mail" json:"mail,omitempty"`
+	Editor       string                 `db:"editor" json:"editor"`
+	LastChanges  string                 `db:"last_changes" json:"last_changes"`
+	Permissions  []SoftUserPermission   `db:"-" json:"permissions"`
+	AccountState *SoftUserAccountState  `db:"-" json:"account_state"`
+	Propertys    map[string]interface{} `json:"props"`
+	Groups       []SoftwareGroup        `json:"groups"`
+	GroupNames   string                 `json:"group_names"`
 }

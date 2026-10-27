@@ -81,6 +81,17 @@ func (u *UseCase) softUserResponse(user entity.SoftUser) map[string]interface{} 
 	}
 	adUser["permissions"] = permissions
 
+	accountState := user.AccountState
+	if accountState == nil {
+		accountState = &entity.SoftUserAccountState{
+			Status: entity.SoftUserAccountStatusActive,
+			Source: "default",
+		}
+	} else {
+		accountState.Status = entity.NormalizeSoftUserAccountStatus(accountState.Status)
+	}
+	adUser["account_state"] = accountState
+
 	// Совместимость со старым API: срок основного полномочия.
 	if len(permissions) > 0 {
 		adUser["enddate"] = permissions[0].EndDate

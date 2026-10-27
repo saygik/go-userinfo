@@ -1,6 +1,7 @@
 package mssql
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -18,6 +19,82 @@ func nullableSoftDate(value string) interface{} {
 
 func softPermissionSended(permission entity.SoftUserPermission) bool {
 	return permission.Sended && nullableSoftDate(permission.EndDate) != nil
+}
+
+func getSoftAccountStateByUserID(tx *gorp.Transaction, userID int64) (*entity.SoftUserAccountState, error) {
+	var state entity.SoftUserAccountState
+	err := tx.SelectOne(&state, softAccountStateSelectColumns+`
+		WHERE a.id_user_software = $1`, userID)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &state, nil
+}
+
+func upsertSoftAccountState(tx *gorp.Transaction, userID int64, requested *entity.SoftUserAccountState, editor string, currentTime string) (*entity.SoftUserAccountState, error) {
+	existing, err := getSoftAccountStateByUserID(tx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if existing == nil {
+		status := entity.SoftUserAccountStatusActive
+		reason := ""
+		if requested != nil {
+			status = entity.NormalizeSoftUserAccountStatus(requested.Status)
+			reason = strings.TrimSpace(requested.StatusReason)
+		}
+		if status == entity.SoftUserAccountStatusActive {
+			reason = ""
+		}
+
+		_, err = tx.Exec(`
+			INSERT INTO dbo.UserSoftwaresAccountStates
+				(id_user_software, status, status_changed_at, status_changed_by, status_reason, source)
+			VALUES ($1, $2, $3, $4, $5, 'manual')`,
+			userID, status, currentTime, editor, reason)
+		if err != nil {
+			return nil, err
+		}
+		return getSoftAccountStateByUserID(tx, userID)
+	}
+
+	if requested == nil {
+		return existing, nil
+	}
+
+	status := entity.NormalizeSoftUserAccountStatus(requested.Status)
+	reason := strings.TrimSpace(requested.StatusReason)
+	if status == entity.SoftUserAccountStatusActive {
+		reason = ""
+	}
+
+	if existing.Status != status {
+		_, err = tx.Exec(`
+			UPDATE dbo.UserSoftwaresAccountStates
+			SET status = $1,
+			    status_changed_at = $2,
+			    status_changed_by = $3,
+			    status_reason = $4,
+			    source = 'manual'
+			WHERE id_user_software = $5`,
+			status, currentTime, editor, reason, userID)
+	} else if existing.StatusReason != reason {
+		_, err = tx.Exec(`
+			UPDATE dbo.UserSoftwaresAccountStates
+			SET status_reason = $1,
+			    source = 'manual'
+			WHERE id_user_software = $2`,
+			reason, userID)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return getSoftAccountStateByUserID(tx, userID)
 }
 
 func insertSoftPermission(tx *gorp.Transaction, userID int64, permission entity.SoftUserPermission) (entity.SoftUserPermission, error) {
@@ -146,12 +223,18 @@ func (r *Repository) AddOneSoftwareUser(form entity.SoftUser, editor string, cur
 		return formRes, err
 	}
 
+	accountState, err := upsertSoftAccountState(tx, userID, form.AccountState, editor, currentTime)
+	if err != nil {
+		return formRes, err
+	}
+
 	err = tx.SelectOne(&formRes, softUserSelectColumns+`
 		WHERE u.id = $1`, userID)
 	if err != nil {
 		return formRes, err
 	}
 	formRes.Permissions = permissions
+	formRes.AccountState = accountState
 
 	if err = tx.Commit(); err != nil {
 		return formRes, err
@@ -208,12 +291,18 @@ func (r *Repository) UpdateOneSoftwareUser(form entity.SoftUser, editor string, 
 		}
 	}
 
+	accountState, err := upsertSoftAccountState(tx, form.Id, form.AccountState, editor, currentTime)
+	if err != nil {
+		return formRes, err
+	}
+
 	err = tx.SelectOne(&formRes, softUserSelectColumns+`
 		WHERE u.id = $1`, form.Id)
 	if err != nil {
 		return formRes, err
 	}
 	formRes.Permissions = permissions
+	formRes.AccountState = accountState
 
 	if err = tx.Commit(); err != nil {
 		return formRes, err

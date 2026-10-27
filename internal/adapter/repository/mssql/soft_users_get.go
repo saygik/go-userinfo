@@ -23,6 +23,24 @@ const softPermissionSelectColumns = `
 	       p.sended
 	FROM dbo.UserSoftwaresPermissions p`
 
+const softAccountStateSelectColumns = `
+	SELECT a.id,
+	       a.id_user_software,
+	       a.status,
+	       COALESCE(CONVERT(varchar(40), a.status_changed_at, 127), '') AS status_changed_at,
+	       COALESCE(a.status_changed_by, '') AS status_changed_by,
+	       COALESCE(a.status_reason, '') AS status_reason,
+	       COALESCE(a.source, '') AS source,
+	       COALESCE(CONVERT(varchar(40), a.last_sync_at, 127), '') AS last_sync_at
+	FROM dbo.UserSoftwaresAccountStates a`
+
+func defaultSoftAccountState() *entity.SoftUserAccountState {
+	return &entity.SoftUserAccountState{
+		Status: entity.SoftUserAccountStatusActive,
+		Source: "default",
+	}
+}
+
 func (r *Repository) GetSoftwareUsers(softID int) (users []entity.SoftUser, err error) {
 	_, err = r.db.Select(&users, softUserSelectColumns+`
 		WHERE u.id_soft = $1
@@ -36,6 +54,12 @@ func (r *Repository) GetSoftwareUsers(softID int) (users []entity.SoftUser, err 
 		return users, err
 	}
 	attachSoftPermissions(users, permissions)
+
+	states, err := r.getAccountStatesBySoftID(softID)
+	if err != nil {
+		return users, err
+	}
+	attachSoftAccountStates(users, states)
 	return users, nil
 }
 
@@ -51,6 +75,12 @@ func (r *Repository) GetSoftwaresUsers() (users []entity.SoftUser, err error) {
 		return users, err
 	}
 	attachSoftPermissions(users, permissions)
+
+	states, err := r.getAllAccountStates()
+	if err != nil {
+		return users, err
+	}
+	attachSoftAccountStates(users, states)
 	return users, nil
 }
 
@@ -110,6 +140,44 @@ func attachSoftPermissions(users []entity.SoftUser, permissions map[int64][]enti
 		users[i].Permissions = permissions[users[i].Id]
 		if users[i].Permissions == nil {
 			users[i].Permissions = []entity.SoftUserPermission{}
+		}
+	}
+}
+
+func (r *Repository) getAccountStatesBySoftID(softID int) (map[int64]*entity.SoftUserAccountState, error) {
+	var states []entity.SoftUserAccountState
+	_, err := r.db.Select(&states, softAccountStateSelectColumns+`
+		INNER JOIN dbo.UserSoftwares u ON u.id = a.id_user_software
+		WHERE u.id_soft = $1`, softID)
+	if err != nil {
+		return nil, err
+	}
+	return groupSoftAccountStates(states), nil
+}
+
+func (r *Repository) getAllAccountStates() (map[int64]*entity.SoftUserAccountState, error) {
+	var states []entity.SoftUserAccountState
+	_, err := r.db.Select(&states, softAccountStateSelectColumns)
+	if err != nil {
+		return nil, err
+	}
+	return groupSoftAccountStates(states), nil
+}
+
+func groupSoftAccountStates(states []entity.SoftUserAccountState) map[int64]*entity.SoftUserAccountState {
+	result := make(map[int64]*entity.SoftUserAccountState, len(states))
+	for i := range states {
+		result[states[i].IdUserSoft] = &states[i]
+	}
+	return result
+}
+
+func attachSoftAccountStates(users []entity.SoftUser, states map[int64]*entity.SoftUserAccountState) {
+	for i := range users {
+		if state := states[users[i].Id]; state != nil {
+			users[i].AccountState = state
+		} else {
+			users[i].AccountState = defaultSoftAccountState()
 		}
 	}
 }
