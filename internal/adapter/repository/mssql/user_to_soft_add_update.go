@@ -210,7 +210,7 @@ func (r *Repository) AddOneSoftwareUser(form entity.SoftUser, editor string, cur
 	var userID int64
 	err = tx.QueryRow(`
 		INSERT INTO dbo.UserSoftwares
-			(id_soft, user_name, user_login, user_comment, fio, external, mail, editor, last_changes)
+			(id_soft, user_name, user_login, user_comment, fio, [external], mail, editor, last_changes)
 		OUTPUT INSERTED.id
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		form.IdSoft, form.Name, form.Login, form.Comment, form.Fio, form.External, form.Mail, editor, currentTime).Scan(&userID)
