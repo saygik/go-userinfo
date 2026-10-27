@@ -52,6 +52,12 @@ func (u *UseCase) GetSoftwaresUsers() ([]entity.SoftUser, error) {
 		return nil, u.Error("невозможно получить список систем пользователя")
 	}
 	for i, softUser := range softwaresUsers {
+		for j := range softwaresUsers[i].Permissions {
+			softwaresUsers[i].Permissions[j].EndDate = normalizeSoftPermissionDate(softwaresUsers[i].Permissions[j].EndDate)
+			if softwaresUsers[i].Permissions[j].EndDate == "" {
+				softwaresUsers[i].Permissions[j].Sended = false
+			}
+		}
 		for _, soft := range softwares {
 			if soft.Id == int64(softUser.IdSoft) {
 				softwaresUsers[i].SoftName = soft.Name

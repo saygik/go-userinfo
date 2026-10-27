@@ -153,7 +153,7 @@ func (h *Handler) UpdateUserInSoftware(c *gin.Context) {
 
 	userProperties, err := h.uc.UpdateOneSoftwareUser(userForm, userID)
 	if err != nil {
-		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка добавления пользователя к системе", "error": err.Error()})
+		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка изменения пользователя системы", "error": err.Error()})
 		return
 	}
 

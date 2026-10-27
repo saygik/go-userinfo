@@ -10,25 +10,29 @@ func (u *UseCase) GetSoftwareUsersEOL() ([]map[string]interface{}, error) {
 	if !u.IsAppInitialized() {
 		return nil, u.Error("система не инициализирована")
 	}
-	users, err := u.repo.GetSoftwareUsersEOL()
+	permissions, err := u.repo.GetSoftwareUsersEOL()
 	if err != nil {
-		return nil, u.Error("невозможно получить системы из GLPI")
+		return nil, u.Error("невозможно получить полномочия с истекающим сроком")
 	}
 	softUsers := []map[string]interface{}{}
 
-	for _, user := range users {
-
-		soft, err := u.glpi.GetSoftware(user.IdSoft)
+	for _, permission := range permissions {
+		soft, err := u.glpi.GetSoftware(permission.IdSoft)
 		if err != nil {
 			continue
 		}
-		if len(user.Mail) > 4 {
-			err = u.SendMail(user.Mail,
+
+		if len(permission.Mail) > 4 {
+			err = u.SendMail(permission.Mail,
 				fmt.Sprintf(`
-Срок действия учетной записи % s пользователя %s для системы %s истекает %s.
+Срок действия полномочий «%s» учетной записи %s пользователя %s для системы %s истекает %s.
 Примите меры для перерегистрации в системе или пропустите это письмо, если данная система вас не интересует.`,
-					user.Login, user.Fio, soft.Name, parseDate(user.EndDate)))
+					permission.PermissionName, permission.Login, permission.Fio, soft.Name, parseDate(permission.EndDate)))
+			if err != nil && u.log != nil {
+				u.log.Errorf("не удалось отправить оповещение о полномочиях %d: %v", permission.PermissionId, err)
+			}
 		}
+
 		for _, group := range soft.Groups {
 			if group.GroupCalendar > 0 {
 				testtask := entity.ScheduleTask{
@@ -36,19 +40,21 @@ func (u *UseCase) GetSoftwareUsersEOL() ([]map[string]interface{}, error) {
 					Idc:            group.GroupCalendar,
 					Tip:            3,
 					Status:         2,
-					Title:          fmt.Sprintf(`Срок действия учетной записи истёк для пользователя %s`, user.Fio),
-					Start:          user.EndDate,
+					Title:          fmt.Sprintf(`Срок действия полномочий «%s» истёк для пользователя %s`, permission.PermissionName, permission.Fio),
+					Start:          permission.EndDate,
 					End:            "",
 					Upn:            "",
 					AllDay:         true,
 					SendMattermost: true,
-					Comment:        fmt.Sprintf(`Срок действия учетной записи % s пользователя %s для системы %s истёк. Произведите отключение.`, user.Login, user.Fio, soft.Name),
+					Comment:        fmt.Sprintf(`Срок действия полномочий «%s» учетной записи %s пользователя %s для системы %s истёк. Произведите отключение.`, permission.PermissionName, permission.Login, permission.Fio, soft.Name),
 				}
 				_, _ = u.AddScheduleTask(testtask)
 			}
 		}
-		u.repo.SetOneUserSoftwareSendedToCalendar(user.Id)
 
+		if err = u.repo.SetOneUserSoftwarePermissionSended(permission.PermissionId); err != nil && u.log != nil {
+			u.log.Errorf("не удалось отметить оповещение полномочия %d: %v", permission.PermissionId, err)
+		}
 	}
 	return softUsers, nil
 }

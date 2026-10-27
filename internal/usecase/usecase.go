@@ -42,11 +42,11 @@ type Repository interface {
 	AddOneSoftwareUser(entity.SoftUser, string, string) (entity.SoftUser, error)
 	UpdateOneSoftwareUser(entity.SoftUser, string, string) (entity.SoftUser, error)
 	DelOneUserSoftware(string) error
-	SetOneUserSoftwareSendedToCalendar(int64) error
+	SetOneUserSoftwarePermissionSended(int64) error
 	GetOrgCodes() ([]entity.OrgWithCodes, error)
 	GetSoftwareUsers(int) ([]entity.SoftUser, error)
 	GetSoftwaresUsers() ([]entity.SoftUser, error)
-	GetSoftwareUsersEOL() ([]entity.SoftUser, error)
+	GetSoftwareUsersEOL() ([]entity.SoftUserPermissionEOL, error)
 	SetUserAvatar(string, string) error
 	SetUserIp(entity.UserActivityForm) (string, error)
 	GetSchedule(int) (entity.Schedule, error)

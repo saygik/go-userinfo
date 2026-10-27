@@ -82,6 +82,31 @@ type SoftwareForm struct {
 	User string `form:"user" json:"user"`
 }
 
+const SoftUserMainPermissionName = "Основные полномочия"
+
+// SoftUserPermission — отдельное полномочие пользователя на систему.
+// У каждого полномочия свой срок действия и признак отправленного оповещения.
+type SoftUserPermission struct {
+	Id         int64  `db:"id" json:"id"`
+	IdUserSoft int64  `db:"id_user_software" json:"id_user_software,omitempty"`
+	Name       string `db:"name" json:"name"`
+	EndDate    string `db:"enddate" json:"enddate,omitempty"`
+	Sended     bool   `db:"sended" json:"sended"`
+}
+
+// SoftUserPermissionEOL — строка для рассылки оповещений об окончании полномочий.
+type SoftUserPermissionEOL struct {
+	PermissionId   int64  `db:"permission_id"`
+	IdUserSoftware int64  `db:"id_user_software"`
+	IdSoft         int    `db:"id_soft"`
+	Name           string `db:"user_name"`
+	Login          string `db:"user_login"`
+	Fio            string `db:"fio"`
+	Mail           string `db:"mail"`
+	PermissionName string `db:"permission_name"`
+	EndDate        string `db:"enddate"`
+}
+
 type SoftUser struct {
 	Id          int64                  `db:"id" json:"id"`
 	IdSoft      int                    `db:"id_soft" json:"id_soft"`
@@ -91,11 +116,10 @@ type SoftUser struct {
 	Comment     string                 `db:"user_comment" json:"comment,omitempty"`
 	Fio         string                 `db:"fio" json:"fio,omitempty"`
 	External    bool                   `db:"external" json:"external"`
-	EndDate     string                 `db:"enddate" json:"enddate,omitempty"`
 	Mail        string                 `db:"mail" json:"mail,omitempty"`
-	Sended      bool                   `db:"sended" json:"sended"`
 	Editor      string                 `db:"editor" json:"editor"`
 	LastChanges string                 `db:"last_changes" json:"last_changes"`
+	Permissions []SoftUserPermission   `db:"-" json:"permissions"`
 	Propertys   map[string]interface{} `json:"props"`
 	Groups      []SoftwareGroup        `json:"groups"`
 	GroupNames  string                 `json:"group_names"`
