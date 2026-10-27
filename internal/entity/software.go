@@ -22,6 +22,7 @@ type Software struct {
 	Murl         string                   `db:"murl" json:"manual_url"`
 	Durl         string                   `db:"durl" json:"icon_url"`
 	IsRecursive  int64                    `db:"is_recursive" json:"is_recursive"`
+	Categorie    int64                    `db:"categorie" json:"categorie"`
 	Admins       []map[string]interface{} `json:"tech_users"`
 	Groups       []SoftwareGroup          `json:"groups"`
 }
