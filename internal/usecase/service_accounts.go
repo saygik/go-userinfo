@@ -57,6 +57,25 @@ func normalizeServiceGroupName(name string) string {
 	return strings.ToLower(strings.TrimSpace(name))
 }
 
+// serviceMailGroupName — группа, членство в которой помечает пользователя как
+// владельца служебной почты. В отличие от сервисных учётных записей такие
+// пользователи не скрываются из списков.
+const serviceMailGroupName = "Служебная почта"
+
+// isServiceMailUser сообщает, входит ли пользователь в группу «Служебная почта».
+// memberOf может содержать как CN, так и полный DN — поддерживаются оба вида.
+func isServiceMailUser(memberOf []string) bool {
+	for _, group := range memberOf {
+		if strings.EqualFold(strings.TrimSpace(group), serviceMailGroupName) {
+			return true
+		}
+		if cn := serviceGroupCN(group); cn != "" && strings.EqualFold(strings.TrimSpace(cn), serviceMailGroupName) {
+			return true
+		}
+	}
+	return false
+}
+
 // userDomainName достаёт имя домена из пользователя, сохранённого в Redis:
 // при импорте в поле domain записывается entity.DomainList.
 func userDomainName(user map[string]interface{}) string {

@@ -49,6 +49,38 @@ func TestIsServiceAccountUser(t *testing.T) {
 	})
 }
 
+func TestIsServiceMailUser(t *testing.T) {
+	t.Run("matches plain group name", func(t *testing.T) {
+		if !isServiceMailUser([]string{"Domain Users", "Служебная почта"}) {
+			t.Fatal("expected user to have service mail")
+		}
+	})
+
+	t.Run("matching is case insensitive and trims spaces", func(t *testing.T) {
+		if !isServiceMailUser([]string{"  служебная ПОЧТА  "}) {
+			t.Fatal("expected case insensitive match")
+		}
+	})
+
+	t.Run("matches CN from DN", func(t *testing.T) {
+		if !isServiceMailUser([]string{"CN=Служебная почта,OU=Groups,DC=example,DC=local"}) {
+			t.Fatal("expected DN match")
+		}
+	})
+
+	t.Run("ignores other groups", func(t *testing.T) {
+		if isServiceMailUser([]string{"Domain Users", "Service Accounts"}) {
+			t.Fatal("expected user not to have service mail")
+		}
+	})
+
+	t.Run("empty member list", func(t *testing.T) {
+		if isServiceMailUser(nil) {
+			t.Fatal("empty member list must not match")
+		}
+	})
+}
+
 func TestCanSeeServiceAccounts(t *testing.T) {
 	sysadmin := entity.Permissions{IsSysAdmin: true}
 	if !(&UseCase{}).canSeeServiceAccounts(&sysadmin, "example.local") {
