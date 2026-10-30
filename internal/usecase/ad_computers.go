@@ -70,7 +70,7 @@ func (u *UseCase) GetADComputers(perms entity.Permissions) ([]map[string]interfa
 					if isAdmin {
 						continue
 					}
-					if domain, ok := (*comp)["domain"].(string); ok && perms.AdminDomains[domain] {
+					if domain, ok := (*comp)["domain"].(string); ok && hasDomainAccess(perms.AdminDomains, domain) {
 						continue
 					}
 					// Удаляем поля для не-админов

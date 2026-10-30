@@ -35,19 +35,20 @@ func (u *UseCase) LoadUserPermissions(upn string) (entity.Permissions, error) {
 	}
 
 	// 3. Домашний домен из UPN
-	perms.HomeDomain = getDomainFromUserName(upn)
+	perms.HomeDomain = normalizeDomainName(getDomainFromUserName(upn))
 
 	// 4. user_domain_access права
 	domainAccess, err := u.repo.GetDomainAccess(upn)
 	if err == nil {
 		for _, da := range domainAccess {
+			domain := normalizeDomainName(da.Domain)
 			switch da.AccessLevel {
 			case "admin":
-				perms.AdminDomains[da.Domain] = true
+				perms.AdminDomains[domain] = true
 			case "tech":
-				perms.TechDomains[da.Domain] = true
+				perms.TechDomains[domain] = true
 			case "user":
-				perms.UserDomains[da.Domain] = true
+				perms.UserDomains[domain] = true
 			}
 		}
 	}
@@ -62,7 +63,7 @@ func (u *UseCase) LoadUserPermissions(upn string) (entity.Permissions, error) {
 
 	// 6. Расширить права по ролям для ВСЕХ доменов
 	for _, domain := range domains {
-		domainName := domain.Name
+		domainName := normalizeDomainName(domain.Name)
 
 		if perms.AllDomains {
 			perms.UserDomains[domainName] = true

@@ -92,6 +92,7 @@ type AD interface {
 	GetDomainComputers(string) ([]map[string]any, error)
 	GetDomainInternetGroups(string) entity.ADInternetGroups
 	GetDomainInternetGroupsDN(string) entity.ADInternetGroupsDN
+	GetDomainServiceGroups(string) []string
 	IsDomainExist(string) bool
 	Authenticate(string, entity.LoginForm) (bool, map[string]string, error)
 	GetGroupUsers(string, string) ([]map[string]any, error)

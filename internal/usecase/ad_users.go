@@ -13,6 +13,7 @@ import (
 var sensitiveFields = []string{
 	"ip", "pwdLastSet", "proxyAddresses", "passwordDontExpire",
 	"passwordCantChange", "distinguishedName", "userAccountControl", "memberOf",
+	"service",
 }
 
 var sensitiveLongFields = []string{
@@ -107,18 +108,19 @@ func (u *UseCase) GetADUsers(perms entity.Permissions) ([]map[string]interface{}
 
 		domain := allowedDomains[i]
 		accessLevel := u.GetAccessLevelForDomain(&perms, domain)
+		seeServiceAccounts := u.canSeeServiceAccounts(&perms, domain)
 		wg.Add(1)
 
-		go func(domain string, dataStr string, level string) {
+		go func(domain string, dataStr string, level string, seeServiceAccounts bool) {
 			defer wg.Done()
 
-			users, err := u.processDomainUsers([]byte(dataStr), level)
+			users, err := u.processDomainUsers([]byte(dataStr), level, seeServiceAccounts)
 			if err == nil && len(users) > 0 {
 				mu.Lock()
 				result = append(result, users...)
 				mu.Unlock()
 			}
-		}(domain, data.(string), accessLevel)
+		}(domain, data.(string), accessLevel, seeServiceAccounts)
 	}
 
 	wg.Wait()
@@ -130,7 +132,7 @@ func (u *UseCase) GetADUsers(perms entity.Permissions) ([]map[string]interface{}
 }
 
 // 🔥 Функция обработки пользователей домена
-func (u *UseCase) processDomainUsers(data []byte, accessLevel string) ([]map[string]interface{}, error) {
+func (u *UseCase) processDomainUsers(data []byte, accessLevel string, seeServiceAccounts bool) ([]map[string]interface{}, error) {
 	var users []map[string]interface{}
 	if err := json.Unmarshal(data, &users); err != nil {
 		return nil, err
@@ -141,6 +143,13 @@ func (u *UseCase) processDomainUsers(data []byte, accessLevel string) ([]map[str
 
 	for _, user := range users {
 		processedUser := u.cloneUserMap(user) // Копируем чтобы не мутировать оригинал
+
+		// Сервисные учётные записи видят только sysadmin и админ домена
+		if !seeServiceAccounts {
+			if service, ok := processedUser["service"].(bool); ok && service {
+				continue
+			}
+		}
 
 		if accessLevel == "user" {
 			for _, field := range sensitiveFields {

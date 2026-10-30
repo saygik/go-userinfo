@@ -71,6 +71,7 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			}()
 			u.log.Info("Получение данных домена " + one.Name + "...")
 			internetGroups := u.ad.GetDomainInternetGroups(one.Name)
+			serviceGroups := u.ad.GetDomainServiceGroups(one.Name)
 
 			users, err := u.ad.GetDomainUsers(one.Name)
 			comps, _ := u.ad.GetDomainComputers(one.Name)
@@ -193,6 +194,10 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 					}
 					if IsStringInArray("Отключенные Кадровичком", userGroups) {
 						user["sap_disabled"] = true
+					}
+
+					if isServiceAccountUser(userGroups, serviceGroups) {
+						user["service"] = true
 					}
 
 					if AnyOfFirstInSecond(internetGroups.WhiteList, userGroups) {

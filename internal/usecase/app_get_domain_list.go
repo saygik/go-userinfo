@@ -20,13 +20,13 @@ func (u *UseCase) GetDomainList(perms entity.Permissions) []entity.DomainList {
 
 func (u *UseCase) GetAccessLevelForDomain(perms *entity.Permissions, domainName string) string {
 	// Приоритет: admin > tech > user
-	if perms.AdminDomains[domainName] {
+	if hasDomainAccess(perms.AdminDomains, domainName) {
 		return "admin"
 	}
-	if perms.TechDomains[domainName] {
+	if hasDomainAccess(perms.TechDomains, domainName) {
 		return "tech"
 	}
-	if perms.UserDomains[domainName] {
+	if hasDomainAccess(perms.UserDomains, domainName) {
 		return "user"
 	}
 	return "none"

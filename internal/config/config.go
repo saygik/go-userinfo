@@ -39,6 +39,7 @@ type ADConfig struct {
 	GlpiRegionPrefix     string           `json:"glpiRegionPrefix"`
 	MattermostLogChannel string           `json:"mattermostLogChannel"`
 	RmsPort              int              `json:"rmsPort"`
+	ServiceGroups        []string         `json:"serviceGroups"`
 	InternetGroups       ADInternetGroups `json:"internetGroups"`
 	InternetGroupsDN     ADInternetGroups `json:"internetGroupsDN"`
 	Time                 time.Duration    `json:"time"`

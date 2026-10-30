@@ -71,7 +71,7 @@ func HasAdminAccess(perms entity.Permissions, domain string) bool {
 
 	// 2. 🔥 domain в AdminDomains
 	if perms.AdminDomains != nil {
-		return perms.AdminDomains[domain]
+		return hasDomainAccess(perms.AdminDomains, domain)
 	}
 
 	return false

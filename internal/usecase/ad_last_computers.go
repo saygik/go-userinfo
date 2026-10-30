@@ -283,5 +283,5 @@ func (u *UseCase) GetADLastComputers(domain string, perms entity.Permissions) ([
 }
 
 func isAdminDomain(perms entity.Permissions, domain string) bool {
-	return perms.IsAdmin || perms.IsSysAdmin || perms.AdminDomains[domain]
+	return perms.IsAdmin || perms.IsSysAdmin || hasDomainAccess(perms.AdminDomains, domain)
 }
