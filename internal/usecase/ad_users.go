@@ -80,15 +80,24 @@ func (u *UseCase) GetADUsers(perms entity.Permissions) ([]map[string]interface{}
 	if cached, err := u.redis.GetKeyValue(cacheKey); err == nil {
 		var res []map[string]interface{}
 		if json.Unmarshal([]byte(cached), &res) == nil {
+			observeADUsersCacheRequest("hit")
 			return res, nil
 		}
+		observeADUsersCacheRequest("invalid")
 	}
+
+	start := time.Now()
+	defer func() {
+		observeADUsersBuildDuration(time.Since(start))
+	}()
 
 	// 2. 🔥 Только разрешенные домены (HMGet)
 	allowedDomains := u.getAllowedUserDomains(&perms)
 	if len(allowedDomains) == 0 {
+		observeADUsersCacheRequest("miss")
 		return []map[string]interface{}{}, nil
 	}
+	observeADUsersCacheRequest("miss")
 
 	// 3. 🔥 1 Redis запрос!
 	redisData, err := u.redis.GetKeyFieldsValue("ad", allowedDomains)
@@ -115,6 +124,9 @@ func (u *UseCase) GetADUsers(perms entity.Permissions) ([]map[string]interface{}
 			defer wg.Done()
 
 			users, err := u.processDomainUsers([]byte(dataStr), level, seeServiceAccounts)
+			if err == nil {
+				observeADUsersProcessed(domain, len(users))
+			}
 			if err == nil && len(users) > 0 {
 				mu.Lock()
 				result = append(result, users...)

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -61,12 +62,21 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 
 			enabledUsersCount, disabledUsersCount, lockedUsersCount := 0, 0, 0
 			fullInternetUsersCount, whiteListInternetUsersCount, techInternetUsersCount := 0, 0, 0
+			serviceUsersCount, serviceMailUsersCount, privilegedUsersCount := 0, 0, 0
+			archiveUsersCount, sapDisabledUsersCount, attributeErrorsUsersCount := 0, 0, 0
+			passwordDontExpireUsersCount, passwordCantChangeUsersCount := 0, 0
+			noComputerUsersCount, osUnsupportedUsersCount := 0, 0
+			result := "success"
 			start := time.Now()
 			defer func() {
-				observeGetADUsers(time.Since(start), one.Name)
 				if r := recover(); r != nil {
+					result = "panic"
+					observeADCacheFillError(one.Name, "panic")
 					u.log.Error(fmt.Sprintf(" Паника в горутине FillRedisCaсheFromAD для домена %s: %v", one.Name, r))
 				}
+				d := time.Since(start)
+				observeGetADUsers(d, one.Name)
+				observeADCacheFillDuration(d, one.Name, result)
 				wg.Done()
 			}()
 			u.log.Info("Получение данных домена " + one.Name + "...")
@@ -74,6 +84,13 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			serviceGroups := u.ad.GetDomainServiceGroups(one.Name)
 
 			users, err := u.ad.GetDomainUsers(one.Name)
+			if err != nil {
+				result = "error"
+				if len(users) > 0 {
+					result = "partial"
+				}
+				observeADCacheFillError(one.Name, "ad")
+			}
 			comps, _ := u.ad.GetDomainComputers(one.Name)
 			tagsMap, _ := u.glpi.GetComputersTags(one.Name)
 			arhsMap, _ := u.glpi.GetComputersArhs(one.Name)
@@ -208,6 +225,37 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 						user["privileged"] = true
 					}
 
+					if user["service"] == true {
+						serviceUsersCount++
+					}
+					if user["serviceMail"] == true {
+						serviceMailUsersCount++
+					}
+					if user["privileged"] == true {
+						privilegedUsersCount++
+					}
+					if user["archive"] == true {
+						archiveUsersCount++
+					}
+					if user["sap_disabled"] == true {
+						sapDisabledUsersCount++
+					}
+					if userErrors, ok := user["errors"].(string); ok && userErrors != "" {
+						attributeErrorsUsersCount++
+					}
+					if val, ok := user["userAccountControl"]; ok {
+						if uacStr, ok := val.(string); ok {
+							if uac, err := strconv.Atoi(uacStr); err == nil {
+								if uac&65536 == 65536 {
+									passwordDontExpireUsersCount++
+								}
+								if uac&64 == 64 {
+									passwordCantChangeUsersCount++
+								}
+							}
+						}
+					}
+
 					if AnyOfFirstInSecond(internetGroups.WhiteList, userGroups) {
 						user["internetwl"] = true
 						whiteListInternetUsersCount++
@@ -244,6 +292,11 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 							}
 						}
 					}
+					if _, ok := user["computer"].(string); !ok {
+						noComputerUsersCount++
+					} else if version, ok := user["computer_os_version"].(WindowsVersionInfo); !ok || !version.Supported {
+						osUnsupportedUsersCount++
+					}
 					if len(avatars) > 0 {
 						for _, avatar := range avatars {
 							if user["userPrincipalName"] == avatar.Name {
@@ -272,14 +325,27 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 			observeUsersPerDomain(one.Name, "internet", "full", fullInternetUsersCount)
 			observeUsersPerDomain(one.Name, "internet", "white", whiteListInternetUsersCount)
 			observeUsersPerDomain(one.Name, "internet", "tech", techInternetUsersCount)
+			observeUsersPerDomain(one.Name, "privileged", "all", privilegedUsersCount)
+			observeUsersPerDomain(one.Name, "service_mail", "all", serviceMailUsersCount)
+			observeUsersPerDomain(one.Name, "service", "all", serviceUsersCount)
+			observeUsersPerDomain(one.Name, "archive", "all", archiveUsersCount)
+			observeUsersPerDomain(one.Name, "sap_disabled", "all", sapDisabledUsersCount)
+			observeUsersPerDomain(one.Name, "attribute_errors", "all", attributeErrorsUsersCount)
+			observeUsersPerDomain(one.Name, "password_never_expires", "all", passwordDontExpireUsersCount)
+			observeUsersPerDomain(one.Name, "password_cant_change", "all", passwordCantChangeUsersCount)
+			observeUsersPerDomain(one.Name, "no_computer", "all", noComputerUsersCount)
+			observeUsersPerDomain(one.Name, "os_unsupported", "all", osUnsupportedUsersCount)
 
 			if len(users) > 0 {
 				jsonUsers, _ := json.Marshal(users)
 				u.redis.DelKeyField("ad", one.Name)
 				err1 := u.redis.AddKeyFieldValue("ad", one.Name, jsonUsers)
 				if err1 != nil {
+					result = "error"
+					observeADCacheFillError(one.Name, "redis")
 					return
 				}
+				observeADCacheLastSuccess(one.Name)
 				u.log.Info(fmt.Sprintf("Добавлено %d пользователей домена %s", len(users), one.Name))
 			}
 			if len(comps) > 0 {
@@ -306,7 +372,9 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 	select {
 	case <-done:
 		u.log.Info("Все горутины доменов завершены успешно.")
+		observeADCacheLastComplete()
 	case <-time.After(timeout):
+		observeADCacheFillTimeout()
 		u.log.Error(fmt.Sprintf("Таймаут ожидания завершения обработки доменов (превышен лимит %v). Продолжаем выполнение.", timeout))
 	}
 

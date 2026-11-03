@@ -12,6 +12,7 @@ import (
 )
 
 func (s *Server) registerMiddlewares() {
+	s.Rtr.Use(metricsMiddleware())
 	s.Rtr.Use(cORSMiddleware())
 	s.Rtr.Use(requestIDMiddleware())
 	s.Rtr.Use(gzip.Gzip(gzip.DefaultCompression))
