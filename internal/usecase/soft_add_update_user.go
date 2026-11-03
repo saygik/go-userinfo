@@ -12,6 +12,13 @@ func (u *UseCase) AddOneSoftwareUser(id string, softwareForm entity.SoftUser, ed
 		return nil, u.Error("неправильный id системы")
 	}
 	softwareForm.IdSoft = softID
+
+	ticketID, err := normalizeSoftTicketID(softwareForm.GLPITicketID)
+	if err != nil {
+		return nil, err
+	}
+	softwareForm.GLPITicketID = ticketID
+
 	softwareForm.Permissions = normalizeSoftUserPermissions(softwareForm.Permissions, true)
 
 	currentTime, err := CurrentTimeFormattedRFC3339()
@@ -31,6 +38,12 @@ func (u *UseCase) UpdateOneSoftwareUser(softwareForm entity.SoftUser, editor str
 	if softwareForm.Permissions != nil {
 		softwareForm.Permissions = normalizeSoftUserPermissions(softwareForm.Permissions, false)
 	}
+
+	ticketID, err := normalizeSoftTicketID(softwareForm.GLPITicketID)
+	if err != nil {
+		return nil, err
+	}
+	softwareForm.GLPITicketID = ticketID
 
 	formatted, err := CurrentTimeFormattedRFC3339()
 	if err != nil {

@@ -11,6 +11,7 @@ const softUserSelectColumns = `
 	       COALESCE(u.fio, '') AS fio,
 	       u.[external],
 	       COALESCE(u.mail, '') AS mail,
+	       COALESCE(u.glpi_ticket_id, '') AS glpi_ticket_id,
 	       COALESCE(u.editor, '') AS editor,
 	       COALESCE(CONVERT(varchar(40), u.last_changes, 127), '') AS last_changes
 	FROM dbo.UserSoftwares u`

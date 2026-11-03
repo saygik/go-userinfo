@@ -63,6 +63,7 @@ func (u *UseCase) softUserResponse(user entity.SoftUser) map[string]interface{} 
 	adUser["external"] = user.External
 	adUser["editor"] = user.Editor
 	adUser["last_changes"] = user.LastChanges
+	adUser["glpi_ticket_id"] = user.GLPITicketID
 
 	if len(user.Mail) > 0 {
 		adUser["mail"] = user.Mail

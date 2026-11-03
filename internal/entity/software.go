@@ -150,6 +150,7 @@ type SoftUser struct {
 	Fio          string                 `db:"fio" json:"fio,omitempty"`
 	External     bool                   `db:"external" json:"external"`
 	Mail         string                 `db:"mail" json:"mail,omitempty"`
+	GLPITicketID string                 `db:"glpi_ticket_id" json:"glpi_ticket_id,omitempty"`
 	Editor       string                 `db:"editor" json:"editor"`
 	LastChanges  string                 `db:"last_changes" json:"last_changes"`
 	Permissions  []SoftUserPermission   `db:"-" json:"permissions"`

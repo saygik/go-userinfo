@@ -17,6 +17,14 @@ func nullableSoftDate(value string) interface{} {
 	return value
 }
 
+func nullableSoftString(value string) interface{} {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return nil
+	}
+	return value
+}
+
 func softPermissionSended(permission entity.SoftUserPermission) bool {
 	return permission.Sended && nullableSoftDate(permission.EndDate) != nil
 }
@@ -210,10 +218,10 @@ func (r *Repository) AddOneSoftwareUser(form entity.SoftUser, editor string, cur
 	var userID int64
 	err = tx.QueryRow(`
 		INSERT INTO dbo.UserSoftwares
-			(id_soft, user_name, user_login, user_comment, fio, [external], mail, editor, last_changes)
+			(id_soft, user_name, user_login, user_comment, fio, [external], mail, glpi_ticket_id, editor, last_changes)
 		OUTPUT INSERTED.id
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		form.IdSoft, form.Name, form.Login, form.Comment, form.Fio, form.External, form.Mail, editor, currentTime).Scan(&userID)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+		form.IdSoft, form.Name, form.Login, form.Comment, form.Fio, form.External, form.Mail, nullableSoftString(form.GLPITicketID), editor, currentTime).Scan(&userID)
 	if err != nil {
 		return formRes, err
 	}
@@ -257,10 +265,11 @@ func (r *Repository) UpdateOneSoftwareUser(form entity.SoftUser, editor string, 
 		    fio = $2,
 		    user_comment = $3,
 		    mail = $4,
-		    editor = $5,
-		    last_changes = $6
-		WHERE id = $7`,
-		form.Login, form.Fio, form.Comment, form.Mail, editor, currentTime, form.Id)
+		    glpi_ticket_id = $5,
+		    editor = $6,
+		    last_changes = $7
+		WHERE id = $8`,
+		form.Login, form.Fio, form.Comment, form.Mail, nullableSoftString(form.GLPITicketID), editor, currentTime, form.Id)
 	if err != nil {
 		return formRes, err
 	}
