@@ -23,11 +23,10 @@ func (u *UseCase) GetADUsersPublicInfo(perm entity.Permissions) ([]map[string]in
 		if disabled, exists := user["disabled"]; exists && disabled == true {
 			continue
 		}
-		// Сервисные учётные записи видят только sysadmin и админ домена
+		// Публичный список пользователей не должен содержать служебные учётные записи
+		// независимо от роли пользователя, запросившего список.
 		if service, ok := user["service"].(bool); ok && service {
-			if !u.canSeeServiceAccounts(&perm, userDomainName(user)) {
-				continue
-			}
+			continue
 		}
 		for _, field := range sensitiveLongFields {
 			delete(user, field)
