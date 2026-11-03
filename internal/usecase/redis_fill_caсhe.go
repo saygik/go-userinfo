@@ -204,6 +204,10 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 						user["serviceMail"] = true
 					}
 
+					if isPrivilegedUser(userGroups) {
+						user["privileged"] = true
+					}
+
 					if AnyOfFirstInSecond(internetGroups.WhiteList, userGroups) {
 						user["internetwl"] = true
 						whiteListInternetUsersCount++

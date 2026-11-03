@@ -76,6 +76,26 @@ func isServiceMailUser(memberOf []string) bool {
 	return false
 }
 
+// privilegedGroupName — группа, членство в которой помечает пользователя как
+// обладателя привилегированных записей. Такие пользователи не скрываются из
+// списков, фильтр по ним доступен на странице пользователей.
+const privilegedGroupName = "Привилегированные записи"
+
+// isPrivilegedUser сообщает, входит ли пользователь в группу
+// «Привилегированные записи». memberOf может содержать как CN, так и полный
+// DN — поддерживаются оба вида.
+func isPrivilegedUser(memberOf []string) bool {
+	for _, group := range memberOf {
+		if strings.EqualFold(strings.TrimSpace(group), privilegedGroupName) {
+			return true
+		}
+		if cn := serviceGroupCN(group); cn != "" && strings.EqualFold(strings.TrimSpace(cn), privilegedGroupName) {
+			return true
+		}
+	}
+	return false
+}
+
 // userDomainName достаёт имя домена из пользователя, сохранённого в Redis:
 // при импорте в поле domain записывается entity.DomainList.
 func userDomainName(user map[string]interface{}) string {
