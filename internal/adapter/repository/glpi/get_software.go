@@ -120,7 +120,7 @@ func (r *Repository) GetSoftwareJournal(id int) (items []entity.SoftwareJournal,
                 INNER JOIN glpi_items_tickets it
                 ON it.tickets_id = t.id
                 LEFT JOIN glpi_plugin_fields_ticketfailures tf
-                ON tf.items_id = t.id
+                ON tf.items_id = t.id AND tf.itemtype = 'Ticket'
                 LEFT JOIN glpi_plugin_fields_failcategoryfielddropdowns fc
                 ON fc.id = tf.plugin_fields_failcategoryfielddropdowns_id
                 WHERE it.itemtype = 'Software'
