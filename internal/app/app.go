@@ -68,7 +68,7 @@ func New(ctx context.Context) (*App, error) {
 	app.c = c
 	app.c.useCase.ClearRedisCaсhe()
 
-	go app.c.useCase.FillRedisCaсheFromAD()
+	go app.c.useCase.FillRedisCaсheFromAD(ctx)
 	go app.fillRedis(ctx)
 	if app.cfg.App.Env == "prod" {
 		go app.getHrpTickets(ctx)
@@ -97,7 +97,7 @@ func (a *App) fillRedis(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			a.c.useCase.FillRedisCaсheFromAD()
+			a.c.useCase.FillRedisCaсheFromAD(ctx)
 		}
 	}
 }

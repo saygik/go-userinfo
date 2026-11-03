@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -13,15 +14,12 @@ import (
 	"github.com/saygik/go-userinfo/internal/state"
 )
 
-func (u *UseCase) FillRedisCaсheFromAD() error {
+func (u *UseCase) FillRedisCaсheFromAD(ctx context.Context) error {
 	if state.IsFillingRedis() {
 		u.log.Error("кеш не обновлён, попытка заполнения кеша пользователей при невыполненной предыдущей задаче...")
 		return u.Error("кеш не обновлён")
 	}
 	defer func() {
-		if !state.IsInitialized() {
-			state.SetInitialized()
-		}
 		state.SetFillingRedis(false)
 	}()
 
@@ -373,9 +371,16 @@ func (u *UseCase) FillRedisCaсheFromAD() error {
 	case <-done:
 		u.log.Info("Все горутины доменов завершены успешно.")
 		observeADCacheLastComplete()
+	case <-ctx.Done():
+		u.log.Info("Заполнение кеша AD прервано: сервис останавливается.")
+		return nil
 	case <-time.After(timeout):
 		observeADCacheFillTimeout()
 		u.log.Error(fmt.Sprintf("Таймаут ожидания завершения обработки доменов (превышен лимит %v). Продолжаем выполнение.", timeout))
+	}
+
+	if !state.IsInitialized() {
+		state.SetInitialized()
 	}
 
 	u.redis.Rename("allusers", "prev")

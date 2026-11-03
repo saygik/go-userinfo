@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	_ "net/http/pprof"
 
 	"github.com/saygik/go-userinfo/internal/controller/http"
@@ -8,7 +9,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/controller/metrics"
 )
 
-func (a *App) StartHTTPServer() error {
+func (a *App) StartHTTPServer(ctx context.Context) error {
 
 	s := http.NewServer(a.cfg.App.Env, a.accessLog)
 
@@ -28,7 +29,7 @@ func (a *App) StartHTTPServer() error {
 		}
 	}()
 
-	err := s.Start(a.cfg.App.Port)
+	err := s.Start(ctx, a.cfg.App.Port)
 	if err != nil {
 		return err
 	}

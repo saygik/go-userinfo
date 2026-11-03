@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -320,8 +321,9 @@ func (h *Handler) ForceFillRedisCacheFromAD(c *gin.Context) {
 	}
 
 	// Запускаем асинхронно, чтобы не держать HTTP-соединение.
+	// Контекст запроса здесь не подходит: он отменяется сразу после ответа клиенту.
 	go func() {
-		if err := h.uc.FillRedisCaсheFromAD(); err != nil {
+		if err := h.uc.FillRedisCaсheFromAD(context.Background()); err != nil {
 			h.log.Error(err)
 		}
 	}()

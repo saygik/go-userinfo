@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -22,7 +23,7 @@ type UseCase interface {
 	ComputerLocalAdminsAudit(string, []string, bool) error
 	ComputerLocalAdminsGet(bool) ([]entity.LocalAdmins, error)
 	UpdateComputerLocalAdmins(entity.Permissions, string, string, string) error
-	FillRedisCaсheFromAD() error
+	FillRedisCaсheFromAD(context.Context) error
 	FillRedisCaсheFromIUTM() error
 	LoadUserPermissions(string) (entity.Permissions, error)                                                      //LoadUserPermissions
 	IUTMGetList(string) ([]string, error)                                                                        //IUTMGetWlist

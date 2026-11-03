@@ -18,10 +18,9 @@ func StartServer() {
 		log.Fatalf("Config error: %s", err)
 		os.Exit(1)
 	}
-	err = a.StartHTTPServer()
+	err = a.StartHTTPServer(ctx)
 	if err != nil {
 		log.Fatalf("Error starting WEB-server: %s", err)
 		os.Exit(2)
 	}
-	<-ctx.Done()
 }
