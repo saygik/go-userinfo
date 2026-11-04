@@ -44,6 +44,7 @@ type UseCase interface {
 	AddUserSection(entity.Permissions, string, string) (*entity.IdNameDescription, error)                        // Добавить раздел приложения пользователя
 	DeleteAllUserRights(entity.Permissions, string) error                                                        // Удалить все права пользователя
 	GetPermissionAudit(int) ([]entity.PermissionAudit, error)                                                    // Аудит изменений прав
+	GetUserSoftwareAudit(int) ([]entity.UserSoftwareAudit, error)                                                // Аудит изменений записей «пользователь — система»
 	GetAppResources(string) ([]entity.IdName, error)                                                             // Все ресурсы приложения
 	Authenticate(entity.LoginForm) (bool, map[string]string, error)                                              // Аутентификация
 	SetUserIp(entity.UserActivityForm) (string, error)                                                           // Установить ip пользователя
@@ -78,10 +79,10 @@ type UseCase interface {
 	GetSoftware(string) (entity.Software, error)                                                                 // Одна система
 	GetSoftwareJournal(string) (*[]entity.SoftwareJournal, error)                                                // Одна система
 	GetSoftwareUsers(string) ([]map[string]interface{}, error)                                                   // Список пользователей одной системы
-	AddUserSoftware(entity.SoftwareForm) error                                                                   // Добавление системы пользователя
+	AddUserSoftware(entity.SoftwareForm, string) error                                                           // Добавление системы пользователя
 	AddOneSoftwareUser(string, entity.SoftUser, string) (map[string]interface{}, error)                          // Добавление пользователя в систему
 	UpdateOneSoftwareUser(entity.SoftUser, string) (map[string]interface{}, error)                               // Изменение пользователя в систему
-	DelUserSoftware(string) error                                                                                // Удаление системы пользователя
+	DelUserSoftware(string, string) error                                                                        // Удаление системы пользователя
 	GetUserADActivity(string, entity.Permissions) ([]entity.UserActivity, error)                                 // Активность доменов
 	GetUserMailboxPermissions(string, entity.Permissions) ([]entity.MailBoxDelegates, error)                     // Получение делегированных почтовых ящиков пользователя
 	SetUserAvatar(string, string, string) error                                                                  // Установить пользователю аватар

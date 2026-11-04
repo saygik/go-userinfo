@@ -31,6 +31,8 @@ func (u *UseCase) AddOneSoftwareUser(id string, softwareForm entity.SoftUser, ed
 		return nil, u.Error("ошибка SQL добавления пользователя в систему")
 	}
 
+	u.auditUserSoftwareChange(editor, UserSoftwareAuditCreate, user, userSoftwareAuditDetails(UserSoftwareAuditCreate, user))
+
 	return u.softUserResponse(user), nil
 }
 
@@ -50,10 +52,18 @@ func (u *UseCase) UpdateOneSoftwareUser(softwareForm entity.SoftUser, editor str
 		return nil, u.Error("ошибка получения текущей даты и времени в формате RFC3339")
 	}
 
+	oldUser, oldErr := u.repo.GetUserSoftwareByID(softwareForm.Id)
+
 	user, err := u.repo.UpdateOneSoftwareUser(softwareForm, editor, formatted)
 	if err != nil {
 		return nil, u.Error("ошибка SQL изменения пользователя в системе")
 	}
+
+	details := ""
+	if oldErr == nil {
+		details = describeUserSoftwareChanges(oldUser, user)
+	}
+	u.auditUserSoftwareChange(editor, UserSoftwareAuditUpdate, user, details)
 
 	return u.softUserResponse(user), nil
 }

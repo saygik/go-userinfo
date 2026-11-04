@@ -21,6 +21,7 @@ func (h *Handler) NewAppRouterGroup() *gin.RouterGroup {
 	rg.GET("/admin/overview", h.TokenAuthMiddleware(), h.AdminOverview)
 	rg.DELETE("/admin/user/:username/rights", h.TokenAuthMiddleware(), h.AdminDeleteUserRights)
 	rg.GET("/admin/audit", h.TokenAuthMiddleware(), h.AdminPermissionAudit)
+	rg.GET("/admin/software-audit", h.TokenAuthMiddleware(), h.AdminUserSoftwareAudit)
 
 	rg.GET("/ip", h.Ip)
 	return rg

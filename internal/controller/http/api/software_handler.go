@@ -47,7 +47,7 @@ func (h *Handler) AddSoftwareUser(c *gin.Context) {
 		return
 	}
 	softwareForm.User = userName
-	err = h.uc.AddUserSoftware(softwareForm)
+	err = h.uc.AddUserSoftware(softwareForm, getUserID(c))
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка добавления системы пользователя", "error": err.Error()})
 		return
@@ -59,7 +59,7 @@ func (h *Handler) AddSoftwareUser(c *gin.Context) {
 func (h *Handler) DelSoftwareUser(c *gin.Context) {
 	id := c.Param("id")
 
-	err := h.uc.DelUserSoftware(id)
+	err := h.uc.DelUserSoftware(id, getUserID(c))
 	if err != nil {
 		c.JSON(http.StatusNotAcceptable, gin.H{"message": "Ошибка удаления системы пользователя", "error": err.Error()})
 		return

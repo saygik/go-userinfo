@@ -1,6 +1,10 @@
 package mssql
 
-import "github.com/saygik/go-userinfo/internal/entity"
+import (
+	"database/sql"
+
+	"github.com/saygik/go-userinfo/internal/entity"
+)
 
 const softUserSelectColumns = `
 	SELECT u.id,
@@ -181,4 +185,37 @@ func attachSoftAccountStates(users []entity.SoftUser, states map[int64]*entity.S
 			users[i].AccountState = defaultSoftAccountState()
 		}
 	}
+}
+
+// GetUserSoftwareByID возвращает одну запись «пользователь — система»
+// вместе с полномочиями и состоянием учётной записи.
+func (r *Repository) GetUserSoftwareByID(id int64) (entity.SoftUser, error) {
+	var user entity.SoftUser
+	err := r.db.SelectOne(&user, softUserSelectColumns+`
+		WHERE u.id = $1`, id)
+	if err != nil {
+		return user, err
+	}
+
+	if _, err = r.db.Select(&user.Permissions, softPermissionSelectColumns+`
+		WHERE p.id_user_software = $1
+		ORDER BY p.id`, id); err != nil {
+		return user, err
+	}
+	if user.Permissions == nil {
+		user.Permissions = []entity.SoftUserPermission{}
+	}
+
+	var state entity.SoftUserAccountState
+	err = r.db.SelectOne(&state, softAccountStateSelectColumns+`
+		WHERE a.id_user_software = $1`, id)
+	if err == sql.ErrNoRows {
+		user.AccountState = defaultSoftAccountState()
+	} else if err != nil {
+		return user, err
+	} else {
+		user.AccountState = &state
+	}
+
+	return user, nil
 }

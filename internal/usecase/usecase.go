@@ -47,6 +47,7 @@ type Repository interface {
 	GetOrgCodes() ([]entity.OrgWithCodes, error)
 	GetSoftwareUsers(int) ([]entity.SoftUser, error)
 	GetSoftwaresUsers() ([]entity.SoftUser, error)
+	GetUserSoftwareByID(int64) (entity.SoftUser, error)
 	GetSoftwareUsersEOL() ([]entity.SoftUserPermissionEOL, error)
 	SetUserAvatar(string, string) error
 	SetUserIp(entity.UserActivityForm) (string, error)
@@ -74,6 +75,8 @@ type Repository interface {
 	DeleteAllUserRights(string) error
 	AddPermissionAudit(string, string, string, string, string) error
 	GetPermissionAudits(int) ([]entity.PermissionAudit, error)
+	AddUserSoftwareAudit(string, string, entity.SoftUser, string, string) error
+	GetUserSoftwareAudits(int) ([]entity.UserSoftwareAudit, error)
 	Ping() error
 }
 type Redis interface {
