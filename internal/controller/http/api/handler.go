@@ -122,6 +122,7 @@ type UseCase interface {
 	UserInGropScopes(string, []string, []entity.IDPScope, *entity.OAuth2Client) ([]string, bool, error)          // У пользователя есть права на требуемый scope
 	GetComputerRMS(string) ([]entity.ComputerRMS, error)                                                         //Списсок компьютеров с RMS
 	ReplyPost(string, string, string) error                                                                      // Mattermost. Ответить на пост
+	GetAdminOverview() (entity.AdminOverview, error)                                                             // Панель администратора
 }
 
 type OAuth2 interface {

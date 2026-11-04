@@ -64,6 +64,13 @@ type Repository interface {
 	GetOneDelegateMailBoxes(string) ([]entity.MailBoxDelegates, error)
 	GetUserGlpiTrackingGroups(string) ([]entity.Id, error)
 	GetComputerByDomain(string) ([]entity.DomainComputer, error)
+
+	// Панель администратора
+	GetAllUserRoles() ([]entity.AdminUserRoleRow, error)
+	GetAllUserDomainAccess() ([]entity.AdminUserDomainAccessRow, error)
+	GetAllUserSections() ([]entity.AdminUserSectionRow, error)
+	CountUserSoftwares() (int, error)
+	Ping() error
 }
 type Redis interface {
 	ClearAllDomainsUsers()
@@ -77,6 +84,7 @@ type Redis interface {
 	Delete(string) error
 	Rename(oldKey, newKey string) error
 	Unlink(keys ...string) (int64, error)
+	Ping() error
 }
 type IUTM interface {
 	List() []entity.IutmCategoryList

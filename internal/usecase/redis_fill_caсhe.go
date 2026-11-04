@@ -386,6 +386,7 @@ func (u *UseCase) FillRedisCaсheFromAD(ctx context.Context) error {
 	u.redis.Rename("allusers", "prev")
 	u.redis.Rename("allusers:stagging", "allusers")
 	u.redis.Unlink("prev")
+	state.SetLastADFill(time.Now())
 	u.log.Info("Получение данных всех доменов завершено.")
 
 	return nil
