@@ -7,7 +7,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-// Действия аудита изменений записей «пользователь — система».
+// Действия аудита пользователей систем.
 const (
 	UserSoftwareAuditCreate = "create"
 	UserSoftwareAuditUpdate = "update"
@@ -15,14 +15,14 @@ const (
 )
 
 // auditUserSoftwareChange пишет запись аудита после успешного изменения
-// связи «пользователь — система». Ошибка аудита не отменяет изменение.
+// связи пользователя с системой. Ошибка аудита не отменяет изменение.
 func (u *UseCase) auditUserSoftwareChange(actor, action string, record entity.SoftUser, details string) {
 	if u.repo == nil {
 		return
 	}
 	softName := u.softNameForAudit(record.IdSoft)
 	if err := u.repo.AddUserSoftwareAudit(actor, action, record, softName, details); err != nil && u.log != nil {
-		u.log.WithError(err).Warn("не удалось записать аудит изменения записи «пользователь — система»")
+		u.log.WithError(err).Warn("не удалось записать аудит пользователей систем")
 	}
 }
 
@@ -106,7 +106,7 @@ func userSoftwareAuditDetails(action string, record entity.SoftUser) string {
 }
 
 // GetUserSoftwareAudit возвращает последние записи аудита изменений
-// связей «пользователь — система».
+// связей пользователей с системами.
 func (u *UseCase) GetUserSoftwareAudit(limit int) ([]entity.UserSoftwareAudit, error) {
 	if limit <= 0 {
 		limit = 200

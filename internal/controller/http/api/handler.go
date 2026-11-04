@@ -44,7 +44,7 @@ type UseCase interface {
 	AddUserSection(entity.Permissions, string, string) (*entity.IdNameDescription, error)                        // Добавить раздел приложения пользователя
 	DeleteAllUserRights(entity.Permissions, string) error                                                        // Удалить все права пользователя
 	GetPermissionAudit(int) ([]entity.PermissionAudit, error)                                                    // Аудит изменений прав
-	GetUserSoftwareAudit(int) ([]entity.UserSoftwareAudit, error)                                                // Аудит изменений записей «пользователь — система»
+	GetUserSoftwareAudit(int) ([]entity.UserSoftwareAudit, error)                                                // Аудит пользователей систем
 	GetAppResources(string) ([]entity.IdName, error)                                                             // Все ресурсы приложения
 	Authenticate(entity.LoginForm) (bool, map[string]string, error)                                              // Аутентификация
 	SetUserIp(entity.UserActivityForm) (string, error)                                                           // Установить ip пользователя

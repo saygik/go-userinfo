@@ -44,7 +44,7 @@ func (r *Repository) GetAllUserSections() ([]entity.AdminUserSectionRow, error) 
 	return rows, err
 }
 
-// CountUserSoftwares возвращает количество записей «пользователь — система».
+// CountUserSoftwares возвращает количество записей пользователей систем.
 func (r *Repository) CountUserSoftwares() (int, error) {
 	var count int
 	err := r.db.SelectOne(&count, `SELECT COUNT(*) FROM dbo.UserSoftwares`)

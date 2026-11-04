@@ -2,7 +2,7 @@ package entity
 
 import "time"
 
-// UserSoftwareAudit — запись аудита изменения связи «пользователь — система».
+// UserSoftwareAudit — запись аудита изменения связи пользователя с системой.
 type UserSoftwareAudit struct {
 	Id             int64     `db:"id" json:"id"`
 	ChangedAt      time.Time `db:"changed_at" json:"changed_at"`

@@ -117,8 +117,8 @@ func (h *Handler) AdminPermissionAudit(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": records})
 }
 
-// AdminUserSoftwareAudit отдаёт последние записи аудита изменений записей
-// «пользователь — система». Доступен только пользователям с ролью SysAdmin.
+// AdminUserSoftwareAudit отдаёт последние записи аудита пользователей систем.
+// Доступен только пользователям с ролью SysAdmin.
 func (h *Handler) AdminUserSoftwareAudit(c *gin.Context) {
 	perms, ok := h.getPerms(c)
 	if !ok {
@@ -140,7 +140,7 @@ func (h *Handler) AdminUserSoftwareAudit(c *gin.Context) {
 	records, err := h.uc.GetUserSoftwareAudit(limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Невозможно получить аудит изменений записей «пользователь — система»",
+			"message": "Невозможно получить аудит пользователей систем",
 			"error":   err.Error(),
 		})
 		return

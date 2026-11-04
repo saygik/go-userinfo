@@ -187,7 +187,7 @@ func attachSoftAccountStates(users []entity.SoftUser, states map[int64]*entity.S
 	}
 }
 
-// GetUserSoftwareByID возвращает одну запись «пользователь — система»
+// GetUserSoftwareByID возвращает одну запись пользователя системы
 // вместе с полномочиями и состоянием учётной записи.
 func (r *Repository) GetUserSoftwareByID(id int64) (entity.SoftUser, error) {
 	var user entity.SoftUser

@@ -3,7 +3,7 @@ package mssql
 import "github.com/saygik/go-userinfo/internal/entity"
 
 // AddUserSoftwareAudit сохраняет запись об успешном изменении связи
-// «пользователь — система». Пустые строки пишутся как NULL.
+// записи пользователя системы. Пустые строки пишутся как NULL.
 func (r *Repository) AddUserSoftwareAudit(actor, action string, record entity.SoftUser, softName, details string) error {
 	_, err := r.db.Exec(`
         INSERT INTO dbo.UserSoftwareAudit
@@ -16,8 +16,7 @@ func (r *Repository) AddUserSoftwareAudit(actor, action string, record entity.So
 	return err
 }
 
-// GetUserSoftwareAudits возвращает последние записи аудита изменений
-// связей «пользователь — система».
+// GetUserSoftwareAudits возвращает последние записи аудита пользователей систем.
 func (r *Repository) GetUserSoftwareAudits(limit int) ([]entity.UserSoftwareAudit, error) {
 	if limit <= 0 {
 		limit = 200
