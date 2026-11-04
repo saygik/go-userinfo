@@ -27,6 +27,7 @@ type Repository interface {
 	//	GetUserRole(string) []entity.IdNameDescription
 	SetUserRole(string, int) error
 	GetUserGroups(string) ([]entity.IdName, error)
+	GetUserRole(string, int) (entity.IdNameDescription, error)
 	AddUserRole(string, int) (*entity.IdNameDescription, error)
 	AddUserDomainRole(string, string, string) (*entity.DomainAccess, string, error)
 	DelUserDomainRole(string, string) error
@@ -71,6 +72,8 @@ type Repository interface {
 	GetAllUserSections() ([]entity.AdminUserSectionRow, error)
 	CountUserSoftwares() (int, error)
 	DeleteAllUserRights(string) error
+	AddPermissionAudit(string, string, string, string, string) error
+	GetPermissionAudits(int) ([]entity.PermissionAudit, error)
 	Ping() error
 }
 type Redis interface {

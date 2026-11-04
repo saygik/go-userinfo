@@ -16,7 +16,13 @@ func (u *UseCase) AddUserRole(perms entity.Permissions, user string, id int) (*e
 		return nil, u.Error("неправильное имя пользователя")
 	}
 	result, err := u.repo.AddUserRole(user, id)
-	return result, err
+	if err != nil {
+		return result, err
+	}
+	if result != nil {
+		u.auditPermissionChange(perms, user, AuditRoleAdd, result.Name, "")
+	}
+	return result, nil
 }
 
 func (u *UseCase) AddUserSection(perms entity.Permissions, user string, section string) (*entity.IdNameDescription, error) {
@@ -31,7 +37,13 @@ func (u *UseCase) AddUserSection(perms entity.Permissions, user string, section 
 		return nil, u.Error("неправильное имя пользователя")
 	}
 	result, err := u.repo.AddUserSection(user, section)
-	return result, err
+	if err != nil {
+		return result, err
+	}
+	if result != nil {
+		u.auditPermissionChange(perms, user, AuditSectionAdd, result.Name, "")
+	}
+	return result, nil
 }
 
 func (u *UseCase) AddUserDomainRole(perms entity.Permissions, user string, domain string, level string) (*entity.DomainAccess, string, error) {
@@ -46,5 +58,15 @@ func (u *UseCase) AddUserDomainRole(perms entity.Permissions, user string, domai
 		return nil, "", u.Error("неправильное имя пользователя")
 	}
 	result, operation, err := u.repo.AddUserDomainRole(user, domain, level)
-	return result, operation, err
+	if err != nil {
+		return result, operation, err
+	}
+	action := AuditDomainAdd
+	if operation == "UPDATED" {
+		action = AuditDomainUpdate
+	}
+	if result != nil {
+		u.auditPermissionChange(perms, user, action, result.Domain, result.AccessLevel)
+	}
+	return result, operation, nil
 }

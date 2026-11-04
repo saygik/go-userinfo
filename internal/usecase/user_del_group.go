@@ -18,10 +18,15 @@ func (u *UseCase) DelUserRole(perms entity.Permissions, user string, id int) err
 	if !isEmailValid(user) {
 		return u.Error("неправильное имя пользователя")
 	}
+	roleName := ""
+	if role, roleErr := u.repo.GetUserRole(user, id); roleErr == nil {
+		roleName = role.Name
+	}
 	err := u.repo.DelUserRole(user, id)
 	if err != nil {
 		return u.Error(fmt.Sprintf("ошибка MySQL: %s", err.Error()))
 	}
+	u.auditPermissionChange(perms, user, AuditRoleRemove, roleName, "")
 	return nil
 }
 
@@ -40,6 +45,7 @@ func (u *UseCase) DelUserSection(perms entity.Permissions, user string, section 
 	if err != nil {
 		return u.Error(fmt.Sprintf("ошибка MySQL: %s", err.Error()))
 	}
+	u.auditPermissionChange(perms, user, AuditSectionRemove, strings.TrimPrefix(section, "SECTION:"), "")
 	return nil
 }
 
@@ -58,6 +64,7 @@ func (u *UseCase) DelUserDomainRole(perms entity.Permissions, user string, domai
 	if err != nil {
 		return u.Error(fmt.Sprintf("ошибка MySQL: %s", err.Error()))
 	}
+	u.auditPermissionChange(perms, user, AuditDomainRemove, domain, "")
 	return nil
 }
 
@@ -81,5 +88,6 @@ func (u *UseCase) DeleteAllUserRights(perms entity.Permissions, user string) err
 	if err != nil {
 		return u.Error(fmt.Sprintf("ошибка базы данных: %s", err.Error()))
 	}
+	u.auditPermissionChange(perms, user, AuditRightsClear, "", "roles, domain_access, sections")
 	return nil
 }
