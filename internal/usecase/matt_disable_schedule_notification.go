@@ -14,5 +14,6 @@ func (u *UseCase) DisableSheduleTaskNotificationFromMattermost(form entity.Matte
 	if err != nil {
 		return "", u.Error("Задача календаря не отменена. Ошибка: " + err.Error())
 	}
+	u.markScheduleTaskPostClosed(form.Context.Id, loginMattUser, "отменена в Mattermost", schedulePostStatusClosedInMattermost+" пользователем @"+loginMattUser)
 	return "Задача календаря отменена. Оповещение отключено" + " пользователем @" + loginMattUser, nil
 }

@@ -20,8 +20,8 @@ func (u *UseCase) GetHRPTickets() {
 	// tickets := []entity.GLPI_Ticket{}
 	// tickets = append(tickets, entity.GLPI_Ticket{Id: 206238, Content: "Сотрудник: Казаков Юрий Геннадьевич(35407148)"})
 	//* TEST ***************************************
-	tickets, err := u.glpi.GetHRPTickets()
-	//	tickets, err := u.glpi.GetHRPTickets()
+	//tickets, err := u.glpi.GetHRPTickets()
+	tickets, err := u.glpi.GetHRPTicketsTest()
 	_ = tickets
 
 	if err != nil || len(tickets) < 1 {
@@ -32,6 +32,13 @@ func (u *UseCase) GetHRPTickets() {
 	if err != nil {
 		return
 	}
+
+	softsUsers, softsUsersErr := u.GetSoftwaresUsers()
+	if softsUsersErr != nil {
+		u.log.Error(fmt.Sprintf("Error getting software users for HRP tickets: %v", softsUsersErr))
+	}
+	softUsersByFIO := buildSoftUsersByFIO(softsUsers)
+
 	sBoxes := ""
 	val := ""
 	ok := false
@@ -142,24 +149,37 @@ func (u *UseCase) GetHRPTickets() {
 		}
 
 		//** Поиск пользователя в системах//
-		softsUsers, err := u.GetSoftwaresUsers()
-		if err == nil && len(softsUsers) > 0 {
-			for _, softUser := range softsUsers {
-				match, log := FuzzyMatchFIO(softUser.Fio, sfio, 1)
-				if match {
-					systemName := softUser.SoftName
+		for _, softUser := range matchSoftUsersByFIO(softUsersByFIO, softsUsers, sfio) {
+			systemName := softUser.SoftName
 
-					logMessage := fmt.Sprintf("%s [%s]", softUser.Fio, log)
-					finded = true
-					u.sendHRPToCalendarAndMattermostChannel(hrpUser, systemName, ticket, sfio, logMessage, dateToNotificate, softUser.Groups)
-					u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
-						Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
+			if softUserAlreadyDisabled(softUser) {
+				finded = true
+				status := softUserAccountStatus(softUser)
+				account := softUser.Login
+				if account == "" {
+					account = softUser.Name
+				}
+				u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
+					Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
+					          %s найден в списке зарегистрированных пользователей системы <b>%s</b><br>
+							  учётная запись <b>%s</b> уже %s, оповещение администраторам не требуется
+					 `, sfio, systemName, account, softUserStatusLabel(status))})
+				continue
+			}
+
+			match, log := FuzzyMatchFIO(softUser.Fio, sfio, 1)
+			if !match {
+				continue
+			}
+			logMessage := fmt.Sprintf("%s [%s]", softUser.Fio, log)
+			finded = true
+			u.sendHRPToCalendarAndMattermostChannel(hrpUser, systemName, ticket, sfio, logMessage, dateToNotificate, softUser.Groups)
+			u.AddTicketComment(entity.NewCommentForm{ItemId: ticket.Id, ItemType: "Ticket", IsPrivate: true, RequestTypesId: 10,
+				Content: fmt.Sprintf(`<b>Поиск по ФИО:</b><br>
 					          %s найден в списке зарегистрированных пользователей системы <b>%s</b><br>
 							  %s<br>
 					          рекомендуется направить заявку группам администраторов этой системы (<b>%s</b>) для окончательной проверки и отключения
 					 `, sfio, systemName, logMessage, softUser.GroupNames)})
-				}
-			}
 		}
 		// softs, err := u.GetUserSoftwaresByFio(sfio)
 		// if err == nil && len(softs) > 0 {
@@ -228,6 +248,74 @@ func getHRPAttributeFromText(str string, endString string) string {
 	return sfio
 }
 
+// buildSoftUsersByFIO строит индекс системных пользователей по
+// нормализованному ФИО.
+func buildSoftUsersByFIO(users []entity.SoftUser) map[string][]entity.SoftUser {
+	index := make(map[string][]entity.SoftUser, len(users))
+	for _, user := range users {
+		key := normalizeFIO(user.Fio)
+		if key == "" {
+			continue
+		}
+		index[key] = append(index[key], user)
+	}
+	return index
+}
+
+// matchSoftUsersByFIO сначала ищет точное совпадение по индексу, затем
+// переходит к нечёткому сравнению по уже загруженному списку.
+func matchSoftUsersByFIO(index map[string][]entity.SoftUser, all []entity.SoftUser, fio string) []entity.SoftUser {
+	key := normalizeFIO(fio)
+	if key == "" {
+		return nil
+	}
+	if users, ok := index[key]; ok && len(users) > 0 {
+		return users
+	}
+
+	matches := make([]entity.SoftUser, 0)
+	for _, user := range all {
+		if normalizeFIO(user.Fio) == "" {
+			continue
+		}
+		if match, _ := FuzzyMatchFIO(user.Fio, fio, 1); match {
+			matches = append(matches, user)
+		}
+	}
+	return matches
+}
+
+func softUserAccountStatus(user entity.SoftUser) string {
+	if user.AccountState == nil {
+		return entity.SoftUserAccountStatusActive
+	}
+	return entity.NormalizeSoftUserAccountStatus(user.AccountState.Status)
+}
+
+func softUserAlreadyDisabled(user entity.SoftUser) bool {
+	switch softUserAccountStatus(user) {
+	case entity.SoftUserAccountStatusDisabled,
+		entity.SoftUserAccountStatusBlocked,
+		entity.SoftUserAccountStatusDeleted:
+		return true
+	default:
+		return false
+	}
+}
+
+func softUserStatusLabel(status string) string {
+	switch status {
+	case entity.SoftUserAccountStatusDisabled:
+		return "отключена"
+	case entity.SoftUserAccountStatusBlocked:
+		return "заблокирована"
+	case entity.SoftUserAccountStatusDeleted:
+		return "удалена"
+	default:
+		return "активна"
+	}
+}
+
 func (u *UseCase) sendHRPToCalendarAndMattermostChannel(
 	hrpUser entity.HRPUser,
 	softName string,
@@ -263,9 +351,11 @@ func (u *UseCase) sendHRPToCalendarAndMattermostChannel(
 			}
 		}
 		if len(channelId) > 0 {
-			err := u.matt.SendPostHRPSoft(channelId, hrpUser, softName, logMessage, sheduleTaskId)
+			postID, err := u.matt.SendPostHRPSoft(channelId, hrpUser, softName, logMessage, sheduleTaskId)
 			if err != nil {
 				u.log.Error(fmt.Sprintf("Error sending post for  ticket %d to Mattermost channel %s to  glpi group %s. Error: %v", ticket.Id, channelId, adminsName, err))
+			} else {
+				u.saveScheduleTaskMattermostLink(sheduleTaskId, channelId, postID, scheduleLinkSourceHRP, int64(ticket.Id))
 			}
 		}
 	}

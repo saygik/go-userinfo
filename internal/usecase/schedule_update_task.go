@@ -11,5 +11,8 @@ func (u *UseCase) UpdateScheduleTask(task entity.ScheduleTask) error {
 	if err != nil {
 		return u.Error(fmt.Sprintf("ошибка MSSQL: %s", err.Error()))
 	}
+	if task.Status == 3 {
+		u.markScheduleTaskPostClosed(task.Id, "", "закрыта в календаре", schedulePostStatusClosedInCalendar)
+	}
 	return nil
 }

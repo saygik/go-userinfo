@@ -62,6 +62,10 @@ type Repository interface {
 	UpdateScheduleTask(entity.ScheduleTask) error
 	UpdateScheduleTaskNotification(int) error
 	UpdateScheduleTaskDisableMattermost(int) error
+	SaveScheduleTaskMattermostLink(entity.ScheduleTaskMattermostLink) error
+	GetScheduleTaskMattermostLink(int64) (entity.ScheduleTaskMattermostLink, error)
+	MarkScheduleTaskMattermostReminderSent(int64) error
+	MarkScheduleTaskMattermostClosed(int64, string, string) error
 	DelScheduleTask(int) error
 	GetOneDelegateMailBoxes(string) ([]entity.MailBoxDelegates, error)
 	GetUserGlpiTrackingGroups(string) ([]entity.Id, error)
@@ -186,9 +190,10 @@ type Mattermost interface {
 	IntegrationAllowedHosts() []string
 	SendPostHRP(string, entity.HRPUser) (err error)
 	SendPost(string, string, string, string, string, string, bool) (err error)
-	SendPostHRPSoft(string, entity.HRPUser, string, string, int) (err error)
+	SendPostHRPSoft(string, entity.HRPUser, string, string, int) (string, error)
 	SendPostSimple(string, string) error
 	ReplyPost(string, string, string) error
+	UpdatePostStatus(string, string, string) error
 }
 type GlpiApi interface {
 	CreateTicket(entity.NewTicketInputForm) (int, error)

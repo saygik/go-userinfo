@@ -17,6 +17,7 @@ func (u *UseCase) GetScheduleTasksNotifications() error {
 	_ = tasks
 	for _, task := range tasks {
 		if task.Tip == 3 && task.Status == 3 {
+			u.markScheduleTaskPostClosed(task.Id, "", "закрыта в календаре", schedulePostStatusClosedInCalendar)
 			u.repo.UpdateScheduleTaskNotification(task.Id)
 			continue
 		}
@@ -78,6 +79,8 @@ func (u *UseCase) GetScheduleTasksNotifications() error {
 
 				if err != nil {
 					u.log.Error(fmt.Sprintf("Error sending post for calendar task %d to Mattermost channel %s. Error: %v", task.Id, schedule.Mattermost, err))
+				} else {
+					u.markScheduleTaskPostReminderSent(task.Id)
 				}
 				u.repo.UpdateScheduleTaskNotification(task.Id)
 			}

@@ -9,7 +9,7 @@ import (
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, softName string, log string, idTaskCalNotification int) (err error) {
+func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, softName string, log string, idTaskCalNotification int) (postID string, err error) {
 
 	var actions []*model.PostAction
 
@@ -93,10 +93,11 @@ func (r *Repository) SendPostHRPSoft(channelId string, hrpUser entity.HRPUser, s
 		},
 	})
 
-	if _, _, err := r.client.CreatePost(context.Background(), post); err != nil {
-		return err
+	created, _, err := r.client.CreatePost(context.Background(), post)
+	if err != nil {
+		return "", err
 	}
-	return nil
+	return created.Id, nil
 }
 
 func deleteParentheses(s string) string {
