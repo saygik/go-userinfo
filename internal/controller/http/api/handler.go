@@ -42,6 +42,7 @@ type UseCase interface {
 	AddUserRole(entity.Permissions, string, int) (*entity.IdNameDescription, error)                              // Добавить роль приложения пользователя
 	AddUserDomainRole(entity.Permissions, string, string, string) (*entity.DomainAccess, string, error)          // Добавить роль приложения пользователя
 	AddUserSection(entity.Permissions, string, string) (*entity.IdNameDescription, error)                        // Добавить раздел приложения пользователя
+	DeleteAllUserRights(entity.Permissions, string) error                                                        // Удалить все права пользователя
 	GetAppResources(string) ([]entity.IdName, error)                                                             // Все ресурсы приложения
 	Authenticate(entity.LoginForm) (bool, map[string]string, error)                                              // Аутентификация
 	SetUserIp(entity.UserActivityForm) (string, error)                                                           // Установить ip пользователя

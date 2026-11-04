@@ -70,6 +70,7 @@ type Repository interface {
 	GetAllUserDomainAccess() ([]entity.AdminUserDomainAccessRow, error)
 	GetAllUserSections() ([]entity.AdminUserSectionRow, error)
 	CountUserSoftwares() (int, error)
+	DeleteAllUserRights(string) error
 	Ping() error
 }
 type Redis interface {

@@ -58,3 +58,28 @@ func (h *Handler) AdminOverview(c *gin.Context) {
 func roundTo1(value float64) float64 {
 	return math.Round(value*10) / 10
 }
+
+// AdminDeleteUserRights удаляет все роли, доступы к доменам и дополнительные
+// разделы пользователя. Доступен только пользователям с ролью SysAdmin.
+func (h *Handler) AdminDeleteUserRights(c *gin.Context) {
+	perms, ok := h.getPerms(c)
+	if !ok {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Сначала войдите в систему"})
+		return
+	}
+	if !perms.IsSysAdmin {
+		c.JSON(http.StatusForbidden, gin.H{"error": "у вас нет прав для изменения прав пользователей"})
+		return
+	}
+
+	user := c.Param("username")
+	if err := h.uc.DeleteAllUserRights(perms, user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Невозможно удалить права пользователя",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": "OK"})
+}

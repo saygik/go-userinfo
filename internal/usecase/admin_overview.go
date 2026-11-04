@@ -143,6 +143,12 @@ func (u *UseCase) GetAdminOverview() (entity.AdminOverview, error) {
 	if err != nil {
 		warnings = append(warnings, "не удалось получить количество записей пользователей в системах: "+err.Error())
 	}
+	if appRoles == nil {
+		appRoles = []entity.IdNameDescription{}
+	}
+	if appSections == nil {
+		appSections = []entity.IdNameDescription{}
+	}
 
 	overview := entity.AdminOverview{
 		System: entity.AdminSystemInfo{
@@ -166,6 +172,8 @@ func (u *UseCase) GetAdminOverview() (entity.AdminOverview, error) {
 				UsersWithSections:     len(sectionUsers),
 				UserSoftwares:         softwaresCount,
 			},
+			Roles:    appRoles,
+			Sections: appSections,
 		},
 		Users: nonStandard,
 	}

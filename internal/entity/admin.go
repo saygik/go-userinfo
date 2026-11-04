@@ -53,7 +53,10 @@ type AdminSystemInfo struct {
 	Redis         AdminServiceInfo `json:"redis"`
 	AD            AdminADInfo      `json:"ad"`
 	Counts        AdminCounts      `json:"counts"`
-	Warnings      []string         `json:"warnings,omitempty"`
+	// Доступные для назначения роли и разделы приложения.
+	Roles    []IdNameDescription `json:"roles"`
+	Sections []IdNameDescription `json:"sections"`
+	Warnings []string            `json:"warnings,omitempty"`
 }
 
 // AdminUserPermission — пользователь с правами, отличными от стандартных.

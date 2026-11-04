@@ -100,3 +100,26 @@ func (r *Repository) DelUserDomainRole(upn string, domain string) error {
     `, upn, domain)
 	return sqlRowAffectedErrorWrapper(res, err)
 }
+
+// DeleteAllUserRights удаляет роли, доступы к доменам и дополнительные разделы
+// пользователя одной транзакцией. Права в системах и ПО (UserSoftwares) не затрагиваются.
+func (r *Repository) DeleteAllUserRights(upn string) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	if _, err = tx.Exec(`DELETE FROM user_roles WHERE user_principal_name = ?`, upn); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(`DELETE FROM user_domain_access WHERE user_principal_name = ?`, upn); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(`DELETE FROM user_permissions WHERE user_principal_name = ?`, upn); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
