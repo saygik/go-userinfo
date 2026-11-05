@@ -25,6 +25,19 @@ type Software struct {
 	Categorie    int64                    `db:"categorie" json:"categorie"`
 	Admins       []map[string]interface{} `json:"tech_users"`
 	Groups       []SoftwareGroup          `json:"groups"`
+	MailTemplate SoftwareMailTemplate     `json:"mail_template"`
+}
+
+// SoftwareMailTemplate — шаблон письма об истечении полномочий в системе.
+// Если пользовательский шаблон не задан, используются DefaultSubject/DefaultBody.
+type SoftwareMailTemplate struct {
+	Subject        string `json:"subject"`
+	Body           string `json:"body"`
+	IsCustom       bool   `json:"is_custom"`
+	UpdatedAt      string `json:"updated_at,omitempty"`
+	UpdatedBy      string `json:"updated_by,omitempty"`
+	DefaultSubject string `json:"default_subject"`
+	DefaultBody    string `json:"default_body"`
 }
 
 type SoftwareJournal struct {

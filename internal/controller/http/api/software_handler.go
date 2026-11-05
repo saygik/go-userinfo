@@ -83,6 +83,52 @@ func (h *Handler) GetSoftware(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": software})
 }
 
+// UpdateSoftwareMailTemplate сохраняет шаблон письма для системы.
+func (h *Handler) UpdateSoftwareMailTemplate(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить id системы в запросе"})
+		return
+	}
+
+	var form struct {
+		Subject string `json:"subject"`
+		Body    string `json:"body"`
+	}
+	if err := c.ShouldBindJSON(&form); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "Некорректный шаблон письма", "error": err.Error()})
+		return
+	}
+
+	perms, _ := h.getPerms(c)
+	template, err := h.uc.SaveSoftwareMailTemplate(id, entity.SoftwareMailTemplate{
+		Subject: form.Subject,
+		Body:    form.Body,
+	}, getUserID(c), perms)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": template})
+}
+
+// DeleteSoftwareMailTemplate сбрасывает шаблон системы на общий.
+func (h *Handler) DeleteSoftwareMailTemplate(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"error": "Невозможно определить id системы в запросе"})
+		return
+	}
+
+	perms, _ := h.getPerms(c)
+	template, err := h.uc.DeleteSoftwareMailTemplate(id, getUserID(c), perms)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": template})
+}
+
 func (h *Handler) GetSoftwareJournal(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {

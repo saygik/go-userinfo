@@ -39,6 +39,8 @@ func (u *UseCase) GetSoftware(ids string) (entity.Software, error) {
 		software.Admins = []map[string]interface{}{}
 	}
 
+	software.MailTemplate = u.softwareMailTemplate(int64(id))
+
 	return software, nil
 
 }

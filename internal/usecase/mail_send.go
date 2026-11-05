@@ -17,6 +17,11 @@ func (s *smtpServer) Address() string {
 	return s.host + ":" + s.port
 }
 func (u *UseCase) SendMail(toMail string, body string) error {
+	return u.SendMailWithSubject(toMail, defaultSoftwareMailSubject, body)
+}
+
+// SendMailWithSubject отправляет текстовое письмо с указанной темой.
+func (u *UseCase) SendMailWithSubject(toMail string, subject string, body string) error {
 	// Sender data.
 	from := "UserInfo@brnv.rw"
 	// Receiver email address.
@@ -24,7 +29,6 @@ func (u *UseCase) SendMail(toMail string, body string) error {
 	// smtp server configuration.
 	smtpServer := smtpServer{host: "mail.brnv.rw", port: "25"}
 	// Message.
-	subject := "Срок действия вашей учетной записи истекает"
 	encodedSubject := encodeSubject(subject)
 	//mime := "MIME-version: 1.0;\nContent-Type: text/plain; charset=\"UTF-8\";\n\n"
 

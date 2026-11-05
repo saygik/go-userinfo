@@ -49,6 +49,9 @@ type Repository interface {
 	GetSoftwaresUsers() ([]entity.SoftUser, error)
 	GetUserSoftwareByID(int64) (entity.SoftUser, error)
 	GetSoftwareUsersEOL() ([]entity.SoftUserPermissionEOL, error)
+	GetSoftwareMailTemplate(int64) (entity.SoftwareMailTemplate, bool, error)
+	SaveSoftwareMailTemplate(int64, string, string, string) error
+	DeleteSoftwareMailTemplate(int64) error
 	SetUserAvatar(string, string) error
 	SetUserIp(entity.UserActivityForm) (string, error)
 	GetSchedule(int) (entity.Schedule, error)

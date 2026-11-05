@@ -5,6 +5,8 @@ import "github.com/gin-gonic/gin"
 func (h *Handler) NewSoftwareRouterGroup() *gin.RouterGroup {
 	rg := h.rg.Group("/software")
 	rg.GET("/one/:id", h.TokenAuthMiddleware(), h.GetSoftware)
+	rg.PUT("/one/:id/mail-template", h.TokenAuthMiddleware(), h.UpdateSoftwareMailTemplate)
+	rg.DELETE("/one/:id/mail-template", h.TokenAuthMiddleware(), h.DeleteSoftwareMailTemplate)
 	rg.GET("/journal/:id", h.TokenAuthMiddleware(), h.GetSoftwareJournal)
 	rg.POST("/one/:id", h.TokenAuthMiddleware(), h.AddUserToSoftware)
 	rg.PUT("/one/:id", h.TokenAuthMiddleware(), h.UpdateUserInSoftware)

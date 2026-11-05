@@ -77,6 +77,8 @@ type UseCase interface {
 	GetSoftwares() ([]entity.Software, error)                                                                    // Список всех систем
 	GetSoftwaresUsers() ([]entity.SoftUser, error)                                                               // Список всех систем пользователя
 	GetSoftware(string) (entity.Software, error)                                                                 // Одна система
+	SaveSoftwareMailTemplate(string, entity.SoftwareMailTemplate, string, entity.Permissions) (entity.SoftwareMailTemplate, error)
+	DeleteSoftwareMailTemplate(string, string, entity.Permissions) (entity.SoftwareMailTemplate, error)
 	GetSoftwareJournal(string) (*[]entity.SoftwareJournal, error)                                                // Одна система
 	GetSoftwareUsers(string) ([]map[string]interface{}, error)                                                   // Список пользователей одной системы
 	AddUserSoftware(entity.SoftwareForm, string) error                                                           // Добавление системы пользователя

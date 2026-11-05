@@ -15,6 +15,7 @@ func (u *UseCase) GetSoftwareUsersEOL() ([]map[string]interface{}, error) {
 		return nil, u.Error("невозможно получить полномочия с истекающим сроком")
 	}
 	softUsers := []map[string]interface{}{}
+	templates := map[int]entity.SoftwareMailTemplate{}
 
 	for _, permission := range permissions {
 		soft, err := u.glpi.GetSoftware(permission.IdSoft)
@@ -22,12 +23,17 @@ func (u *UseCase) GetSoftwareUsersEOL() ([]map[string]interface{}, error) {
 			continue
 		}
 
+		template, ok := templates[permission.IdSoft]
+		if !ok {
+			template = u.softwareMailTemplate(int64(permission.IdSoft))
+			templates[permission.IdSoft] = template
+		}
+		values := softwareMailTemplateValues(permission, soft.Name)
+
 		if len(permission.Mail) > 4 {
-			err = u.SendMail(permission.Mail,
-				fmt.Sprintf(`
-Срок действия полномочий «%s» учетной записи %s пользователя %s для системы %s истекает %s.
-Примите меры для перерегистрации в системе или пропустите это письмо, если данная система вас не интересует.`,
-					permission.PermissionName, permission.Login, permission.Fio, soft.Name, parseDate(permission.EndDate)))
+			err = u.SendMailWithSubject(permission.Mail,
+				renderSoftwareMailTemplate(template.Subject, values),
+				renderSoftwareMailTemplate(template.Body, values))
 			if err != nil && u.log != nil {
 				u.log.Errorf("не удалось отправить оповещение о полномочиях %d: %v", permission.PermissionId, err)
 			}
