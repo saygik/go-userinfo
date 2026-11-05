@@ -15,7 +15,8 @@ func (h *Handler) GetAllSchedules(c *gin.Context) {
 		user = userI.(string)
 	}
 	_ = user
-	results, err := h.uc.GetAllSchedules(user)
+	perms, _ := h.getPerms(c)
+	results, err := h.uc.GetAllSchedules(user, perms.IsSysAdmin)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить расписания пользователя", "error": err.Error()})
 		return
@@ -40,7 +41,8 @@ func (h *Handler) GetSchedule(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Неправильный ID расписания"})
 		return
 	}
-	results, err := h.uc.GetSchedule(id, user)
+	perms, _ := h.getPerms(c)
+	results, err := h.uc.GetSchedule(id, user, perms.IsSysAdmin)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusNotAcceptable, gin.H{"Message": "Невозможно получить календарь", "error": err.Error()})
 		return

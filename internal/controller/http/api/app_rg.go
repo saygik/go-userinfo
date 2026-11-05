@@ -22,6 +22,11 @@ func (h *Handler) NewAppRouterGroup() *gin.RouterGroup {
 	rg.DELETE("/admin/user/:username/rights", h.TokenAuthMiddleware(), h.AdminDeleteUserRights)
 	rg.GET("/admin/audit", h.TokenAuthMiddleware(), h.AdminPermissionAudit)
 	rg.GET("/admin/software-audit", h.TokenAuthMiddleware(), h.AdminUserSoftwareAudit)
+	rg.GET("/admin/calendars", h.TokenAuthMiddleware(), h.AdminSchedules)
+	rg.GET("/admin/calendars/meta", h.TokenAuthMiddleware(), h.AdminScheduleMeta)
+	rg.POST("/admin/calendars", h.TokenAuthMiddleware(), h.AdminScheduleCreate)
+	rg.PUT("/admin/calendars/:id", h.TokenAuthMiddleware(), h.AdminScheduleUpdate)
+	rg.DELETE("/admin/calendars/:id", h.TokenAuthMiddleware(), h.AdminScheduleDelete)
 
 	rg.GET("/ip", h.Ip)
 	return rg

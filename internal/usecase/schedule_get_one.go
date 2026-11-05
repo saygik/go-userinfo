@@ -2,64 +2,89 @@ package usecase
 
 import (
 	"fmt"
-	"strconv"
+	"strings"
 
 	"github.com/saygik/go-userinfo/internal/entity"
 )
 
-func (u *UseCase) GetSchedule(id int, currentUser string) (entity.Schedule, error) {
-
-	// testtask := entity.ScheduleTask{
-	// 	Id:             0,
-	// 	Idc:            6,
-	// 	Tip:            3,
-	// 	Status:         1,
-	// 	Title:          "Отключение пользователя 1",
-	// 	Start:          formDate,
-	// 	End:            "",
-	// 	Upn:            "",
-	// 	AllDay:         true,
-	// 	SendMattermost: true,
-	// 	Comment:        "ttest",
-	// }
-
+func (u *UseCase) GetSchedule(id int, currentUser string, isSysAdmin bool) (entity.Schedule, error) {
 	schedule, err := u.repo.GetSchedule(id)
 	if err != nil {
 		return entity.Schedule{}, u.Error("невозможно получить календарь из базы данных")
 	}
-	schedule.Available = false
-	scheduleAvailable := false
-	scheduleUsersIdName, err := u.repo.GetScheduleUsers(id, 2)
-	if err != nil {
-		return entity.Schedule{}, u.Error("невозможно получить пользователей календаря из базы данных")
-	}
-	//GET GLPI Users of schedule
-	glpiGroups, _ := u.repo.GetScheduleUserGroups(id, "glpi")
 
-	for _, group := range glpiGroups {
-		if group.Type != 2 {
+	userRows, groupRows, err := u.repo.GetScheduleAccessRows(id)
+	if err != nil {
+		return entity.Schedule{}, u.Error("невозможно получить права календаря из базы данных")
+	}
+
+	managers := []entity.IdName{}
+	viewers := []entity.IdName{}
+
+	for _, row := range userRows {
+		name := strings.TrimSpace(row.Name)
+		if name == "" {
 			continue
 		}
-		gid, err := strconv.Atoi(group.Name)
-		if err != nil {
-			continue
-		}
-		groupUsers, _ := u.glpi.GetGroupUsers(gid)
-		for _, groupUser := range groupUsers {
-			if !IsStringInArrayIdName(groupUser.Name, scheduleUsersIdName) {
-				scheduleUsersIdName = append(scheduleUsersIdName, groupUser)
+		user := entity.IdName{Name: name}
+		switch row.Role {
+		case 1:
+			if !IsStringInArrayIdName(name, managers) {
+				managers = append(managers, user)
+			}
+		default:
+			if !IsStringInArrayIdName(name, viewers) {
+				viewers = append(viewers, user)
 			}
 		}
 	}
 
-	scheduleUsers := []entity.ScheduleUser{}
-	su := entity.ScheduleUser{}
-	for _, user := range scheduleUsersIdName {
-		// if user.Name == currentUser {
-		// 	scheduleAvailable = true
-		// }
+	for _, row := range groupRows {
+		if row.GroupId <= 0 {
+			continue
+		}
+		groupUsers, err := u.glpi.GetGroupUsers(row.GroupId)
+		if err != nil {
+			continue
+		}
+		for _, groupUser := range groupUsers {
+			switch row.Role {
+			case 1:
+				if !IsStringInArrayIdName(groupUser.Name, managers) {
+					managers = append(managers, groupUser)
+				}
+			default:
+				if !IsStringInArrayIdName(groupUser.Name, viewers) {
+					viewers = append(viewers, groupUser)
+				}
+			}
+		}
+	}
+
+	isManager := IsStringInArrayIdName(currentUser, managers)
+	isViewer := IsStringInArrayIdName(currentUser, viewers)
+
+	schedule.Edit = isSysAdmin || isManager
+	schedule.Available = isSysAdmin || !schedule.Private || isManager || isViewer
+
+	// В список участников графика входят и полные администраторы, и
+	// наблюдатели: полный доступ включает возможность быть назначенным.
+	roster := make([]entity.IdName, 0, len(managers)+len(viewers))
+	for _, user := range managers {
+		if !IsStringInArrayIdName(user.Name, roster) {
+			roster = append(roster, user)
+		}
+	}
+	for _, user := range viewers {
+		if !IsStringInArrayIdName(user.Name, roster) {
+			roster = append(roster, user)
+		}
+	}
+
+	scheduleUsers := make([]entity.ScheduleUser, 0, len(roster))
+	for _, user := range roster {
 		adUser := u.GetUserADPropertysShort(user.Name)
-		su = entity.ScheduleUser{
+		su := entity.ScheduleUser{
 			Name: fmt.Sprintf("%s", adUser["name"]),
 			AD:   fmt.Sprintf("%t", adUser["findedInAD"]),
 		}
@@ -86,47 +111,12 @@ func (u *UseCase) GetSchedule(id int, currentUser string) (entity.Schedule, erro
 		}
 		scheduleUsers = append(scheduleUsers, su)
 	}
-	schedule.Edit = false
-
-	//Get users with edit permission
-	scheduleAdmins, err := u.repo.GetScheduleUsers(id, 1)
-	if err != nil {
-		return entity.Schedule{}, u.Error("ошибка получения списка доступа пользователей")
-	}
-	for _, group := range glpiGroups {
-		if group.Type != 1 {
-			continue
-		}
-		gid, err := strconv.Atoi(group.Name)
-		if err != nil {
-			continue
-		}
-		groupUsers, _ := u.glpi.GetGroupUsers(gid)
-		for _, groupUser := range groupUsers {
-			if !IsStringInArrayIdName(groupUser.Name, scheduleAdmins) {
-				scheduleAdmins = append(scheduleAdmins, groupUser)
-			}
-		}
-	}
-	for _, user := range scheduleAdmins {
-		if user.Name == currentUser {
-			scheduleAvailable = true
-			schedule.Edit = true
-			break
-		}
-	}
 
 	scheduleTasks, _ := u.GetScheduleTasks(id)
-	schedule.ScheduleTasks = scheduleTasks
-	schedule.ScheduleUsers = scheduleUsers
-	schedule.ScheduleAdmins = scheduleAdmins
-	if !schedule.Private {
-		schedule.Available = true
-	} else {
-		schedule.Available = scheduleAvailable
-	}
 
-	//h.uc.GetADGroupUsers(domain, group)
+	schedule.ScheduleAdmins = managers
+	schedule.ScheduleUsers = scheduleUsers
+	schedule.ScheduleTasks = scheduleTasks
 
 	return schedule, nil
 }

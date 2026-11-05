@@ -111,10 +111,15 @@ type UseCase interface {
 	GetStatPeriodRequestTypes(string, string) ([]entity.GLPIStatsTop10, error)                                   //
 	GetStatRegions(string, string) ([]entity.GLPIRegionsStats, error)                                            //
 	GetStatPeriodOrgTreemap(string, string) ([]entity.TreemapData, error)                                        //
-	GetSchedule(int, string) (entity.Schedule, error)                                                            // Один календарь
-	GetAllSchedules(string) ([]entity.IdNameType, error)                                                         // Все календарь
+	GetSchedule(int, string, bool) (entity.Schedule, error)                                                      // Один календарь
+	GetAllSchedules(string, bool) ([]entity.IdNameType, error)                                                   // Все календарь
 	GetScheduleTasks(int) ([]entity.ScheduleTaskCalendar, error)                                                 //
 	AddScheduleTask(entity.ScheduleTask) (entity.ScheduleTaskCalendar, error)                                    //
+	GetAdminSchedules() ([]entity.Schedule, error)                                                               // Все календари для админки
+	GetScheduleGroups() ([]entity.IdName, error)                                                                 // Группы GLPI для админки
+	CreateSchedule(entity.ScheduleForm) (entity.Schedule, error)                                                 // Создать календарь
+	UpdateSchedule(int, entity.ScheduleForm) error                                                               // Изменить календарь
+	DeleteSchedule(int) error                                                                                    // Удалить календарь
 	DelScheduleTask(int) error                                                                                   //
 	UpdateScheduleTask(entity.ScheduleTask) error                                                                //
 	AddTicketSolution(entity.NewCommentForm) error                                                               // GLPI. Добавление  решения

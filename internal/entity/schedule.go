@@ -7,12 +7,48 @@ type Schedule struct {
 	Private        bool                   `db:"private" json:"private"`
 	Caption        string                 `db:"caption" json:"caption"`
 	Edit           bool                   `db:"edit" json:"edit"`
-	Usergroup      string                 `db:"usergroup" json:"usergroup"`
 	Mattermost     string                 `db:"mattermost" json:"mattermost"`
 	Available      bool                   `json:"available"`
+	Managers       ScheduleAccess         `json:"managers"`
+	Viewers        ScheduleAccess         `json:"viewers"`
 	ScheduleUsers  []ScheduleUser         `json:"users"`
 	ScheduleAdmins []IdName               `json:"admins"`
 	ScheduleTasks  []ScheduleTaskCalendar `json:"tasks"`
+}
+
+// ScheduleAccess описывает выданные календарю права. Пользователи хранятся
+// по UPN, группы — по идентификатору и имени группы GLPI.
+type ScheduleAccess struct {
+	Users  []string              `json:"users"`
+	Groups []ScheduleAccessGroup `json:"groups"`
+}
+
+type ScheduleAccessGroup struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+// ScheduleAccessUserRow и ScheduleAccessGroupRow — строки таблиц доступа,
+// которые репозиторий отдаёт в usecase.
+type ScheduleAccessUserRow struct {
+	Name string `db:"name" json:"name"`
+	Role int    `db:"role" json:"role"`
+}
+
+type ScheduleAccessGroupRow struct {
+	GroupId int `db:"group_id" json:"group_id"`
+	Role    int `db:"role" json:"role"`
+}
+
+// ScheduleForm — форма создания и редактирования календаря в админке.
+type ScheduleForm struct {
+	Name       string         `json:"name"`
+	Tip        int            `json:"tip"`
+	Mattermost string         `json:"mattermost"`
+	Private    bool           `json:"private"`
+	Caption    string         `json:"caption"`
+	Managers   ScheduleAccess `json:"managers"`
+	Viewers    ScheduleAccess `json:"viewers"`
 }
 
 type ExtendedProps struct {

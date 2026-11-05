@@ -52,9 +52,14 @@ type Repository interface {
 	SetUserAvatar(string, string) error
 	SetUserIp(entity.UserActivityForm) (string, error)
 	GetSchedule(int) (entity.Schedule, error)
+	GetSchedules() ([]entity.Schedule, error)
 	GetScheduleUsers(int, int) ([]entity.IdName, error)
 	GetScheduleUserGroups(int, string) ([]entity.IdNameType, error)
-	GetScheduleUserAvailableGroups(string, string) ([]entity.IdNameType, error)
+	GetScheduleUserAvailableGroups(string, string, bool) ([]entity.IdNameType, error)
+	GetScheduleAccessRows(int) ([]entity.ScheduleAccessUserRow, []entity.ScheduleAccessGroupRow, error)
+	AddSchedule(entity.ScheduleForm) (int, error)
+	UpdateSchedule(int, entity.ScheduleForm) error
+	DeleteSchedule(int) error
 
 	GetScheduleTasks(int) ([]entity.ScheduleTask, error)
 	GetScheduleTasksNotifications(string) ([]entity.ScheduleTask, error)
@@ -130,6 +135,7 @@ type GLPI interface {
 	GetUserById(int) (entity.GLPIUser, error)
 	GetUserProfiles(int) ([]entity.GLPIUserProfile, error)
 	GetUserGroups(int) ([]entity.IdName, error)
+	GetGroups() ([]entity.IdName, error)
 	GetAllSoftwares() ([]entity.Software, error)
 	GetSoftware(int) (entity.Software, error)
 	GetSoftwareJournal(int) ([]entity.SoftwareJournal, error)
